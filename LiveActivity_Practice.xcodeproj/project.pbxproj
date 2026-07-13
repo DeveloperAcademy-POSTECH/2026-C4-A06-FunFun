@@ -6,8 +6,65 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A10000000000000000000001 /* LiveActivityWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A10000000000000000000010 /* LiveActivityWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		A10000000000000000000002 /* LiveActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000011 /* LiveActivityWidget.swift */; };
+		A10000000000000000000005 /* LiveActivity_Practice/Walking/Domain/WalkingModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000015 /* LiveActivity_Practice/Walking/Domain/WalkingModels.swift */; };
+		A10000000000000000000006 /* LiveActivity_Practice/Walking/Presentation/WalkingActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000016 /* LiveActivity_Practice/Walking/Presentation/WalkingActivityAttributes.swift */; };
+		A10000000000000000000007 /* LiveActivity_Practice/Walking/Presentation/StopWalkingIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000017 /* LiveActivity_Practice/Walking/Presentation/StopWalkingIntent.swift */; };
+		A20000000000000000000001 /* Frameworks/TMapSDK.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* Frameworks/TMapSDK.xcframework */; };
+		A20000000000000000000002 /* Frameworks/VSMSDK.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000011 /* Frameworks/VSMSDK.xcframework */; };
+		A20000000000000000000003 /* Frameworks/TMapSDK.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* Frameworks/TMapSDK.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		A20000000000000000000004 /* Frameworks/VSMSDK.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000011 /* Frameworks/VSMSDK.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A10000000000000000000020 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B7F679E23000C6E000631B6E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A10000000000000000000030;
+			remoteInfo = LiveActivityWidget;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		A10000000000000000000040 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				A10000000000000000000001 /* LiveActivityWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A20000000000000000000020 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				A20000000000000000000003 /* Frameworks/TMapSDK.xcframework in Embed Frameworks */,
+				A20000000000000000000004 /* Frameworks/VSMSDK.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
+		A10000000000000000000010 /* LiveActivityWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LiveActivityWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		A10000000000000000000011 /* LiveActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityWidget.swift; sourceTree = "<group>"; };
+		A10000000000000000000012 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A10000000000000000000015 /* LiveActivity_Practice/Walking/Domain/WalkingModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivity_Practice/Walking/Domain/WalkingModels.swift; sourceTree = SOURCE_ROOT; };
+		A10000000000000000000016 /* LiveActivity_Practice/Walking/Presentation/WalkingActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivity_Practice/Walking/Presentation/WalkingActivityAttributes.swift; sourceTree = SOURCE_ROOT; };
+		A10000000000000000000017 /* LiveActivity_Practice/Walking/Presentation/StopWalkingIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivity_Practice/Walking/Presentation/StopWalkingIntent.swift; sourceTree = SOURCE_ROOT; };
+		A20000000000000000000010 /* Frameworks/TMapSDK.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = Frameworks/TMapSDK.xcframework; sourceTree = SOURCE_ROOT; };
+		A20000000000000000000011 /* Frameworks/VSMSDK.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = Frameworks/VSMSDK.xcframework; sourceTree = SOURCE_ROOT; };
 		B7F679EA3000C6E000631B6E /* LiveActivity_Practice.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LiveActivity_Practice.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C30000000000000000000001 /* Config/AppConfiguration.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config/AppConfiguration.xcconfig; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -19,20 +76,45 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		B7F679E73000C6E000631B6E /* Frameworks */ = {
+		A10000000000000000000041 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B7F679E73000C6E000631B6E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A20000000000000000000001 /* Frameworks/TMapSDK.xcframework in Frameworks */,
+				A20000000000000000000002 /* Frameworks/VSMSDK.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		A10000000000000000000050 /* LiveActivityWidget */ = {
+			isa = PBXGroup;
+			children = (
+				A10000000000000000000011 /* LiveActivityWidget.swift */,
+				A10000000000000000000012 /* Info.plist */,
+			);
+			path = LiveActivityWidget;
+			sourceTree = "<group>";
+		};
 		B7F679E13000C6E000631B6E = {
 			isa = PBXGroup;
 			children = (
 				B7F679EC3000C6E000631B6E /* LiveActivity_Practice */,
+				A10000000000000000000050 /* LiveActivityWidget */,
+				A10000000000000000000015 /* LiveActivity_Practice/Walking/Domain/WalkingModels.swift */,
+				A10000000000000000000016 /* LiveActivity_Practice/Walking/Presentation/WalkingActivityAttributes.swift */,
+				A10000000000000000000017 /* LiveActivity_Practice/Walking/Presentation/StopWalkingIntent.swift */,
+				A20000000000000000000010 /* Frameworks/TMapSDK.xcframework */,
+				A20000000000000000000011 /* Frameworks/VSMSDK.xcframework */,
+				C30000000000000000000001 /* Config/AppConfiguration.xcconfig */,
 				B7F679EB3000C6E000631B6E /* Products */,
 			);
 			sourceTree = "<group>";
@@ -41,6 +123,7 @@
 			isa = PBXGroup;
 			children = (
 				B7F679EA3000C6E000631B6E /* LiveActivity_Practice.app */,
+				A10000000000000000000010 /* LiveActivityWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -48,6 +131,25 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		A10000000000000000000030 /* LiveActivityWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A10000000000000000000060 /* Build configuration list for PBXNativeTarget "LiveActivityWidget" */;
+			buildPhases = (
+				A10000000000000000000042 /* Sources */,
+				A10000000000000000000041 /* Frameworks */,
+				A10000000000000000000043 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LiveActivityWidget;
+			packageProductDependencies = (
+			);
+			productName = LiveActivityWidget;
+			productReference = A10000000000000000000010 /* LiveActivityWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		B7F679E93000C6E000631B6E /* LiveActivity_Practice */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = B7F679F53000C6E100631B6E /* Build configuration list for PBXNativeTarget "LiveActivity_Practice" */;
@@ -55,10 +157,13 @@
 				B7F679E63000C6E000631B6E /* Sources */,
 				B7F679E73000C6E000631B6E /* Frameworks */,
 				B7F679E83000C6E000631B6E /* Resources */,
+				A10000000000000000000040 /* Embed Foundation Extensions */,
+				A20000000000000000000020 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				A10000000000000000000021 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				B7F679EC3000C6E000631B6E /* LiveActivity_Practice */,
@@ -80,6 +185,9 @@
 				LastSwiftUpdateCheck = 2630;
 				LastUpgradeCheck = 2630;
 				TargetAttributes = {
+					A10000000000000000000030 = {
+						CreatedOnToolsVersion = 26.3;
+					};
 					B7F679E93000C6E000631B6E = {
 						CreatedOnToolsVersion = 26.3;
 					};
@@ -100,11 +208,19 @@
 			projectRoot = "";
 			targets = (
 				B7F679E93000C6E000631B6E /* LiveActivity_Practice */,
+				A10000000000000000000030 /* LiveActivityWidget */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		A10000000000000000000043 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B7F679E83000C6E000631B6E /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -115,6 +231,17 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		A10000000000000000000042 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000002 /* LiveActivityWidget.swift in Sources */,
+				A10000000000000000000005 /* LiveActivity_Practice/Walking/Domain/WalkingModels.swift in Sources */,
+				A10000000000000000000006 /* LiveActivity_Practice/Walking/Presentation/WalkingActivityAttributes.swift in Sources */,
+				A10000000000000000000007 /* LiveActivity_Practice/Walking/Presentation/StopWalkingIntent.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		B7F679E63000C6E000631B6E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -124,7 +251,69 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		A10000000000000000000021 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A10000000000000000000030 /* LiveActivityWidget */;
+			targetProxy = A10000000000000000000020 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		A10000000000000000000061 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7HK4Z95VZD;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LiveActivityWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "HJ.com.LiveActivity-Practice.LiveActivityWidget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A10000000000000000000062 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 7HK4Z95VZD;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LiveActivityWidget/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "HJ.com.LiveActivity-Practice.LiveActivityWidget";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		B7F679F33000C6E100631B6E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -248,6 +437,7 @@
 		};
 		B7F679F63000C6E100631B6E /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C30000000000000000000001 /* Config/AppConfiguration.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -256,8 +446,12 @@
 				DEVELOPMENT_TEAM = 7HK4Z95VZD;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Config/AppInfo.plist;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "도보 경로 진행 상황과 다음 분기점을 안내하기 위해 위치를 사용합니다.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIBackgroundModes = location;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -280,6 +474,7 @@
 		};
 		B7F679F73000C6E100631B6E /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = C30000000000000000000001 /* Config/AppConfiguration.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -288,8 +483,12 @@
 				DEVELOPMENT_TEAM = 7HK4Z95VZD;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Config/AppInfo.plist;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "도보 경로 진행 상황과 다음 분기점을 안내하기 위해 위치를 사용합니다.";
+				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIBackgroundModes = location;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -313,6 +512,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		A10000000000000000000060 /* Build configuration list for PBXNativeTarget "LiveActivityWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A10000000000000000000061 /* Debug */,
+				A10000000000000000000062 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		B7F679E53000C6E000631B6E /* Build configuration list for PBXProject "LiveActivity_Practice" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
