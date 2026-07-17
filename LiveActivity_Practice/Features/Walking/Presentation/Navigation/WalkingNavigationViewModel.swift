@@ -134,7 +134,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
         do {
             let response = try await placeSearchClient.searchPlaces(keyword: keyword, page: 1, near: currentLocation)
             let results = response.searchPoiInfo.pois.poi.compactMap(Self.mapPlaceSearchResult)
-            placeSearchResults = results
+            placeSearchResults = results.uniqued(by: \.id)
             let totalCount = Int(response.searchPoiInfo.totalCount ?? "0") ?? 0
             canLoadMoreSearchResults = results.count < totalCount
         } catch is CancellationError {
@@ -155,7 +155,9 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
         do {
             let response = try await placeSearchClient.searchPlaces(keyword: lastSearchKeyword, page: nextPage, near: currentLocation)
             let newResults = response.searchPoiInfo.pois.poi.compactMap(Self.mapPlaceSearchResult)
-            placeSearchResults.append(contentsOf: newResults)
+            let existingIDs = Set(placeSearchResults.map(\.id))
+            let uniqueNewResults = newResults.filter { !existingIDs.contains($0.id) }
+            placeSearchResults.append(contentsOf: uniqueNewResults)
             currentSearchPage = nextPage
             let totalCount = Int(response.searchPoiInfo.totalCount ?? "0") ?? 0
             canLoadMoreSearchResults = placeSearchResults.count < totalCount
@@ -592,5 +594,12 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
         let shortestDelta = (candidate - previous + 540).truncatingRemainder(dividingBy: 360) - 180
         guard abs(shortestDelta) >= 3 else { return previous }
         return (previous + shortestDelta * 0.35 + 360).truncatingRemainder(dividingBy: 360)
+    }
+}
+
+private extension Array {
+    func uniqued<T: Hashable>(by keyPath: KeyPath<Element, T>) -> [Element] {
+        var seen = Set<T>()
+        return filter { seen.insert($0[keyPath: keyPath]).inserted }
     }
 }
