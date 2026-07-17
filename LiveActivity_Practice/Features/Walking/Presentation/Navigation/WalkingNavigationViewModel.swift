@@ -190,6 +190,22 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
         lastSearchKeyword = ""
     }
 
+    func dismissRoute() async {
+        if isNavigating {
+            await stopNavigation()
+        }
+        route = nil
+        progress = nil
+        passedRouteIndex = -1
+        destinationName = ""
+        destinationLatitude = ""
+        destinationLongitude = ""
+        hasSelectedDestination = false
+        hasSelectedStart = false
+        errorMessage = nil
+        startLocationTracking()
+    }
+
     func startLocationTracking() {
         shouldTrackLocation = true
         requestLocationAccess()

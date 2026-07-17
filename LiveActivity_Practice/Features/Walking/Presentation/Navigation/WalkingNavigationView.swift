@@ -38,6 +38,13 @@ struct WalkingNavigationView: View {
             }
 
             VStack(spacing: 12) {
+                HStack {
+                    if viewModel.route != nil || viewModel.isNavigating {
+                        backButton
+                    }
+                    Spacer()
+                }
+
                 if viewModel.isNavigating {
                     navigationDestinationPanel
                     if viewModel.isOffRoute {
@@ -104,6 +111,24 @@ struct WalkingNavigationView: View {
         }
     }
 
+    private var backButton: some View {
+        Button {
+            Task { await viewModel.dismissRoute() }
+            issueCameraCommand(.userLocation)
+        } label: {
+            ZStack {
+                Circle()
+                    //.fill(Color.white.opacity(0.05))
+                    //.background(.ultraThinMaterial, in: Circle())
+                    .fill(.ultraThinMaterial)
+                    .frame(width: 50, height: 50)
+                Image(systemName: "chevron.backward")
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundStyle(Color("Colors/text-text-1"))
+            }
+        }
+    }
+
     private var homeSearchPanel: some View {
         VStack(spacing: 6) {
             Capsule()
@@ -117,7 +142,7 @@ struct WalkingNavigationView: View {
                 HStack(spacing: 16) {
                     Image(systemName: "magnifyingglass")
                         .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(Color(.systemGray))
+                        .foregroundStyle(Color("Colors/text-text-1"))
 
                     Text("어디로 갈까요?")
                         .font(.system(size: 16, weight: .semibold))
@@ -127,7 +152,7 @@ struct WalkingNavigationView: View {
 
                     Image(systemName: "mic.fill")
                         .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(Color(.systemGray))
+                        .foregroundStyle(Color("Colors/text-text-1"))
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
