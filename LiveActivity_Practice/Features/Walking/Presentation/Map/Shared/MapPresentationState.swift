@@ -7,22 +7,6 @@
 import CoreLocation
 import Foundation
 
-enum MapProviderKind: String, CaseIterable, Identifiable {
-    case apple
-    case tmap
-    case naver
-
-    var id: Self { self }
-
-    var displayName: String {
-        switch self {
-        case .apple: "Apple 지도"
-        case .tmap: "Tmap"
-        case .naver: "네이버 지도"
-        }
-    }
-}
-
 struct MapCameraCommand: Equatable {
     enum Target: Equatable {
         case userLocation

@@ -13,16 +13,10 @@ struct WalkingNavigationView: View {
     @State private var cameraCommand: MapCameraCommand?
     @State private var cameraCommandSequence = 0
     @FocusState private var focusedSearchField: SearchField?
-    @Binding private var selectedMapProvider: MapProviderKind
-
-    init(selectedMapProvider: Binding<MapProviderKind>) {
-        _selectedMapProvider = selectedMapProvider
-    }
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             PersistentWalkingMapView(
-                selectedProvider: selectedMapProvider,
                 state: MapPresentationState(
                     route: viewModel.route,
                     deviationPath: viewModel.deviationPath,
@@ -34,10 +28,7 @@ struct WalkingNavigationView: View {
                     navigationAlignmentID: viewModel.navigationAlignmentID,
                     isNavigating: viewModel.isNavigating,
                     cameraCommand: cameraCommand
-                ),
-                appleEngine: AppleMapEngine(),
-                tmapEngine: TMapEngine(),
-                naverEngine: NaverMapEngine()
+                )
             )
                 .ignoresSafeArea()
 
@@ -74,24 +65,6 @@ struct WalkingNavigationView: View {
             }
             .padding()
 
-            if selectedMapProvider != .naver {
-                Button {
-                    viewModel.startLocationTracking()
-                    issueCameraCommand(.userLocation)
-                } label: {
-                    Image(systemName: "location.fill")
-                        .font(.title3)
-                        .frame(width: 48, height: 48)
-                }
-                .buttonStyle(.borderedProminent)
-                .tint(.white)
-                .foregroundStyle(.blue)
-                .clipShape(Circle())
-                .shadow(radius: 5)
-                .accessibilityLabel("내 위치 추적")
-                .padding(.trailing, 16)
-                .padding(.bottom, viewModel.route == nil ? 24 : 235)
-            }
         }
         .task {
             // 지도 첫 화면의 기준점을 현재 위치로 맞춘다.
@@ -137,20 +110,6 @@ struct WalkingNavigationView: View {
 
     private var routeSearchPanel: some View {
         VStack(spacing: 10) {
-            HStack {
-                Label("지도", systemImage: "map")
-                    .font(.subheadline.weight(.semibold))
-                Spacer()
-                Picker("지도 선택", selection: $selectedMapProvider) {
-                    ForEach(MapProviderKind.allCases) { provider in
-                        Text(provider.displayName).tag(provider)
-                    }
-                }
-                .pickerStyle(.menu)
-            }
-
-            Divider()
-
             HStack(spacing: 10) {
                 Image(systemName: "circle.fill")
                     .font(.caption)
