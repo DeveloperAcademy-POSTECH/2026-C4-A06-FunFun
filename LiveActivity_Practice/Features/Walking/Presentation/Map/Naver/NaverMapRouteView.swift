@@ -172,6 +172,8 @@ struct NaverMapRouteView: UIViewRepresentable {
             path?.outlineColor = .white
             path?.width = 8
             path?.outlineWidth = 2
+            path?.patternIcon = NMFOverlayImage(image: Self.arrowPatternImage(size: 8))
+            path?.patternInterval = 18
             path?.mapView = mapView
             routePath = path
 
@@ -281,6 +283,20 @@ struct NaverMapRouteView: UIViewRepresentable {
             landmarkMarker.zIndex = 10_000 - index
             landmarkMarker.mapView = mapView
             routeMarkers.append(landmarkMarker)
+        }
+        
+        /// 경로위에 표시하는 화살표
+        private static func arrowPatternImage(size: CGFloat) -> UIImage {
+            let config = UIImage.SymbolConfiguration(pointSize: size, weight: .bold)
+            guard let symbol = UIImage(systemName: "arrowtriangle.up.fill", withConfiguration: config) else {
+                return UIImage()
+            }
+            let renderer = UIGraphicsImageRenderer(size: symbol.size)
+            return renderer.image { _ in
+                UIColor.white.setFill()
+                symbol.withTintColor(.white, renderingMode: .alwaysOriginal)
+                    .draw(at: .zero)
+            }
         }
 
         private static func landmarkBubbleImage(index: Int, name: String, isPassed: Bool) -> UIImage {

@@ -6,6 +6,8 @@
     <string>$(TMAP_APP_KEY)</string>
     <key>NCP_CLIENT_KEY</key>
     <string>$(NCP_CLIENT_KEY)</string>
+    <key>UIUserInterfaceStyle</key>
+    <string>Light</string>
     <key>UIBackgroundModes</key>
     <array>
         <string>location</string>
