@@ -27,6 +27,9 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
     @Published var destinationName = ""
     @Published private(set) var placeSearchResults: [PlaceSearchResult] = []
     @Published private(set) var isSearchingPlaces = false
+    @Published private(set) var canLoadMoreSearchResults = false
+    private var currentSearchPage = 1
+    private var lastSearchKeyword = ""
     @Published private(set) var hasSelectedStart = false
     @Published private(set) var hasSelectedDestination = false
     @Published private(set) var route: WalkingRoute?
@@ -88,6 +91,17 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
         requestLocationAccess()
     }
 
+    func setStartFromCurrentLocation() {
+        guard let location = currentLocation else {
+            useCurrentLocation()
+            return
+        }
+        startLatitude = String(location.latitude)
+        startLongitude = String(location.longitude)
+        startName = "현재 위치"
+        hasSelectedStart = true
+    }
+
     func updateSearchQuery(_ query: String, for target: SearchTarget) {
         switch target {
         case .start:
@@ -109,19 +123,46 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
         let keyword = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
         guard keyword.count >= 2 else {
             placeSearchResults = []
+            canLoadMoreSearchResults = false
             return
         }
 
+        currentSearchPage = 1
+        lastSearchKeyword = keyword
         isSearchingPlaces = true
         defer { isSearchingPlaces = false }
         do {
-            let response = try await placeSearchClient.searchPlaces(keyword: keyword, near: currentLocation)
-            placeSearchResults = response.searchPoiInfo.pois.poi.compactMap(Self.mapPlaceSearchResult)
+            let response = try await placeSearchClient.searchPlaces(keyword: keyword, page: 1, near: currentLocation)
+            let results = response.searchPoiInfo.pois.poi.compactMap(Self.mapPlaceSearchResult)
+            placeSearchResults = results
+            let totalCount = Int(response.searchPoiInfo.totalCount ?? "0") ?? 0
+            canLoadMoreSearchResults = results.count < totalCount
         } catch is CancellationError {
             return
         } catch {
             placeSearchResults = []
+            canLoadMoreSearchResults = false
             errorMessage = "장소를 검색하지 못했습니다: \(error.localizedDescription)"
+        }
+    }
+
+    func loadMoreSearchResults() async {
+        guard canLoadMoreSearchResults, !isSearchingPlaces, !lastSearchKeyword.isEmpty else { return }
+
+        let nextPage = currentSearchPage + 1
+        isSearchingPlaces = true
+        defer { isSearchingPlaces = false }
+        do {
+            let response = try await placeSearchClient.searchPlaces(keyword: lastSearchKeyword, page: nextPage, near: currentLocation)
+            let newResults = response.searchPoiInfo.pois.poi.compactMap(Self.mapPlaceSearchResult)
+            placeSearchResults.append(contentsOf: newResults)
+            currentSearchPage = nextPage
+            let totalCount = Int(response.searchPoiInfo.totalCount ?? "0") ?? 0
+            canLoadMoreSearchResults = placeSearchResults.count < totalCount
+        } catch is CancellationError {
+            return
+        } catch {
+            canLoadMoreSearchResults = false
         }
     }
 
@@ -144,6 +185,9 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
 
     func clearPlaceSearchResults() {
         placeSearchResults = []
+        canLoadMoreSearchResults = false
+        currentSearchPage = 1
+        lastSearchKeyword = ""
     }
 
     func startLocationTracking() {

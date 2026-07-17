@@ -7,12 +7,12 @@
 import SwiftUI
 
 struct WalkingNavigationView: View {
-    private enum SearchField: String, Hashable { case start, destination }
-
     @StateObject private var viewModel = WalkingNavigationViewModel()
     @State private var cameraCommand: MapCameraCommand?
     @State private var cameraCommandSequence = 0
-    @FocusState private var focusedSearchField: SearchField?
+    @State private var isSearchExpanded = false
+    @State private var searchQuery = ""
+    @FocusState private var isSearchFieldFocused: Bool
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -43,8 +43,6 @@ struct WalkingNavigationView: View {
                     if viewModel.isOffRoute {
                         offRouteBanner
                     }
-                } else {
-                    routeSearchPanel
                 }
 
                 Spacer()
@@ -62,35 +60,20 @@ struct WalkingNavigationView: View {
                         .padding()
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
                 }
+
+                if !viewModel.isNavigating && viewModel.route == nil {
+                    homeSearchPanel
+                }
             }
             .padding()
 
         }
         .task {
-            // 지도 첫 화면의 기준점을 현재 위치로 맞춘다.
             viewModel.startLocationTracking()
             issueCameraCommand(.userLocation)
         }
         .onChange(of: viewModel.route) { _, route in
             if route != nil { issueCameraCommand(.route) }
-        }
-        .task(id: placeSearchTaskID) {
-            guard focusedSearchField != nil else {
-                viewModel.clearPlaceSearchResults()
-                return
-            }
-            let query = activeSearchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard query.count >= 2 else {
-                viewModel.clearPlaceSearchResults()
-                return
-            }
-            do {
-                try await Task.sleep(nanoseconds: 350_000_000)
-                try Task.checkCancellation()
-                await viewModel.searchPlaces(keyword: query)
-            } catch {
-                // 새 입력이 들어오면 이전 검색 작업을 조용히 취소한다.
-            }
         }
         .confirmationDialog(
             "경로를 벗어났습니다",
@@ -106,68 +89,54 @@ struct WalkingNavigationView: View {
         } message: {
             Text("현재 위치를 출발점으로 목적지까지 다시 탐색할 수 있습니다.")
         }
+        .overlay {
+            if isSearchExpanded {
+                expandedSearchPanel
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.easeInOut(duration: 0.3), value: isSearchExpanded)
+        .task(id: searchQuery) {
+            guard isSearchExpanded else { return }
+            try? await Task.sleep(for: .milliseconds(400))
+            guard !Task.isCancelled else { return }
+            await viewModel.searchPlaces(keyword: searchQuery)
+        }
     }
 
-    private var routeSearchPanel: some View {
-        VStack(spacing: 10) {
-            HStack(spacing: 10) {
-                Image(systemName: "circle.fill")
-                    .font(.caption)
-                    .foregroundStyle(.green)
-                TextField("출발지를 검색하세요", text: searchBinding(for: .start))
-                    .focused($focusedSearchField, equals: .start)
-                    .submitLabel(.search)
-                if viewModel.hasSelectedStart {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
-                }
-                Button {
-                    viewModel.useCurrentLocation()
-                    focusedSearchField = nil
-                } label: {
-                    Image(systemName: "location.fill")
-                }
-                .accessibilityLabel("현재 위치를 출발지로 사용")
-            }
-
-            Divider()
-
-            HStack(spacing: 10) {
-                Image(systemName: "mappin.circle.fill")
-                    .foregroundStyle(.red)
-                TextField("목적지를 검색하세요", text: searchBinding(for: .destination))
-                    .focused($focusedSearchField, equals: .destination)
-                    .submitLabel(.search)
-                if viewModel.hasSelectedDestination {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
-                }
-            }
-
-            if focusedSearchField != nil {
-                Divider()
-                placeSearchResults
-            }
+    private var homeSearchPanel: some View {
+        VStack(spacing: 6) {
+            Capsule()
+                .fill(Color(.systemGray3))
+                .frame(width: 51, height: 5)
 
             Button {
-                focusedSearchField = nil
-                Task { await viewModel.searchRoute() }
+                isSearchExpanded = true
+                isSearchFieldFocused = true
             } label: {
-                HStack {
-                    if viewModel.isLoading { ProgressView().tint(.white) }
-                    Text("길찾기").frame(maxWidth: .infinity)
+                HStack(spacing: 16) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundStyle(Color(.systemGray))
+
+                    Text("어디로 갈까요?")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(Color(red: 0.3, green: 0.3, blue: 0.3))
+
+                    Spacer()
+
+                    Image(systemName: "mic.fill")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundStyle(Color(.systemGray))
                 }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 10)
+                .background(Color.black.opacity(0.06), in: Capsule())
             }
-            .buttonStyle(.borderedProminent)
-            .disabled(
-                viewModel.isLoading ||
-                !viewModel.hasSelectedStart ||
-                !viewModel.hasSelectedDestination
-            )
+            .buttonStyle(.plain)
         }
-        .padding(14)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
-        .shadow(radius: 8)
+        .padding(10)
+        .background(Color.white.opacity(0.3), in: RoundedRectangle(cornerRadius: 30))
     }
 
     private var navigationDestinationPanel: some View {
@@ -221,70 +190,114 @@ struct WalkingNavigationView: View {
         .shadow(radius: 8)
     }
 
-    @ViewBuilder
-    private var placeSearchResults: some View {
-        if viewModel.isSearchingPlaces {
-            ProgressView("장소 검색 중…")
-                .frame(maxWidth: .infinity, alignment: .leading)
-        } else if viewModel.placeSearchResults.isEmpty, activeSearchQuery.count >= 2 {
-            Text("검색 결과가 없습니다.")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        } else {
-            ForEach(viewModel.placeSearchResults.prefix(6)) { place in
-                Button {
-                    guard let target = activeSearchTarget else { return }
-                    viewModel.selectPlace(place, for: target)
-                    focusedSearchField = nil
-                } label: {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(place.name)
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(.primary)
-                        Text([place.category, place.address].filter { !$0.isEmpty }.joined(separator: " · "))
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .buttonStyle(.plain)
-                Divider()
-            }
-        }
-    }
+    private var expandedSearchPanel: some View {
+        VStack(spacing: 6) {
+            Capsule()
+                .fill(Color(.systemGray3))
+                .frame(width: 51, height: 5)
+                .padding(.top, 12)
 
-    private func searchBinding(for field: SearchField) -> Binding<String> {
-        Binding(
-            get: { field == .start ? viewModel.startName : viewModel.destinationName },
-            set: {
-                viewModel.updateSearchQuery(
-                    $0,
-                    for: field == .start ? .start : .destination
-                )
+            // Search bar
+            HStack(spacing: 16) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundStyle(Color(.systemGray))
+
+                TextField("어디로 갈까요?", text: $searchQuery)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Color(red: 0.3, green: 0.3, blue: 0.3))
+                    .focused($isSearchFieldFocused)
+                    .submitLabel(.search)
+
+                if !searchQuery.isEmpty {
+                    Button {
+                        searchQuery = ""
+                        viewModel.clearPlaceSearchResults()
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 18))
+                            .foregroundStyle(Color(.systemGray3))
+                    }
+                }
+
+                Image(systemName: "mic.fill")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundStyle(Color(.systemGray))
             }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .frame(height: 50)
+            .background(Color.white.opacity(0.8), in: RoundedRectangle(cornerRadius: 25))
+            .padding(.horizontal, 12)
+
+            // Results container
+            if !viewModel.placeSearchResults.isEmpty || (viewModel.isSearchingPlaces && placeSearchResultsEmpty) {
+                searchResultsContainer
+            }
+
+            Spacer(minLength: 0)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(
+            Color(red: 233/255, green: 233/255, blue: 238/255).opacity(0.1)
+                .background(.ultraThinMaterial)
+                .ignoresSafeArea()
         )
     }
 
-    private var activeSearchTarget: WalkingNavigationViewModel.SearchTarget? {
-        switch focusedSearchField {
-        case .start: .start
-        case .destination: .destination
-        case nil: nil
-        }
+    private var placeSearchResultsEmpty: Bool {
+        viewModel.placeSearchResults.isEmpty
     }
 
-    private var activeSearchQuery: String {
-        switch focusedSearchField {
-        case .start: viewModel.startName
-        case .destination: viewModel.destinationName
-        case nil: ""
+    private var searchResultsContainer: some View {
+        ScrollView {
+            LazyVStack(spacing: 8) {
+                ForEach(viewModel.placeSearchResults) { place in
+                    searchResultRow(place)
+                        .onAppear {
+                            if place.id == viewModel.placeSearchResults.last?.id {
+                                Task { await viewModel.loadMoreSearchResults() }
+                            }
+                        }
+                }
+                if viewModel.isSearchingPlaces {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                }
+            }
         }
+        .padding(20)
+        .background(Color.white.opacity(0.8), in: RoundedRectangle(cornerRadius: 30))
+        .padding(.horizontal, 12)
     }
 
-    private var placeSearchTaskID: String {
-        "\(focusedSearchField?.rawValue ?? "none")|\(activeSearchQuery)"
+    private func searchResultRow(_ place: PlaceSearchResult) -> some View {
+        Button {
+            viewModel.setStartFromCurrentLocation()
+            viewModel.selectPlace(place, for: .destination)
+            searchQuery = ""
+            isSearchFieldFocused = false
+            isSearchExpanded = false
+            Task { await viewModel.searchRoute() }
+        } label: {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(place.name)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.1))
+                    .lineLimit(1)
+                Text(place.address)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(Color(red: 0.7, green: 0.7, blue: 0.7))
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .buttonStyle(.plain)
+        .overlay(alignment: .bottom) {
+            Divider()
+                .padding(.top, 4)
+        }
     }
 
     private func issueCameraCommand(_ target: MapCameraCommand.Target) {
@@ -301,8 +314,6 @@ struct WalkingNavigationView: View {
             }
             .font(.headline)
 
-            // 길찾기 직후에는 핵심 요약과 시작 동작만 제공한다.
-            // 안내가 시작된 뒤에만 다음 회전 등 상세 정보를 노출한다.
             if viewModel.isNavigating {
                 navigationDetails(for: route)
             }

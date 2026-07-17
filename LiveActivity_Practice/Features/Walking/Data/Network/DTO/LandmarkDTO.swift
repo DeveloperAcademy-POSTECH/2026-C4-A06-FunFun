@@ -12,6 +12,9 @@ nonisolated struct LandmarkSearchResponseDTO: Decodable, Sendable {
 }
 
 nonisolated struct LandmarkSearchPoiInfoDTO: Decodable, Sendable {
+    let totalCount: String?
+    let page: String?
+    let count: String?
     let pois: LandmarkPoisDTO
 }
 

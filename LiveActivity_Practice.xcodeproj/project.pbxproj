@@ -25,6 +25,13 @@
 			remoteGlobalIDString = A10000000000000000000030;
 			remoteInfo = LiveActivityWidget;
 		};
+		T10000000000000000000050 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B7F679E23000C6E000631B6E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B7F679E93000C6E000631B6E;
+			remoteInfo = LiveActivity_Practice;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -62,12 +69,18 @@
 		A20000000000000000000011 /* Frameworks/VSMSDK.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = Frameworks/VSMSDK.xcframework; sourceTree = SOURCE_ROOT; };
 		B7F679EA3000C6E000631B6E /* LiveActivity_Practice.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LiveActivity_Practice.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C30000000000000000000001 /* Config/AppConfiguration.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config/AppConfiguration.xcconfig; sourceTree = SOURCE_ROOT; };
+		T10000000000000000000010 /* LiveActivity_PracticeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LiveActivity_PracticeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		B7F679EC3000C6E000631B6E /* LiveActivity_Practice */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = LiveActivity_Practice;
+			sourceTree = "<group>";
+		};
+		T10000000000000000000020 /* LiveActivity_PracticeTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = LiveActivity_PracticeTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -89,6 +102,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		T10000000000000000000041 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -105,6 +125,7 @@
 			isa = PBXGroup;
 			children = (
 				B7F679EC3000C6E000631B6E /* LiveActivity_Practice */,
+				T10000000000000000000020 /* LiveActivity_PracticeTests */,
 				A10000000000000000000050 /* LiveActivityWidget */,
 				A10000000000000000000015 /* LiveActivity_Practice/Features/Walking/Domain/Models/WalkingModels.swift */,
 				A10000000000000000000016 /* LiveActivity_Practice/Features/Walking/Presentation/LiveActivity/WalkingActivityAttributes.swift */,
@@ -119,6 +140,7 @@
 			isa = PBXGroup;
 			children = (
 				B7F679EA3000C6E000631B6E /* LiveActivity_Practice.app */,
+				T10000000000000000000010 /* LiveActivity_PracticeTests.xctest */,
 				A10000000000000000000010 /* LiveActivityWidget.appex */,
 			);
 			name = Products;
@@ -167,6 +189,27 @@
 			productReference = B7F679EA3000C6E000631B6E /* LiveActivity_Practice.app */;
 			productType = "com.apple.product-type.application";
 		};
+		T10000000000000000000030 /* LiveActivity_PracticeTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = T10000000000000000000060 /* Build configuration list for PBXNativeTarget "LiveActivity_PracticeTests" */;
+			buildPhases = (
+				T10000000000000000000040 /* Sources */,
+				T10000000000000000000041 /* Frameworks */,
+				T10000000000000000000042 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				T10000000000000000000051 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				T10000000000000000000020 /* LiveActivity_PracticeTests */,
+			);
+			name = LiveActivity_PracticeTests;
+			productName = LiveActivity_PracticeTests;
+			productReference = T10000000000000000000010 /* LiveActivity_PracticeTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -182,6 +225,10 @@
 					};
 					B7F679E93000C6E000631B6E = {
 						CreatedOnToolsVersion = 26.3;
+					};
+					T10000000000000000000030 = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = B7F679E93000C6E000631B6E;
 					};
 				};
 			};
@@ -203,6 +250,7 @@
 			projectRoot = "";
 			targets = (
 				B7F679E93000C6E000631B6E /* LiveActivity_Practice */,
+				T10000000000000000000030 /* LiveActivity_PracticeTests */,
 				A10000000000000000000030 /* LiveActivityWidget */,
 			);
 		};
@@ -217,6 +265,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		B7F679E83000C6E000631B6E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		T10000000000000000000042 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -244,6 +299,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		T10000000000000000000040 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -251,6 +313,11 @@
 			isa = PBXTargetDependency;
 			target = A10000000000000000000030 /* LiveActivityWidget */;
 			targetProxy = A10000000000000000000020 /* PBXContainerItemProxy */;
+		};
+		T10000000000000000000051 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B7F679E93000C6E000631B6E /* LiveActivity_Practice */;
+			targetProxy = T10000000000000000000050 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -508,6 +575,48 @@
 			};
 			name = Release;
 		};
+		T10000000000000000000061 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2QJX795Q3R;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "HJ.com.LiveActivity-Practice.Tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LiveActivity_Practice.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LiveActivity_Practice";
+			};
+			name = Debug;
+		};
+		T10000000000000000000062 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2QJX795Q3R;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "HJ.com.LiveActivity-Practice.Tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LiveActivity_Practice.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LiveActivity_Practice";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -534,6 +643,15 @@
 			buildConfigurations = (
 				B7F679F63000C6E100631B6E /* Debug */,
 				B7F679F73000C6E100631B6E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		T10000000000000000000060 /* Build configuration list for PBXNativeTarget "LiveActivity_PracticeTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				T10000000000000000000061 /* Debug */,
+				T10000000000000000000062 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
