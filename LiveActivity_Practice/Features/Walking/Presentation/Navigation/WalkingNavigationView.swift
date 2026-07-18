@@ -28,6 +28,8 @@ struct WalkingNavigationView: View {
                     navigationAlignmentID: viewModel.navigationAlignmentID,
                     isNavigating: viewModel.isNavigating,
                     cameraCommand: cameraCommand,
+                    showLandmarks: viewModel.showLandmarks,
+                    landmarkScaleThreshold: viewModel.landmarkMinZoom,
                     onMapTapped: { coordinate in
                         guard !viewModel.isNavigating, !isSearchExpanded else { return }
                         viewModel.selectCoordinateAsDestination(coordinate)
@@ -157,6 +159,26 @@ struct WalkingNavigationView: View {
                             .onChange(of: viewModel.showTimeInsteadOfDistance) {
                                 viewModel.refreshLiveActivity()
                             }
+                    }
+                    Section("지도") {
+                        Toggle("랜드마크 표시", isOn: $viewModel.showLandmarks)
+                        if viewModel.showLandmarks {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("축척 \(Int(viewModel.landmarkMinZoom))m 이하에서 표시")
+                                    .font(.subheadline)
+                                Slider(value: $viewModel.landmarkMinZoom, in: 10...100, step: 10)
+                            }
+                        }
+                    }
+                    Section("Approaching 기준 거리") {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("\(Int(viewModel.approachingThreshold))m")
+                                .font(.subheadline.monospacedDigit())
+                            Slider(value: $viewModel.approachingThreshold, in: 0...30, step: 1)
+                                .onChange(of: viewModel.approachingThreshold) {
+                                    viewModel.refreshLiveActivity()
+                                }
+                        }
                     }
                 }
                 .navigationTitle("설정")

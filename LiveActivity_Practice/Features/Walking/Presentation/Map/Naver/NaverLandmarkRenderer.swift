@@ -5,12 +5,23 @@ import NMapsMap
 import UIKit
 
 final class NaverLandmarkRenderer {
+    /// 축척(m)을 NaverMap 줌 레벨로 변환
+    /// 축척이 작을수록(확대) 줌 레벨이 높고, 클수록(축소) 줌 레벨이 낮음
+    static func zoomLevel(forScale meters: Double) -> Double {
+        // NaverMap: 줌 16 ≈ 25m, 줌 15 ≈ 50m, 줌 14 ≈ 100m (log2 스케일)
+        let baseZoom = 15.0  // 50m 기준
+        let baseScale = 50.0
+        return baseZoom + log2(baseScale / meters)
+    }
+
+    private var currentMinZoom: Double = zoomLevel(forScale: 50)
     private var landmarkAreas: [NMFCircleOverlay] = []
     private var landmarkConnectors: [NMFPolylineOverlay] = []
     private var landmarkMarkers: [NMFMarker] = []
 
-    func render(landmarks: [MapLandmarkSelection], passedRouteIndex: Int, on mapView: NMFMapView) {
+    func render(landmarks: [MapLandmarkSelection], passedRouteIndex: Int, scaleThreshold: Double = 50, on mapView: NMFMapView) {
         clearAll()
+        currentMinZoom = Self.zoomLevel(forScale: scaleThreshold)
 
         for (offset, selection) in landmarks.enumerated() {
             addLandmark(
@@ -53,6 +64,7 @@ final class NaverLandmarkRenderer {
         area.fillColor = landmarkColor.withAlphaComponent(0.32)
         area.outlineColor = landmarkColor.withAlphaComponent(0.9)
         area.outlineWidth = 2
+        area.minZoom = currentMinZoom
         area.mapView = mapView
         landmarkAreas.append(area)
 
@@ -62,6 +74,7 @@ final class NaverLandmarkRenderer {
             connector.pattern = [4, 4]
             connector.capType = .round
             connector.joinType = .round
+            connector.minZoom = currentMinZoom
             connector.mapView = mapView
             landmarkConnectors.append(connector)
         }
@@ -78,6 +91,7 @@ final class NaverLandmarkRenderer {
         turnMarker.height = 24
         turnMarker.anchor = CGPoint(x: 0.5, y: 0.5)
         turnMarker.zIndex = 9_000
+        turnMarker.minZoom = currentMinZoom
         turnMarker.mapView = mapView
         landmarkMarkers.append(turnMarker)
 
@@ -92,6 +106,7 @@ final class NaverLandmarkRenderer {
         landmarkMarker.isForceShowIcon = true
         landmarkMarker.isHideCollidedSymbols = true
         landmarkMarker.zIndex = 10_000 - index
+        landmarkMarker.minZoom = currentMinZoom
         landmarkMarker.mapView = mapView
         landmarkMarkers.append(landmarkMarker)
     }

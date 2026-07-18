@@ -48,6 +48,9 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
     @Published private(set) var isNavigating = false
     @Published var errorMessage: String?
     @Published var showTimeInsteadOfDistance = false
+    @Published var showLandmarks = true
+    @Published var landmarkMinZoom: Double = 50
+    @Published var approachingThreshold: Double = 10
 
     private let repository: WalkingRouteRepositoryProtocol
     private let placeSearchClient: TMAPClientProtocol
@@ -104,9 +107,8 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
     }
 
     func refreshLiveActivity() {
-        print("[LiveActivity] refreshLiveActivity called, showTime=\(showTimeInsteadOfDistance), progress=\(progress != nil)")
         guard let progress else { return }
-        Task { await activityManager.update(progress, showTime: showTimeInsteadOfDistance) }
+        Task { await activityManager.update(progress, showTime: showTimeInsteadOfDistance, approachingThreshold: Int(approachingThreshold)) }
     }
 
     func clearTappedCoordinate() {
@@ -362,13 +364,14 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
         }
 
         let maneuverChanged = lastManeuverID != newProgress.nextManeuver?.id
-        let isApproaching = newProgress.distanceToNextManeuver < 10
+        let threshold = Int(approachingThreshold)
+        let isApproaching = newProgress.distanceToNextManeuver < threshold
         let throttle: TimeInterval = isApproaching ? 3 : 15
         let enoughTimePassed = Date.now.timeIntervalSince(lastActivityUpdate) >= throttle
         if maneuverChanged || enoughTimePassed || newProgress.isOffRoute {
             lastManeuverID = newProgress.nextManeuver?.id
             lastActivityUpdate = .now
-            Task { await activityManager.update(newProgress, showTime: showTimeInsteadOfDistance) }
+            Task { await activityManager.update(newProgress, showTime: showTimeInsteadOfDistance, approachingThreshold: threshold) }
         }
     }
 

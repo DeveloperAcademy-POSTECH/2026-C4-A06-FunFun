@@ -26,13 +26,13 @@ final class WalkingLiveActivityManager {
         )
     }
 
-    func update(_ progress: WalkingProgress, showTime: Bool = false) async {
-        let state = makeState(progress: progress, showTime: showTime)
+    func update(_ progress: WalkingProgress, showTime: Bool = false, approachingThreshold: Int = 10) async {
+        let state = makeState(progress: progress, showTime: showTime, approachingThreshold: approachingThreshold)
         let content = ActivityContent(state: state, staleDate: .now.addingTimeInterval(120))
         let justEnteredApproach = state.isApproachingTurn && !wasApproachingTurn
         wasApproachingTurn = state.isApproachingTurn
 
-        let isArriving = state.maneuver == .destination && state.distanceToNextTurn < 10
+        let isArriving = state.maneuver == .destination && state.distanceToNextTurn < approachingThreshold
 
         for activity in Activity<WalkingActivityAttributes>.activities {
             if isArriving && !hasTriggeredArrival {
@@ -66,7 +66,7 @@ final class WalkingLiveActivityManager {
         )
     }
 
-    private func makeState(progress: WalkingProgress, showTime: Bool = false) -> WalkingActivityAttributes.ContentState {
+    private func makeState(progress: WalkingProgress, showTime: Bool = false, approachingThreshold: Int = 10) -> WalkingActivityAttributes.ContentState {
         let walkingSpeed = 1.25
         return WalkingActivityAttributes.ContentState(
             remainingDistance: progress.remainingDistance,
@@ -76,7 +76,7 @@ final class WalkingLiveActivityManager {
             landmarkName: progress.nextManeuver?.landmark?.name,
             instruction: progress.nextManeuver?.instruction ?? "목적지에 도착했습니다",
             isOffRoute: progress.isOffRoute,
-            isApproachingTurn: progress.distanceToNextManeuver < 10,
+            isApproachingTurn: progress.distanceToNextManeuver < approachingThreshold,
             showTimeInsteadOfDistance: showTime
         )
     }

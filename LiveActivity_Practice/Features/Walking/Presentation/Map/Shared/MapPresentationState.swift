@@ -28,6 +28,8 @@ struct MapPresentationState: Equatable {
     let navigationAlignmentID: Int?
     let isNavigating: Bool
     let cameraCommand: MapCameraCommand?
+    let showLandmarks: Bool
+    let landmarkScaleThreshold: Double
     var onMapTapped: ((Coordinate) -> Void)?
 
     static func == (lhs: MapPresentationState, rhs: MapPresentationState) -> Bool {
@@ -41,6 +43,8 @@ struct MapPresentationState: Equatable {
         && lhs.navigationAlignmentID == rhs.navigationAlignmentID
         && lhs.isNavigating == rhs.isNavigating
         && lhs.cameraCommand == rhs.cameraCommand
+        && lhs.showLandmarks == rhs.showLandmarks
+        && lhs.landmarkScaleThreshold == rhs.landmarkScaleThreshold
     }
 }
 
