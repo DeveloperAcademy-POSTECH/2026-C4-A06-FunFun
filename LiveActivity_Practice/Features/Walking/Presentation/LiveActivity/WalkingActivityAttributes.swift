@@ -16,6 +16,8 @@ nonisolated struct WalkingActivityAttributes: ActivityAttributes {
         let landmarkName: String?
         let instruction: String
         let isOffRoute: Bool
+        let isApproachingTurn: Bool
+        let showTimeInsteadOfDistance: Bool
     }
 
     let destinationName: String

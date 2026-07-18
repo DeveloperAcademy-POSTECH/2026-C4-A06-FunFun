@@ -9,8 +9,11 @@ import Foundation
 
 @MainActor
 final class WalkingLiveActivityManager {
+    private var wasApproachingTurn = false
+
     func start(destinationName: String, route: WalkingRoute) async throws {
         await end()
+        wasApproachingTurn = false
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
         let progress = initialProgress(route)
         let state = makeState(progress: progress)
@@ -21,10 +24,22 @@ final class WalkingLiveActivityManager {
         )
     }
 
-    func update(_ progress: WalkingProgress) async {
-        let content = ActivityContent(state: makeState(progress: progress), staleDate: .now.addingTimeInterval(120))
+    func update(_ progress: WalkingProgress, showTime: Bool = false) async {
+        let state = makeState(progress: progress, showTime: showTime)
+        let content = ActivityContent(state: state, staleDate: .now.addingTimeInterval(120))
+        let justEnteredApproach = state.isApproachingTurn && !wasApproachingTurn
+        wasApproachingTurn = state.isApproachingTurn
+
         for activity in Activity<WalkingActivityAttributes>.activities {
-            await activity.update(content)
+            if justEnteredApproach {
+                await activity.update(content, alertConfiguration: AlertConfiguration(
+                    title: "\(state.instruction)",
+                    body: "\(state.distanceToNextTurn)m 앞",
+                    sound: .default
+                ))
+            } else {
+                await activity.update(content)
+            }
         }
     }
 
@@ -44,7 +59,7 @@ final class WalkingLiveActivityManager {
         )
     }
 
-    private func makeState(progress: WalkingProgress) -> WalkingActivityAttributes.ContentState {
+    private func makeState(progress: WalkingProgress, showTime: Bool = false) -> WalkingActivityAttributes.ContentState {
         let walkingSpeed = 1.25
         return WalkingActivityAttributes.ContentState(
             remainingDistance: progress.remainingDistance,
@@ -53,7 +68,9 @@ final class WalkingLiveActivityManager {
             maneuver: progress.nextManeuver?.turn ?? .destination,
             landmarkName: progress.nextManeuver?.landmark?.name,
             instruction: progress.nextManeuver?.instruction ?? "목적지에 도착했습니다",
-            isOffRoute: progress.isOffRoute
+            isOffRoute: progress.isOffRoute,
+            isApproachingTurn: progress.distanceToNextManeuver < 10,
+            showTimeInsteadOfDistance: showTime
         )
     }
 }

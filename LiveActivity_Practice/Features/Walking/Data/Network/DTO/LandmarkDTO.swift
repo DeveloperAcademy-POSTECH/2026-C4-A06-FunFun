@@ -17,6 +17,13 @@ nonisolated struct LandmarkSearchPoiInfoDTO: Decodable, Sendable {
     let count: String?
     let pois: LandmarkPoisDTO
 
+    init(totalCount: String?, page: String?, count: String?, pois: LandmarkPoisDTO) {
+        self.totalCount = totalCount
+        self.page = page
+        self.count = count
+        self.pois = pois
+    }
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         totalCount = Self.decodeFlexibleString(from: container, key: .totalCount)

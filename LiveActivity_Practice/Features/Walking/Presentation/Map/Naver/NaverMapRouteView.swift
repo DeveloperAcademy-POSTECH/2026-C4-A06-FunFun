@@ -20,6 +20,7 @@ struct NaverMapRouteView: UIViewRepresentable {
         naverMapView.showZoomControls = false
         naverMapView.showLocationButton = false
         mapView.positionMode = .normal
+        mapView.touchDelegate = context.coordinator
 
         context.coordinator.location.setupLocationButton(on: naverMapView, hasRoute: state.route != nil)
         context.coordinator.camera.prepareInitialCamera(location: state.currentLocation, on: mapView)
@@ -27,6 +28,7 @@ struct NaverMapRouteView: UIViewRepresentable {
     }
 
     func updateUIView(_ naverMapView: NMFNaverMapView, context: Context) {
+        context.coordinator.onMapTapped = state.onMapTapped
         context.coordinator.update(state: state, on: naverMapView.mapView)
     }
 
@@ -34,14 +36,19 @@ struct NaverMapRouteView: UIViewRepresentable {
         coordinator.tearDown()
     }
 
-    final class Coordinator {
+    final class Coordinator: NSObject, NMFMapViewTouchDelegate {
         let camera = NaverCameraController()
         let route = NaverRouteRenderer()
         let landmark = NaverLandmarkRenderer()
         let location = NaverLocationOverlay()
+        var onMapTapped: ((Coordinate) -> Void)?
 
         private var renderedRoute: WalkingRoute?
         private var renderedPassedRouteIndex = -1
+
+        func mapView(_ mapView: NMFMapView, didTapMap latlng: NMGLatLng, point: CGPoint) {
+            onMapTapped?(Coordinate(latitude: latlng.lat, longitude: latlng.lng))
+        }
 
         func update(state: MapPresentationState, on mapView: NMFMapView) {
             location.updateOverlay(

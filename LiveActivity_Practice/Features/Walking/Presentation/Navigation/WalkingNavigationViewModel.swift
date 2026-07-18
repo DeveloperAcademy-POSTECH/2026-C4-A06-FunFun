@@ -47,6 +47,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
     @Published private(set) var isLoading = false
     @Published private(set) var isNavigating = false
     @Published var errorMessage: String?
+    @Published var showTimeInsteadOfDistance = false
 
     private let repository: WalkingRouteRepositoryProtocol
     private let placeSearchClient: TMAPClientProtocol
@@ -80,7 +81,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
         super.init()
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
-        locationManager.distanceFilter = 5
+        locationManager.distanceFilter = 2
         locationManager.headingFilter = 5
         locationManager.activityType = .fitness
     }
@@ -89,6 +90,35 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
         shouldTrackLocation = false
         shouldUseLocationAsStart = true
         requestLocationAccess()
+    }
+
+    @Published private(set) var tappedCoordinate: Coordinate?
+
+    func selectCoordinateAsDestination(_ coordinate: Coordinate) {
+        tappedCoordinate = coordinate
+        destinationName = String(format: "(%.4f, %.4f)", coordinate.latitude, coordinate.longitude)
+        destinationLatitude = String(coordinate.latitude)
+        destinationLongitude = String(coordinate.longitude)
+        hasSelectedDestination = true
+        setStartFromCurrentLocation()
+    }
+
+    func refreshLiveActivity() {
+        print("[LiveActivity] refreshLiveActivity called, showTime=\(showTimeInsteadOfDistance), progress=\(progress != nil)")
+        guard let progress else { return }
+        Task { await activityManager.update(progress, showTime: showTimeInsteadOfDistance) }
+    }
+
+    func clearTappedCoordinate() {
+        tappedCoordinate = nil
+        destinationName = ""
+        destinationLatitude = ""
+        destinationLongitude = ""
+        hasSelectedDestination = false
+        route = nil
+        progress = nil
+        passedRouteIndex = -1
+        errorMessage = nil
     }
 
     func setStartFromCurrentLocation() {
@@ -252,6 +282,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
             locationManager.requestWhenInUseAuthorization()
             locationManager.allowsBackgroundLocationUpdates = true
             locationManager.showsBackgroundLocationIndicator = true
+            locationManager.pausesLocationUpdatesAutomatically = false
             locationManager.startUpdatingLocation()
             locationManager.startUpdatingHeading()
         } catch {
@@ -331,11 +362,13 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
         }
 
         let maneuverChanged = lastManeuverID != newProgress.nextManeuver?.id
-        let enoughTimePassed = Date.now.timeIntervalSince(lastActivityUpdate) >= 15
+        let isApproaching = newProgress.distanceToNextManeuver < 10
+        let throttle: TimeInterval = isApproaching ? 3 : 15
+        let enoughTimePassed = Date.now.timeIntervalSince(lastActivityUpdate) >= throttle
         if maneuverChanged || enoughTimePassed || newProgress.isOffRoute {
             lastManeuverID = newProgress.nextManeuver?.id
             lastActivityUpdate = .now
-            Task { await activityManager.update(newProgress) }
+            Task { await activityManager.update(newProgress, showTime: showTimeInsteadOfDistance) }
         }
     }
 
@@ -489,6 +522,16 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
         horizontalAccuracy: CLLocationAccuracy
     ) {
         guard isNavigating, deviationState != .rerouting else { return }
+
+        // 목적지 50m 이내에서는 경로 이탈 감지 비활성화
+        if let destination = destinationCoordinate {
+            let distToDestination = current.distance(to: destination)
+            if distToDestination <= 50 {
+                if isOffRoute { resetDeviationState() }
+                return
+            }
+        }
+
         distanceFromRoute = routeMatch.distance
         let validAccuracy = horizontalAccuracy >= 0 ? horizontalAccuracy : 0
         let deviationThreshold = max(25, min(validAccuracy * 1.5, 60))

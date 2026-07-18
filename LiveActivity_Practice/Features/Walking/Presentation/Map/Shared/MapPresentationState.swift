@@ -28,6 +28,20 @@ struct MapPresentationState: Equatable {
     let navigationAlignmentID: Int?
     let isNavigating: Bool
     let cameraCommand: MapCameraCommand?
+    var onMapTapped: ((Coordinate) -> Void)?
+
+    static func == (lhs: MapPresentationState, rhs: MapPresentationState) -> Bool {
+        lhs.route == rhs.route
+        && lhs.deviationPath == rhs.deviationPath
+        && lhs.passedRouteIndex == rhs.passedRouteIndex
+        && lhs.currentLocation == rhs.currentLocation
+        && lhs.currentHeading == rhs.currentHeading
+        && lhs.currentLocationAccuracy == rhs.currentLocationAccuracy
+        && lhs.navigationBearing == rhs.navigationBearing
+        && lhs.navigationAlignmentID == rhs.navigationAlignmentID
+        && lhs.isNavigating == rhs.isNavigating
+        && lhs.cameraCommand == rhs.cameraCommand
+    }
 }
 
 struct MapLandmarkSelection {

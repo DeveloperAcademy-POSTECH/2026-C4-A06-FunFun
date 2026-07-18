@@ -27,7 +27,11 @@ struct WalkingNavigationView: View {
                     navigationBearing: viewModel.navigationBearing,
                     navigationAlignmentID: viewModel.navigationAlignmentID,
                     isNavigating: viewModel.isNavigating,
-                    cameraCommand: cameraCommand
+                    cameraCommand: cameraCommand,
+                    onMapTapped: { coordinate in
+                        guard !viewModel.isNavigating, !isSearchExpanded else { return }
+                        viewModel.selectCoordinateAsDestination(coordinate)
+                    }
                 )
             )
                 .ignoresSafeArea()
@@ -39,10 +43,11 @@ struct WalkingNavigationView: View {
 
             VStack(spacing: 12) {
                 HStack {
-                    if viewModel.route != nil || viewModel.isNavigating {
+                    if viewModel.route != nil || viewModel.isNavigating || viewModel.tappedCoordinate != nil {
                         backButton
                     }
                     Spacer()
+                    settingsButton
                 }
 
                 if viewModel.isNavigating {
@@ -60,6 +65,8 @@ struct WalkingNavigationView: View {
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
                 } else if let route = viewModel.route {
                     routeSummary(route)
+                } else if viewModel.tappedCoordinate != nil {
+                    tappedDestinationPanel
                 } else if let error = viewModel.errorMessage {
                     Text(error)
                         .font(.footnote)
@@ -113,6 +120,7 @@ struct WalkingNavigationView: View {
 
     private var backButton: some View {
         Button {
+            viewModel.clearTappedCoordinate()
             Task { await viewModel.dismissRoute() }
             issueCameraCommand(.userLocation)
         } label: {
@@ -127,6 +135,65 @@ struct WalkingNavigationView: View {
                     .foregroundStyle(Color("Colors/text-text-1"))
             }
         }
+    }
+
+    @State private var showSettings = false
+
+    private var settingsButton: some View {
+        Button {
+            showSettings = true
+        } label: {
+            Image(systemName: "gearshape.fill")
+                .font(.system(size: 12))
+                .foregroundStyle(.secondary)
+                .frame(width: 30, height: 30)
+                .background(.ultraThinMaterial, in: Circle())
+        }
+        .sheet(isPresented: $showSettings) {
+            NavigationStack {
+                Form {
+                    Section("Compact 표시") {
+                        Toggle("남은 거리를 시간(분)으로 표시", isOn: $viewModel.showTimeInsteadOfDistance)
+                            .onChange(of: viewModel.showTimeInsteadOfDistance) {
+                                viewModel.refreshLiveActivity()
+                            }
+                    }
+                }
+                .navigationTitle("설정")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("닫기") { showSettings = false }
+                    }
+                }
+            }
+            .presentationDetents([.medium])
+        }
+    }
+
+    private var tappedDestinationPanel: some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 10) {
+                Image(systemName: "mappin.circle.fill")
+                    .foregroundStyle(.red)
+                    .font(.title3)
+                Text(viewModel.destinationName)
+                    .font(.subheadline.weight(.semibold))
+                    .lineLimit(1)
+                Spacer()
+            }
+
+            Button {
+                Task { await viewModel.searchRoute() }
+            } label: {
+                Label("경로 찾기", systemImage: "figure.walk")
+                    .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(.borderedProminent)
+        }
+        .padding()
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
+        .shadow(radius: 8)
     }
 
     private var homeSearchPanel: some View {
