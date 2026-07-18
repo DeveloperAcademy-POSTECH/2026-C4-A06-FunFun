@@ -10,10 +10,12 @@ import Foundation
 @MainActor
 final class WalkingLiveActivityManager {
     private var wasApproachingTurn = false
+    private var hasTriggeredArrival = false
 
     func start(destinationName: String, route: WalkingRoute) async throws {
         await end()
         wasApproachingTurn = false
+        hasTriggeredArrival = false
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
         let progress = initialProgress(route)
         let state = makeState(progress: progress)
@@ -30,8 +32,13 @@ final class WalkingLiveActivityManager {
         let justEnteredApproach = state.isApproachingTurn && !wasApproachingTurn
         wasApproachingTurn = state.isApproachingTurn
 
+        let isArriving = state.maneuver == .destination && state.distanceToNextTurn < 10
+
         for activity in Activity<WalkingActivityAttributes>.activities {
-            if justEnteredApproach {
+            if isArriving && !hasTriggeredArrival {
+                hasTriggeredArrival = true
+                await activity.end(content, dismissalPolicy: .after(.now.addingTimeInterval(8)))
+            } else if justEnteredApproach {
                 await activity.update(content, alertConfiguration: AlertConfiguration(
                     title: "\(state.instruction)",
                     body: "\(state.distanceToNextTurn)m 앞",

@@ -151,8 +151,7 @@ struct WalkingLiveActivity: Widget {
         case .offRoute:
             EmptyView()
         case .arriving:
-            Image(systemName: "arrow.up.circle.fill")
-                .font(.title2).foregroundStyle(.blue)
+            EmptyView()
         case .approaching:
             Image(systemName: context.state.maneuver.symbolName)
                 .font(.title2).foregroundStyle(.blue)
@@ -167,8 +166,7 @@ struct WalkingLiveActivity: Widget {
         case .offRoute:
             EmptyView()
         case .arriving:
-            Text("\(context.state.distanceToNextTurn)m")
-                .monospacedDigit().foregroundStyle(.green)
+            EmptyView()
         case .approaching:
             Text("\(context.state.distanceToNextTurn)m").monospacedDigit()
         case .cruising:
@@ -217,16 +215,23 @@ struct WalkingLiveActivity: Widget {
                 }
             }
         case .arriving:
-            // TODO: 도착 Expanded 디자인
-            HStack {
-                VStack(alignment: .leading) {
-                    Text("목적지에 거의 도착했습니다")
-                        .font(.subheadline.weight(.bold))
-                    Text(context.attributes.destinationName)
-                        .font(.caption).foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("목적지 근처에 도착했어요")
+                        .font(.system(size: 20, weight: .bold))
+                    Text("길 안내를 종료할게요")
+                        .font(.system(size: 14))
+                        .foregroundStyle(Color(white: 0.7))
                 }
-                Spacer()
-                stopWalkingButton
+                Button(intent: OpenAppIntent()) {
+                    Text("앱으로 가기")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(livePrimary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                }
+                .buttonStyle(.plain)
+                .background(Color(red: 16.0/255, green: 31.0/255, blue: 23.0/255), in: Capsule())
             }
         case .approaching:
             // TODO: 10m 미만 Expanded 디자인
