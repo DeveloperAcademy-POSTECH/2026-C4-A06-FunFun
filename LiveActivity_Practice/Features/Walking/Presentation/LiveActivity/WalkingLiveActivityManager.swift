@@ -11,11 +11,13 @@ import Foundation
 final class WalkingLiveActivityManager {
     private var wasApproachingTurn = false
     private var hasTriggeredArrival = false
+    private var approachingStartDate: Date?
 
     func start(destinationName: String, route: WalkingRoute) async throws {
         await end()
         wasApproachingTurn = false
         hasTriggeredArrival = false
+        approachingStartDate = nil
         guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
         let progress = initialProgress(route)
         let state = makeState(progress: progress)
@@ -27,7 +29,29 @@ final class WalkingLiveActivityManager {
     }
 
     func update(_ progress: WalkingProgress, showTime: Bool = false, approachingThreshold: Int = 10) async {
-        let state = makeState(progress: progress, showTime: showTime, approachingThreshold: approachingThreshold)
+        var state = makeState(progress: progress, showTime: showTime, approachingThreshold: approachingThreshold)
+
+        // approaching 최소 8초 유지
+        if state.isApproachingTurn && approachingStartDate == nil {
+            approachingStartDate = .now
+        } else if !state.isApproachingTurn, let start = approachingStartDate {
+            if Date.now.timeIntervalSince(start) < 8 {
+                state = WalkingActivityAttributes.ContentState(
+                    remainingDistance: state.remainingDistance,
+                    estimatedArrival: state.estimatedArrival,
+                    distanceToNextTurn: state.distanceToNextTurn,
+                    maneuver: state.maneuver,
+                    landmarkName: state.landmarkName,
+                    instruction: state.instruction,
+                    isOffRoute: state.isOffRoute,
+                    isApproachingTurn: true,
+                    showTimeInsteadOfDistance: state.showTimeInsteadOfDistance
+                )
+            } else {
+                approachingStartDate = nil
+            }
+        }
+
         let content = ActivityContent(state: state, staleDate: .now.addingTimeInterval(120))
         let justEnteredApproach = state.isApproachingTurn && !wasApproachingTurn
         wasApproachingTurn = state.isApproachingTurn

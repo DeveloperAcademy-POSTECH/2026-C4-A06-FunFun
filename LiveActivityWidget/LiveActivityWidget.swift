@@ -31,12 +31,6 @@ struct WalkingLiveActivity: Widget {
                 .activitySystemActionForegroundColor(.white)
         } dynamicIsland: { context in
             DynamicIsland {
-                DynamicIslandExpandedRegion(.leading) {
-                    expandedLeading(context: context)
-                }
-                DynamicIslandExpandedRegion(.trailing) {
-                    expandedTrailing(context: context)
-                }
                 DynamicIslandExpandedRegion(.bottom) {
                     expandedBottom(context: context)
                 }
@@ -121,35 +115,6 @@ struct WalkingLiveActivity: Widget {
             } else {
                 self = .cruising
             }
-        }
-    }
-
-    @ViewBuilder
-    private func expandedLeading(context: ActivityViewContext<WalkingActivityAttributes>) -> some View {
-        switch DisplayMode(state: context.state) {
-        case .offRoute:
-            EmptyView()
-        case .arriving:
-            EmptyView()
-        case .approaching:
-            Image(systemName: context.state.maneuver.symbolName)
-                .font(.title2).foregroundStyle(.blue)
-        case .cruising:
-            EmptyView()
-        }
-    }
-
-    @ViewBuilder
-    private func expandedTrailing(context: ActivityViewContext<WalkingActivityAttributes>) -> some View {
-        switch DisplayMode(state: context.state) {
-        case .offRoute:
-            EmptyView()
-        case .arriving:
-            EmptyView()
-        case .approaching:
-            Text("\(context.state.distanceToNextTurn)m").monospacedDigit()
-        case .cruising:
-            EmptyView()
         }
     }
 
