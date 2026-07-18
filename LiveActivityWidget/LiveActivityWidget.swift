@@ -150,8 +150,7 @@ struct WalkingLiveActivity: Widget {
             Image(systemName: context.state.maneuver.symbolName)
                 .font(.title2).foregroundStyle(.blue)
         case .cruising:
-            Image(systemName: "arrow.up.circle.fill")
-                .font(.title2).foregroundStyle(.blue)
+            EmptyView()
         }
     }
 
@@ -163,8 +162,10 @@ struct WalkingLiveActivity: Widget {
         case .arriving:
             Text("\(context.state.distanceToNextTurn)m")
                 .monospacedDigit().foregroundStyle(.green)
-        case .approaching, .cruising:
+        case .approaching:
             Text("\(context.state.distanceToNextTurn)m").monospacedDigit()
+        case .cruising:
+            EmptyView()
         }
     }
 
@@ -207,18 +208,30 @@ struct WalkingLiveActivity: Widget {
                 stopWalkingButton
             }
         case .cruising:
-            // TODO: 10m 이상 Expanded 디자인
-            HStack {
-                VStack(alignment: .leading) {
-                    Text(context.state.instruction).lineLimit(2)
-                    Text("남은 거리 \(context.state.remainingDistance)m")
-                        .font(.caption).foregroundStyle(.secondary)
+            HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(context.state.distanceToNextTurn)m")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(livePrimary)
+                    Spacer()
+                    Text("앞으로 가세요")
+                        .font(.system(size: 18, weight: .bold))
+                        .lineLimit(1)
+                    Text(context.state.landmarkName ?? " ")
+                        .font(.system(size: 14, weight: .bold))
                 }
                 Spacer()
-                stopWalkingButton
+                Image(systemName: "arrow.up")
+                    .font(.system(size: 60, weight: .bold))
+                    .foregroundStyle(livePrimary)
+                    .frame(width: 78, height: 78)
             }
+            .padding([.horizontal], 16)
         }
     }
+
+    // #00FF77 — Figma: live-activity/live-primary
+    private let livePrimary = Color(red: 0, green: 1, blue: 119.0 / 255.0)
 
     private var stopWalkingButton: some View {
         Button(intent: StopWalkingIntent()) {
