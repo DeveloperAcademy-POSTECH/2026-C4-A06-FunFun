@@ -5,8 +5,15 @@
 //
 
 import ActivityKit
+import AppIntents
 import SwiftUI
 import WidgetKit
+
+struct OpenAppIntent: LiveActivityIntent {
+    static var title: LocalizedStringResource = "앱 열기"
+    static var openAppWhenRun = true
+    func perform() async throws -> some IntentResult { .result() }
+}
 
 @main
 struct LiveActivityWidgetBundle: WidgetBundle {
@@ -34,7 +41,7 @@ struct WalkingLiveActivity: Widget {
                         .lineLimit(2)
                 }
                 HStack {
-                    Text("다음 안내 \(context.state.distanceToNextTurn)m")
+                    Text("다음 안내 \(context.state.distanceToNextTurnText)")
                         .font(.caption).foregroundStyle(.secondary)
                     Spacer()
                     stopWalkingButton
@@ -71,13 +78,15 @@ struct WalkingLiveActivity: Widget {
     private func compactLeading(context: ActivityViewContext<WalkingActivityAttributes>) -> some View {
         switch DisplayMode(state: context.state) {
         case .offRoute:
-            Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.yellow)
+            Text("\(context.state.remainingDistance)m")
+                .font(.system(size: 14, weight: .semibold))
+                .monospacedDigit()
         case .arriving:
-            Image(systemName: "arrow.up.circle.fill").foregroundStyle(.blue)
+            Image(systemName: "arrow.up").foregroundStyle(livePrimary)
         case .approaching:
-            Image(systemName: context.state.maneuver.symbolName).foregroundStyle(.blue)
+            Image(systemName: context.state.maneuver.symbolName).foregroundStyle(livePrimary)
         case .cruising:
-            Image(systemName: "arrow.up.circle.fill").foregroundStyle(.blue)
+            Image(systemName: "arrow.up").foregroundStyle(livePrimary)
         }
     }
 
@@ -85,20 +94,17 @@ struct WalkingLiveActivity: Widget {
     private func compactTrailing(context: ActivityViewContext<WalkingActivityAttributes>) -> some View {
         switch DisplayMode(state: context.state) {
         case .offRoute:
-            Text("이탈").foregroundStyle(.yellow)
+            Image(systemName: "exclamationmark.triangle.fill")
+                .symbolRenderingMode(.palette)
+                .foregroundStyle(.white, iconWarning)
         case .arriving:
-            distanceOrTimeText(context.state).foregroundStyle(.green)
+            Text(context.state.distanceToNextTurnText)
+                .monospacedDigit()
+                .foregroundStyle(livePrimary)
         case .approaching, .cruising:
-            distanceOrTimeText(context.state)
-        }
-    }
-
-    private func distanceOrTimeText(_ state: WalkingActivityAttributes.ContentState) -> Text {
-        if state.showTimeInsteadOfDistance {
-            let minutes = max(1, Int(ceil(Double(state.distanceToNextTurn) / 75.0)))
-            return Text("\(minutes)분").monospacedDigit()
-        } else {
-            return Text("\(state.distanceToNextTurn)m").monospacedDigit()
+            Text(context.state.distanceToNextTurnText)
+                .monospacedDigit()
+                .foregroundStyle(livePrimary)
         }
     }
 
@@ -106,7 +112,9 @@ struct WalkingLiveActivity: Widget {
     private func compactMinimal(context: ActivityViewContext<WalkingActivityAttributes>) -> some View {
         switch DisplayMode(state: context.state) {
         case .offRoute:
-            Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.yellow)
+            Image(systemName: "exclamationmark.triangle.fill")
+                .symbolRenderingMode(.palette)
+                .foregroundStyle(.white, iconWarning)
         case .arriving:
             Image(systemName: "flag.checkered").foregroundStyle(.green)
         case .approaching:
@@ -141,8 +149,7 @@ struct WalkingLiveActivity: Widget {
     private func expandedLeading(context: ActivityViewContext<WalkingActivityAttributes>) -> some View {
         switch DisplayMode(state: context.state) {
         case .offRoute:
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.title2).foregroundStyle(.yellow)
+            EmptyView()
         case .arriving:
             Image(systemName: "arrow.up.circle.fill")
                 .font(.title2).foregroundStyle(.blue)
@@ -158,7 +165,7 @@ struct WalkingLiveActivity: Widget {
     private func expandedTrailing(context: ActivityViewContext<WalkingActivityAttributes>) -> some View {
         switch DisplayMode(state: context.state) {
         case .offRoute:
-            Text("이탈").foregroundStyle(.yellow)
+            EmptyView()
         case .arriving:
             Text("\(context.state.distanceToNextTurn)m")
                 .monospacedDigit().foregroundStyle(.green)
@@ -173,16 +180,41 @@ struct WalkingLiveActivity: Widget {
     private func expandedBottom(context: ActivityViewContext<WalkingActivityAttributes>) -> some View {
         switch DisplayMode(state: context.state) {
         case .offRoute:
-            // TODO: 경로 이탈 Expanded 디자인
-            HStack {
-                VStack(alignment: .leading) {
-                    Text("경로를 벗어났습니다")
-                        .font(.subheadline.weight(.bold))
-                    Text("남은 거리 \(context.state.remainingDistance)m")
-                        .font(.caption).foregroundStyle(.secondary)
+            VStack(spacing: 8) {
+                HStack(alignment: .center) {
+                    warningIcon
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("경로에서 벗어난 것 같아요")
+                            .font(.system(size: 20, weight: .bold))
+                        Text("현재 위치에서 재탐색할까요?")
+                            .font(.system(size: 14))
+                            .foregroundStyle(Color(white: 0.5))
+                    }
+                    Spacer()
+                    Text("\(context.state.remainingDistance)m")
+                        .font(.system(size: 14, weight: .bold))
+                        .monospacedDigit()
                 }
-                Spacer()
-                stopWalkingButton
+                HStack(spacing: 12) {
+                    Button(intent: OpenAppIntent()) {
+                        Text("앱으로 가기")
+                            .font(.system(size: 16, weight: .semibold))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                    }
+                    .buttonStyle(.plain)
+                    .background(Color(white: 0.2), in: Capsule())
+
+                    Button(intent: OpenAppIntent()) {
+                        Text("재탐색하기")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(livePrimary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                    }
+                    .buttonStyle(.plain)
+                    .background(Color(red: 16.0/255, green: 31.0/255, blue: 23.0/255), in: Capsule())
+                }
             }
         case .arriving:
             // TODO: 도착 Expanded 디자인
@@ -198,19 +230,29 @@ struct WalkingLiveActivity: Widget {
             }
         case .approaching:
             // TODO: 10m 미만 Expanded 디자인
-            HStack {
-                VStack(alignment: .leading) {
-                    Text(context.state.instruction).lineLimit(2)
-                    Text("\(context.state.distanceToNextTurn)m 앞")
-                        .font(.caption).foregroundStyle(.secondary)
+            HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(context.state.distanceToNextTurnText)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(livePrimary)
+                    Spacer()
+                    Text(context.state.maneuver.instruction)
+                        .font(.system(size: 18, weight: .bold))
+                        .lineLimit(1)
+                    Text(context.state.landmarkName ?? " ")
+                        .font(.system(size: 14, weight: .bold))
                 }
                 Spacer()
-                stopWalkingButton
+                Image(systemName: context.state.maneuver.symbolName)
+                    .font(.system(size: 60, weight: .regular))
+                    .foregroundStyle(livePrimary)
+                    .frame(width: 78, height: 78)
             }
+            .padding([.horizontal], 8)
         case .cruising:
             HStack(alignment: .center) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("\(context.state.distanceToNextTurn)m")
+                    Text(context.state.distanceToNextTurnText)
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(livePrimary)
                     Spacer()
@@ -222,16 +264,32 @@ struct WalkingLiveActivity: Widget {
                 }
                 Spacer()
                 Image(systemName: "arrow.up")
-                    .font(.system(size: 60, weight: .bold))
+                    .font(.system(size: 60, weight: .regular))
                     .foregroundStyle(livePrimary)
                     .frame(width: 78, height: 78)
             }
-            .padding([.horizontal], 16)
+            .padding([.horizontal], 8)
         }
     }
 
     // #00FF77 — Figma: live-activity/live-primary
     private let livePrimary = Color(red: 0, green: 1, blue: 119.0 / 255.0)
+    // Icon-warning: RGB(1.0, 0.714, 0.098)
+    private let iconWarning = Color(red: 1, green: 0.714, blue: 0.098)
+    // Icon-warning-bg: RGB(1.0, 0.882, 0.627)
+    private let iconWarningBg = Color(red: 1, green: 0.882, blue: 0.627)
+
+    private var warningIcon: some View {
+        ZStack {
+            Circle()
+                .fill(iconWarningBg)
+                .frame(width: 44, height: 44)
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 22))
+                .symbolRenderingMode(.palette)
+                .foregroundStyle(.white, iconWarning)
+        }
+    }
 
     private var stopWalkingButton: some View {
         Button(intent: StopWalkingIntent()) {
