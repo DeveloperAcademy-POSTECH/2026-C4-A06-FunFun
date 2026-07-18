@@ -25,31 +25,10 @@ struct LiveActivityWidgetBundle: WidgetBundle {
 struct WalkingLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: WalkingActivityAttributes.self) { context in
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Label(context.attributes.destinationName, systemImage: "figure.walk")
-                        .font(.headline)
-                    Spacer()
-                    Text(timerInterval: Date.now...context.state.estimatedArrival, countsDown: true)
-                        .monospacedDigit().font(.headline)
-                }
-                if context.state.isOffRoute {
-                    Label("경로를 벗어났습니다", systemImage: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.yellow)
-                } else {
-                    Label(context.state.instruction, systemImage: context.state.maneuver.symbolName)
-                        .lineLimit(2)
-                }
-                HStack {
-                    Text("다음 안내 \(context.state.distanceToNextTurnText)")
-                        .font(.caption).foregroundStyle(.secondary)
-                    Spacer()
-                    stopWalkingButton
-                }
-            }
-            .padding()
-            .activityBackgroundTint(.black.opacity(0.88))
-            .activitySystemActionForegroundColor(.white)
+            lockScreenView(context: context)
+                .padding(24)
+                .activityBackgroundTint(.black.opacity(0.88))
+                .activitySystemActionForegroundColor(.white)
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
@@ -293,6 +272,84 @@ struct WalkingLiveActivity: Widget {
                 .font(.system(size: 22))
                 .symbolRenderingMode(.palette)
                 .foregroundStyle(.white, iconWarning)
+        }
+    }
+
+    // MARK: - Lock Screen
+
+    @ViewBuilder
+    private func lockScreenView(context: ActivityViewContext<WalkingActivityAttributes>) -> some View {
+        switch DisplayMode(state: context.state) {
+        
+        case .approaching:
+            HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: 16) {
+                    if let landmarkName = context.state.landmarkName {
+                        Text("\(landmarkName)에서")
+                            .font(.system(size: 12))
+                            .foregroundStyle(Color.white)
+                    }
+                    Text(context.state.maneuver.instruction)
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundStyle(Color.white)
+                        .lineLimit(1)
+                }
+                Spacer()
+                Image(systemName: context.state.maneuver.symbolName)
+                    .font(.system(size: 60, weight: .regular))
+                    .foregroundStyle(livePrimary)
+                    .frame(width: 78, height: 78)
+            }
+            
+        case .offRoute:
+            HStack {
+                warningIcon
+                Spacer()
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("경로를 벗어난 것 같아요")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundStyle(Color.white)
+                    Text("앱에서 지도를 확인하세요")
+                        .font(.system(size: 14))
+                        .foregroundStyle(Color(white: 0.7))
+                }
+                Spacer()
+            }
+            .padding([.horizontal], 8)
+        case .arriving:
+            VStack(alignment: .leading, spacing: 4) {
+                Text("목적지 근처에 도착했어요")
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundStyle(Color.white)
+                Text("길 안내를 종료할게요")
+                    .font(.system(size: 14))
+                    .foregroundStyle(Color(white: 0.7))
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        case .cruising:
+            HStack(alignment: .center) {
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack(spacing: 2) {
+                        if let landmarkName = context.state.landmarkName {
+                            Text("\(landmarkName)까지")
+                                .font(.system(size: 12))
+                                .foregroundStyle(Color.white)
+                            Text(context.state.distanceToNextTurnText)
+                                .font(.system(size: 12))
+                                .foregroundStyle(Color.white)
+                        }
+                    }
+                    Text("앞으로 가세요")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundStyle(Color.white)
+                        .lineLimit(1)
+                }
+                Spacer()
+                Image(systemName: "arrow.up")
+                    .font(.system(size: 60, weight: .bold))
+                    .foregroundStyle(livePrimary)
+                    .frame(width: 78, height: 78)
+            }
         }
     }
 
