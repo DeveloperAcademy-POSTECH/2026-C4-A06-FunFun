@@ -7,22 +7,6 @@
 import CoreLocation
 import Foundation
 
-enum MapProviderKind: String, CaseIterable, Identifiable {
-    case apple
-    case tmap
-    case naver
-
-    var id: Self { self }
-
-    var displayName: String {
-        switch self {
-        case .apple: "Apple 지도"
-        case .tmap: "Tmap"
-        case .naver: "네이버 지도"
-        }
-    }
-}
-
 struct MapCameraCommand: Equatable {
     enum Target: Equatable {
         case userLocation
@@ -44,6 +28,24 @@ struct MapPresentationState: Equatable {
     let navigationAlignmentID: Int?
     let isNavigating: Bool
     let cameraCommand: MapCameraCommand?
+    let showLandmarks: Bool
+    let landmarkScaleThreshold: Double
+    var onMapTapped: ((Coordinate) -> Void)?
+
+    static func == (lhs: MapPresentationState, rhs: MapPresentationState) -> Bool {
+        lhs.route == rhs.route
+        && lhs.deviationPath == rhs.deviationPath
+        && lhs.passedRouteIndex == rhs.passedRouteIndex
+        && lhs.currentLocation == rhs.currentLocation
+        && lhs.currentHeading == rhs.currentHeading
+        && lhs.currentLocationAccuracy == rhs.currentLocationAccuracy
+        && lhs.navigationBearing == rhs.navigationBearing
+        && lhs.navigationAlignmentID == rhs.navigationAlignmentID
+        && lhs.isNavigating == rhs.isNavigating
+        && lhs.cameraCommand == rhs.cameraCommand
+        && lhs.showLandmarks == rhs.showLandmarks
+        && lhs.landmarkScaleThreshold == rhs.landmarkScaleThreshold
+    }
 }
 
 struct MapLandmarkSelection {

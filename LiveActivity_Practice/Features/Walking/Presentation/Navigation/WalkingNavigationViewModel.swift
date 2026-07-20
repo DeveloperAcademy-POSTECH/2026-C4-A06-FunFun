@@ -27,6 +27,9 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
     @Published var destinationName = ""
     @Published private(set) var placeSearchResults: [PlaceSearchResult] = []
     @Published private(set) var isSearchingPlaces = false
+    @Published private(set) var canLoadMoreSearchResults = false
+    private var currentSearchPage = 1
+    private var lastSearchKeyword = ""
     @Published private(set) var hasSelectedStart = false
     @Published private(set) var hasSelectedDestination = false
     @Published private(set) var route: WalkingRoute?
@@ -44,6 +47,11 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
     @Published private(set) var isLoading = false
     @Published private(set) var isNavigating = false
     @Published var errorMessage: String?
+    @Published var showTimeInsteadOfDistance = false
+    @Published var showLandmarks = true
+    @Published var landmarkMinZoom: Double = 50
+    @Published var approachingThreshold: Double = 10
+    @Published var showGradientOverlay = true
 
     private let repository: WalkingRouteRepositoryProtocol
     private let placeSearchClient: TMAPClientProtocol
@@ -77,7 +85,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
         super.init()
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
-        locationManager.distanceFilter = 5
+        locationManager.distanceFilter = 2
         locationManager.headingFilter = 5
         locationManager.activityType = .fitness
     }
@@ -86,6 +94,45 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
         shouldTrackLocation = false
         shouldUseLocationAsStart = true
         requestLocationAccess()
+    }
+
+    @Published private(set) var tappedCoordinate: Coordinate?
+
+    func selectCoordinateAsDestination(_ coordinate: Coordinate) {
+        tappedCoordinate = coordinate
+        destinationName = String(format: "(%.4f, %.4f)", coordinate.latitude, coordinate.longitude)
+        destinationLatitude = String(coordinate.latitude)
+        destinationLongitude = String(coordinate.longitude)
+        hasSelectedDestination = true
+        setStartFromCurrentLocation()
+    }
+
+    func refreshLiveActivity() {
+        guard let progress else { return }
+        Task { await activityManager.update(progress, showTime: showTimeInsteadOfDistance, approachingThreshold: Int(approachingThreshold)) }
+    }
+
+    func clearTappedCoordinate() {
+        tappedCoordinate = nil
+        destinationName = ""
+        destinationLatitude = ""
+        destinationLongitude = ""
+        hasSelectedDestination = false
+        route = nil
+        progress = nil
+        passedRouteIndex = -1
+        errorMessage = nil
+    }
+
+    func setStartFromCurrentLocation() {
+        guard let location = currentLocation else {
+            useCurrentLocation()
+            return
+        }
+        startLatitude = String(location.latitude)
+        startLongitude = String(location.longitude)
+        startName = "현재 위치"
+        hasSelectedStart = true
     }
 
     func updateSearchQuery(_ query: String, for target: SearchTarget) {
@@ -109,19 +156,48 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
         let keyword = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
         guard keyword.count >= 2 else {
             placeSearchResults = []
+            canLoadMoreSearchResults = false
             return
         }
 
+        currentSearchPage = 1
+        lastSearchKeyword = keyword
         isSearchingPlaces = true
         defer { isSearchingPlaces = false }
         do {
-            let response = try await placeSearchClient.searchPlaces(keyword: keyword, near: currentLocation)
-            placeSearchResults = response.searchPoiInfo.pois.poi.compactMap(Self.mapPlaceSearchResult)
+            let response = try await placeSearchClient.searchPlaces(keyword: keyword, page: 1, near: currentLocation)
+            let results = response.searchPoiInfo.pois.poi.compactMap(Self.mapPlaceSearchResult)
+            placeSearchResults = results.uniqued(by: \.id)
+            let totalCount = Int(response.searchPoiInfo.totalCount ?? "0") ?? 0
+            canLoadMoreSearchResults = results.count < totalCount
         } catch is CancellationError {
             return
         } catch {
             placeSearchResults = []
+            canLoadMoreSearchResults = false
             errorMessage = "장소를 검색하지 못했습니다: \(error.localizedDescription)"
+        }
+    }
+
+    func loadMoreSearchResults() async {
+        guard canLoadMoreSearchResults, !isSearchingPlaces, !lastSearchKeyword.isEmpty else { return }
+
+        let nextPage = currentSearchPage + 1
+        isSearchingPlaces = true
+        defer { isSearchingPlaces = false }
+        do {
+            let response = try await placeSearchClient.searchPlaces(keyword: lastSearchKeyword, page: nextPage, near: currentLocation)
+            let newResults = response.searchPoiInfo.pois.poi.compactMap(Self.mapPlaceSearchResult)
+            let existingIDs = Set(placeSearchResults.map(\.id))
+            let uniqueNewResults = newResults.filter { !existingIDs.contains($0.id) }
+            placeSearchResults.append(contentsOf: uniqueNewResults)
+            currentSearchPage = nextPage
+            let totalCount = Int(response.searchPoiInfo.totalCount ?? "0") ?? 0
+            canLoadMoreSearchResults = placeSearchResults.count < totalCount
+        } catch is CancellationError {
+            return
+        } catch {
+            canLoadMoreSearchResults = false
         }
     }
 
@@ -144,6 +220,25 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
 
     func clearPlaceSearchResults() {
         placeSearchResults = []
+        canLoadMoreSearchResults = false
+        currentSearchPage = 1
+        lastSearchKeyword = ""
+    }
+
+    func dismissRoute() async {
+        if isNavigating {
+            await stopNavigation()
+        }
+        route = nil
+        progress = nil
+        passedRouteIndex = -1
+        destinationName = ""
+        destinationLatitude = ""
+        destinationLongitude = ""
+        hasSelectedDestination = false
+        hasSelectedStart = false
+        errorMessage = nil
+        startLocationTracking()
     }
 
     func startLocationTracking() {
@@ -190,6 +285,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
             locationManager.requestWhenInUseAuthorization()
             locationManager.allowsBackgroundLocationUpdates = true
             locationManager.showsBackgroundLocationIndicator = true
+            locationManager.pausesLocationUpdatesAutomatically = false
             locationManager.startUpdatingLocation()
             locationManager.startUpdatingHeading()
         } catch {
@@ -269,11 +365,14 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
         }
 
         let maneuverChanged = lastManeuverID != newProgress.nextManeuver?.id
-        let enoughTimePassed = Date.now.timeIntervalSince(lastActivityUpdate) >= 15
+        let threshold = Int(approachingThreshold)
+        let isApproaching = newProgress.distanceToNextManeuver < threshold
+        let throttle: TimeInterval = isApproaching ? 3 : 15
+        let enoughTimePassed = Date.now.timeIntervalSince(lastActivityUpdate) >= throttle
         if maneuverChanged || enoughTimePassed || newProgress.isOffRoute {
             lastManeuverID = newProgress.nextManeuver?.id
             lastActivityUpdate = .now
-            Task { await activityManager.update(newProgress) }
+            Task { await activityManager.update(newProgress, showTime: showTimeInsteadOfDistance, approachingThreshold: threshold) }
         }
     }
 
@@ -427,6 +526,16 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
         horizontalAccuracy: CLLocationAccuracy
     ) {
         guard isNavigating, deviationState != .rerouting else { return }
+
+        // 목적지 50m 이내에서는 경로 이탈 감지 비활성화
+        if let destination = destinationCoordinate {
+            let distToDestination = current.distance(to: destination)
+            if distToDestination <= 50 {
+                if isOffRoute { resetDeviationState() }
+                return
+            }
+        }
+
         distanceFromRoute = routeMatch.distance
         let validAccuracy = horizontalAccuracy >= 0 ? horizontalAccuracy : 0
         let deviationThreshold = max(25, min(validAccuracy * 1.5, 60))
@@ -532,5 +641,12 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
         let shortestDelta = (candidate - previous + 540).truncatingRemainder(dividingBy: 360) - 180
         guard abs(shortestDelta) >= 3 else { return previous }
         return (previous + shortestDelta * 0.35 + 360).truncatingRemainder(dividingBy: 360)
+    }
+}
+
+private extension Array {
+    func uniqued<T: Hashable>(by keyPath: KeyPath<Element, T>) -> [Element] {
+        var seen = Set<T>()
+        return filter { seen.insert($0[keyPath: keyPath]).inserted }
     }
 }

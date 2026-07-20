@@ -34,6 +34,18 @@ nonisolated enum WalkingTurn: String, Codable, Hashable, Sendable {
         default: "arrow.up"
         }
     }
+    
+    var instruction: String {
+        switch self {
+        case .straight: "앞으로 가세요"
+        case .left, .slightLeft: "왼쪽길을 따라가세요"
+        case .right, .slightRight: "오른쪽길을 따라가세요"
+        case .stairs: "계단을 따라가세요"
+        case .crosswalk: "교차로에서 건너세요"
+        case .destination: "목적지 근처에 도착했어요"
+        case .unknown: "알 수 없음"
+        }
+    }
 }
 
 nonisolated struct Landmark: Identifiable, Codable, Hashable, Sendable {

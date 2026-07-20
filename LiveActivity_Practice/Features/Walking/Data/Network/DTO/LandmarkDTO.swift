@@ -12,7 +12,35 @@ nonisolated struct LandmarkSearchResponseDTO: Decodable, Sendable {
 }
 
 nonisolated struct LandmarkSearchPoiInfoDTO: Decodable, Sendable {
+    let totalCount: String?
+    let page: String?
+    let count: String?
     let pois: LandmarkPoisDTO
+
+    init(totalCount: String?, page: String?, count: String?, pois: LandmarkPoisDTO) {
+        self.totalCount = totalCount
+        self.page = page
+        self.count = count
+        self.pois = pois
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        totalCount = Self.decodeFlexibleString(from: container, key: .totalCount)
+        page = Self.decodeFlexibleString(from: container, key: .page)
+        count = Self.decodeFlexibleString(from: container, key: .count)
+        pois = try container.decode(LandmarkPoisDTO.self, forKey: .pois)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case totalCount, page, count, pois
+    }
+
+    private static func decodeFlexibleString(from container: KeyedDecodingContainer<CodingKeys>, key: CodingKeys) -> String? {
+        if let str = try? container.decode(String.self, forKey: key) { return str }
+        if let num = try? container.decode(Int.self, forKey: key) { return String(num) }
+        return nil
+    }
 }
 
 nonisolated struct LandmarkPoisDTO: Decodable, Sendable {

@@ -25,7 +25,7 @@ nonisolated enum TMAPError: LocalizedError {
 nonisolated protocol TMAPClientProtocol: Sendable {
     func requestWalkingRoute(_ requestDTO: WalkingRouteRequestDTO) async throws -> WalkingRouteResponseDTO
     func searchLandmarks(near coordinate: Coordinate, radius: Int) async throws -> LandmarkSearchResponseDTO
-    func searchPlaces(keyword: String, near coordinate: Coordinate?) async throws -> LandmarkSearchResponseDTO
+    func searchPlaces(keyword: String, page: Int, near coordinate: Coordinate?) async throws -> LandmarkSearchResponseDTO
 }
 
 nonisolated final class TMAPClient: TMAPClientProtocol, Sendable {
@@ -79,13 +79,14 @@ nonisolated final class TMAPClient: TMAPClientProtocol, Sendable {
         return try await send(request, as: LandmarkSearchResponseDTO.self)
     }
 
-    func searchPlaces(keyword: String, near coordinate: Coordinate?) async throws -> LandmarkSearchResponseDTO {
+    func searchPlaces(keyword: String, page: Int = 1, near coordinate: Coordinate?) async throws -> LandmarkSearchResponseDTO {
         guard !appKey.isEmpty, appKey != "$(TMAP_APP_KEY)" else { throw TMAPError.missingAPIKey }
         var components = URLComponents(string: "https://apis.openapi.sk.com/tmap/pois")!
         var queryItems = [
             URLQueryItem(name: "version", value: "1"),
             URLQueryItem(name: "searchKeyword", value: keyword),
-            URLQueryItem(name: "count", value: "10"),
+            URLQueryItem(name: "page", value: String(page)),
+            URLQueryItem(name: "count", value: "20"),
             URLQueryItem(name: "searchtypCd", value: "A"),
             URLQueryItem(name: "reqCoordType", value: "WGS84GEO"),
             URLQueryItem(name: "resCoordType", value: "WGS84GEO")

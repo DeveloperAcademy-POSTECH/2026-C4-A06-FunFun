@@ -9,12 +9,10 @@
 /* Begin PBXBuildFile section */
 		A10000000000000000000001 /* LiveActivityWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = A10000000000000000000010 /* LiveActivityWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A10000000000000000000002 /* LiveActivityWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000011 /* LiveActivityWidget.swift */; };
-		A10000000000000000000005 /* WalkingModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000015 /* WalkingModels.swift */; };
-		A10000000000000000000006 /* WalkingActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000016 /* WalkingActivityAttributes.swift */; };
-		A10000000000000000000007 /* StopWalkingIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000017 /* StopWalkingIntent.swift */; };
-		A20000000000000000000001 /* Frameworks/TMapSDK.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* Frameworks/TMapSDK.xcframework */; };
+		A10000000000000000000005 /* LiveActivity_Practice/Features/Walking/Domain/Models/WalkingModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000015 /* LiveActivity_Practice/Features/Walking/Domain/Models/WalkingModels.swift */; };
+		A10000000000000000000006 /* LiveActivity_Practice/Features/Walking/Presentation/LiveActivity/WalkingActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000016 /* LiveActivity_Practice/Features/Walking/Presentation/LiveActivity/WalkingActivityAttributes.swift */; };
+		A10000000000000000000007 /* LiveActivity_Practice/Features/Walking/Presentation/LiveActivity/StopWalkingIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000017 /* LiveActivity_Practice/Features/Walking/Presentation/LiveActivity/StopWalkingIntent.swift */; };
 		A20000000000000000000002 /* Frameworks/VSMSDK.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000011 /* Frameworks/VSMSDK.xcframework */; };
-		A20000000000000000000003 /* Frameworks/TMapSDK.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000010 /* Frameworks/TMapSDK.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A20000000000000000000004 /* Frameworks/VSMSDK.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = A20000000000000000000011 /* Frameworks/VSMSDK.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		B73989A0300619D500966BF4 /* NMapsMap in Frameworks */ = {isa = PBXBuildFile; productRef = B739899F300619D500966BF4 /* NMapsMap */; };
 /* End PBXBuildFile section */
@@ -26,6 +24,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = A10000000000000000000030;
 			remoteInfo = LiveActivityWidget;
+		};
+		T10000000000000000000050 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = B7F679E23000C6E000631B6E /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = B7F679E93000C6E000631B6E;
+			remoteInfo = LiveActivity_Practice;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -47,7 +52,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				A20000000000000000000003 /* Frameworks/TMapSDK.xcframework in Embed Frameworks */,
 				A20000000000000000000004 /* Frameworks/VSMSDK.xcframework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
@@ -59,19 +63,24 @@
 		A10000000000000000000010 /* LiveActivityWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = LiveActivityWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		A10000000000000000000011 /* LiveActivityWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivityWidget.swift; sourceTree = "<group>"; };
 		A10000000000000000000012 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		A10000000000000000000015 /* WalkingModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivity_Practice/Features/Walking/Domain/Models/WalkingModels.swift; sourceTree = SOURCE_ROOT; };
-		A10000000000000000000016 /* WalkingActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivity_Practice/Features/Walking/Presentation/LiveActivity/WalkingActivityAttributes.swift; sourceTree = SOURCE_ROOT; };
-		A10000000000000000000017 /* StopWalkingIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivity_Practice/Features/Walking/Presentation/LiveActivity/StopWalkingIntent.swift; sourceTree = SOURCE_ROOT; };
-		A20000000000000000000010 /* Frameworks/TMapSDK.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = Frameworks/TMapSDK.xcframework; sourceTree = SOURCE_ROOT; };
+		A10000000000000000000015 /* LiveActivity_Practice/Features/Walking/Domain/Models/WalkingModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivity_Practice/Features/Walking/Domain/Models/WalkingModels.swift; sourceTree = SOURCE_ROOT; };
+		A10000000000000000000016 /* LiveActivity_Practice/Features/Walking/Presentation/LiveActivity/WalkingActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivity_Practice/Features/Walking/Presentation/LiveActivity/WalkingActivityAttributes.swift; sourceTree = SOURCE_ROOT; };
+		A10000000000000000000017 /* LiveActivity_Practice/Features/Walking/Presentation/LiveActivity/StopWalkingIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveActivity_Practice/Features/Walking/Presentation/LiveActivity/StopWalkingIntent.swift; sourceTree = SOURCE_ROOT; };
 		A20000000000000000000011 /* Frameworks/VSMSDK.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = Frameworks/VSMSDK.xcframework; sourceTree = SOURCE_ROOT; };
 		B7F679EA3000C6E000631B6E /* LiveActivity_Practice.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LiveActivity_Practice.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C30000000000000000000001 /* Config/AppConfiguration.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config/AppConfiguration.xcconfig; sourceTree = SOURCE_ROOT; };
+		T10000000000000000000010 /* LiveActivity_PracticeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LiveActivity_PracticeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		B7F679EC3000C6E000631B6E /* LiveActivity_Practice */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = LiveActivity_Practice;
+			sourceTree = "<group>";
+		};
+		T10000000000000000000020 /* LiveActivity_PracticeTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = LiveActivity_PracticeTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -88,9 +97,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				A20000000000000000000001 /* Frameworks/TMapSDK.xcframework in Frameworks */,
 				B73989A0300619D500966BF4 /* NMapsMap in Frameworks */,
 				A20000000000000000000002 /* Frameworks/VSMSDK.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		T10000000000000000000041 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -110,11 +125,11 @@
 			isa = PBXGroup;
 			children = (
 				B7F679EC3000C6E000631B6E /* LiveActivity_Practice */,
+				T10000000000000000000020 /* LiveActivity_PracticeTests */,
 				A10000000000000000000050 /* LiveActivityWidget */,
-				A10000000000000000000015 /* WalkingModels.swift */,
-				A10000000000000000000016 /* WalkingActivityAttributes.swift */,
-				A10000000000000000000017 /* StopWalkingIntent.swift */,
-				A20000000000000000000010 /* Frameworks/TMapSDK.xcframework */,
+				A10000000000000000000015 /* LiveActivity_Practice/Features/Walking/Domain/Models/WalkingModels.swift */,
+				A10000000000000000000016 /* LiveActivity_Practice/Features/Walking/Presentation/LiveActivity/WalkingActivityAttributes.swift */,
+				A10000000000000000000017 /* LiveActivity_Practice/Features/Walking/Presentation/LiveActivity/StopWalkingIntent.swift */,
 				A20000000000000000000011 /* Frameworks/VSMSDK.xcframework */,
 				C30000000000000000000001 /* Config/AppConfiguration.xcconfig */,
 				B7F679EB3000C6E000631B6E /* Products */,
@@ -125,6 +140,7 @@
 			isa = PBXGroup;
 			children = (
 				B7F679EA3000C6E000631B6E /* LiveActivity_Practice.app */,
+				T10000000000000000000010 /* LiveActivity_PracticeTests.xctest */,
 				A10000000000000000000010 /* LiveActivityWidget.appex */,
 			);
 			name = Products;
@@ -173,6 +189,27 @@
 			productReference = B7F679EA3000C6E000631B6E /* LiveActivity_Practice.app */;
 			productType = "com.apple.product-type.application";
 		};
+		T10000000000000000000030 /* LiveActivity_PracticeTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = T10000000000000000000060 /* Build configuration list for PBXNativeTarget "LiveActivity_PracticeTests" */;
+			buildPhases = (
+				T10000000000000000000040 /* Sources */,
+				T10000000000000000000041 /* Frameworks */,
+				T10000000000000000000042 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				T10000000000000000000051 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				T10000000000000000000020 /* LiveActivity_PracticeTests */,
+			);
+			name = LiveActivity_PracticeTests;
+			productName = LiveActivity_PracticeTests;
+			productReference = T10000000000000000000010 /* LiveActivity_PracticeTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -181,13 +218,17 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2630;
-				LastUpgradeCheck = 2630;
+				LastUpgradeCheck = 2650;
 				TargetAttributes = {
 					A10000000000000000000030 = {
 						CreatedOnToolsVersion = 26.3;
 					};
 					B7F679E93000C6E000631B6E = {
 						CreatedOnToolsVersion = 26.3;
+					};
+					T10000000000000000000030 = {
+						CreatedOnToolsVersion = 26.3;
+						TestTargetID = B7F679E93000C6E000631B6E;
 					};
 				};
 			};
@@ -209,6 +250,7 @@
 			projectRoot = "";
 			targets = (
 				B7F679E93000C6E000631B6E /* LiveActivity_Practice */,
+				T10000000000000000000030 /* LiveActivity_PracticeTests */,
 				A10000000000000000000030 /* LiveActivityWidget */,
 			);
 		};
@@ -229,6 +271,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		T10000000000000000000042 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -237,13 +286,20 @@
 			buildActionMask = 2147483647;
 			files = (
 				A10000000000000000000002 /* LiveActivityWidget.swift in Sources */,
-				A10000000000000000000005 /* WalkingModels.swift in Sources */,
-				A10000000000000000000006 /* WalkingActivityAttributes.swift in Sources */,
-				A10000000000000000000007 /* StopWalkingIntent.swift in Sources */,
+				A10000000000000000000005 /* LiveActivity_Practice/Features/Walking/Domain/Models/WalkingModels.swift in Sources */,
+				A10000000000000000000006 /* LiveActivity_Practice/Features/Walking/Presentation/LiveActivity/WalkingActivityAttributes.swift in Sources */,
+				A10000000000000000000007 /* LiveActivity_Practice/Features/Walking/Presentation/LiveActivity/StopWalkingIntent.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		B7F679E63000C6E000631B6E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		T10000000000000000000040 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -258,6 +314,11 @@
 			target = A10000000000000000000030 /* LiveActivityWidget */;
 			targetProxy = A10000000000000000000020 /* PBXContainerItemProxy */;
 		};
+		T10000000000000000000051 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = B7F679E93000C6E000631B6E /* LiveActivity_Practice */;
+			targetProxy = T10000000000000000000050 /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
@@ -267,7 +328,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 7HK4Z95VZD;
+				DEVELOPMENT_TEAM = 2QJX795Q3R;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LiveActivityWidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
@@ -294,7 +355,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 7HK4Z95VZD;
+				DEVELOPMENT_TEAM = 2QJX795Q3R;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = LiveActivityWidget/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
@@ -374,6 +435,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -431,6 +493,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -444,7 +507,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 7HK4Z95VZD;
+				DEVELOPMENT_TEAM = 2QJX795Q3R;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Config/AppInfo.plist;
@@ -456,6 +519,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -481,7 +545,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 7HK4Z95VZD;
+				DEVELOPMENT_TEAM = 2QJX795Q3R;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Config/AppInfo.plist;
@@ -493,6 +557,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -507,6 +572,48 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		T10000000000000000000061 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2QJX795Q3R;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "HJ.com.LiveActivity-Practice.Tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LiveActivity_Practice.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LiveActivity_Practice";
+			};
+			name = Debug;
+		};
+		T10000000000000000000062 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2QJX795Q3R;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "HJ.com.LiveActivity-Practice.Tests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LiveActivity_Practice.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LiveActivity_Practice";
 			};
 			name = Release;
 		};
@@ -536,6 +643,15 @@
 			buildConfigurations = (
 				B7F679F63000C6E100631B6E /* Debug */,
 				B7F679F73000C6E100631B6E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		T10000000000000000000060 /* Build configuration list for PBXNativeTarget "LiveActivity_PracticeTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				T10000000000000000000061 /* Debug */,
+				T10000000000000000000062 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
