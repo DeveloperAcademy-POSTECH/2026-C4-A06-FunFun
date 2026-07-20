@@ -38,7 +38,7 @@ struct WalkingNavigationView: View {
             )
                 .ignoresSafeArea()
 
-            if viewModel.isNavigating {
+            if viewModel.isNavigating && viewModel.showGradientOverlay {
                 HeadingSafeAreaGradientOverlay(heading: viewModel.currentHeading)
                     .ignoresSafeArea()
             }
@@ -53,7 +53,6 @@ struct WalkingNavigationView: View {
                 }
 
                 if viewModel.isNavigating {
-                    navigationDestinationPanel
                     if viewModel.isOffRoute {
                         offRouteBanner
                     }
@@ -66,7 +65,11 @@ struct WalkingNavigationView: View {
                         .padding()
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
                 } else if let route = viewModel.route {
-                    routeSummary(route)
+                    if viewModel.isNavigating {
+                        navigationInfoPanel(route: route)
+                    } else {
+                        routeSummary(route)
+                    }
                 } else if viewModel.tappedCoordinate != nil {
                     tappedDestinationPanel
                 } else if let error = viewModel.errorMessage {
@@ -159,6 +162,9 @@ struct WalkingNavigationView: View {
                             .onChange(of: viewModel.showTimeInsteadOfDistance) {
                                 viewModel.refreshLiveActivity()
                             }
+                    }
+                    Section("화면 효과") {
+                        Toggle("그라디언트 오버레이", isOn: $viewModel.showGradientOverlay)
                     }
                     Section("지도") {
                         Toggle("랜드마크 표시", isOn: $viewModel.showLandmarks)
@@ -277,31 +283,71 @@ struct WalkingNavigationView: View {
     }
 
     private var offRouteBanner: some View {
-        HStack(spacing: 10) {
-            Image(systemName: "exclamationmark.triangle.fill")
-            VStack(alignment: .leading, spacing: 2) {
-                Text(viewModel.isRerouting ? "경로 재탐색 중…" : "경로를 벗어났습니다")
-                    .font(.subheadline.weight(.bold))
-                if !viewModel.isRerouting {
-                    Text("기존 경로에서 약 \(Int(viewModel.distanceFromRoute))m 떨어져 있습니다.")
-                        .font(.caption)
+        VStack(spacing: 16) {
+            HStack(spacing: 16) {
+                ZStack {
+                    Circle()
+                        .fill(Color(red: 1, green: 0.882, blue: 0.627))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 22))
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(.white, Color(red: 1, green: 0.714, blue: 0.098))
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    if viewModel.isRerouting {
+                        Text("경로 재탐색 중…")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.1))
+                    } else {
+                        Text("경로에서 벗어난 것 같아요")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.1))
+                        Text("현재 위치에서 재탐색할까요?")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundStyle(Color(red: 0.3, green: 0.3, blue: 0.3))
+                    }
+                }
+
+                Spacer()
+
+                if viewModel.isRerouting {
+                    ProgressView()
                 }
             }
-            Spacer()
+
             if !viewModel.isRerouting {
-                Button("재탐색") {
-                    Task { await viewModel.rerouteFromCurrentLocation() }
+                VStack(spacing: 6) {
+                    Button {
+                        Task { await viewModel.rerouteFromCurrentLocation() }
+                    } label: {
+                        Text("재탐색")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(Color(red: 0.075, green: 0.42, blue: 1))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                    }
+                    .buttonStyle(.plain)
+                    .background(Color(red: 0.678, green: 0.8, blue: 1).opacity(0.8), in: Capsule())
+
+                    Button {
+                        viewModel.keepCurrentRoute()
+                    } label: {
+                        Text("기존 경로 유지")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.1))
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                    }
+                    .buttonStyle(.plain)
+                    .background(Color(red: 0.9, green: 0.9, blue: 0.9), in: Capsule())
                 }
-                .buttonStyle(.bordered)
-                .tint(.white)
-            } else {
-                ProgressView().tint(.white)
             }
         }
-        .foregroundStyle(.white)
-        .padding(14)
-        .background(.red.opacity(0.9), in: RoundedRectangle(cornerRadius: 16))
-        .shadow(radius: 8)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 20)
+        .background(Color.white.opacity(0.5), in: RoundedRectangle(cornerRadius: 25))
     }
 
     private var expandedSearchPanel: some View {
@@ -412,6 +458,54 @@ struct WalkingNavigationView: View {
             Divider()
                 .padding(.top, 4)
         }
+    }
+
+    private func navigationInfoPanel(route: WalkingRoute) -> some View {
+        VStack(spacing: 10) {
+            Capsule()
+                .fill(Color(.systemGray3))
+                .frame(width: 40, height: 5)
+
+            if let progress = viewModel.progress, let maneuver = progress.nextManeuver {
+                HStack(spacing: 16) {
+                    Image(systemName: maneuver.turn.symbolName)
+                        .font(.system(size: 36, weight: .bold))
+                        .foregroundStyle(.blue)
+                        .frame(width: 80, height: 80)
+                        .background(Color(.systemGray6), in: RoundedRectangle(cornerRadius: 40))
+
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(maneuver.instruction)
+                            .font(.system(size: 22, weight: .bold))
+                            .foregroundStyle(.black)
+                            .lineLimit(2)
+
+                        if let nextLandmarkName = nextLandmarkName(after: maneuver, in: route) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("다음")
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundStyle(Color(white: 0.565))
+                                Text(nextLandmarkName)
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundStyle(.black)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 10)
+        .padding(.bottom, 20)
+        .frame(maxWidth: .infinity)
+        .background(Color.white.opacity(0.5), in: RoundedRectangle(cornerRadius: 30))
+    }
+
+    private func nextLandmarkName(after current: WalkingManeuver, in route: WalkingRoute) -> String? {
+        guard let index = route.maneuvers.firstIndex(where: { $0.id == current.id }) else { return nil }
+        let next = route.maneuvers.index(after: index)
+        guard next < route.maneuvers.endIndex else { return nil }
+        return route.maneuvers[next].landmark?.name
     }
 
     private func issueCameraCommand(_ target: MapCameraCommand.Target) {
