@@ -21,7 +21,7 @@ final class NaverLocationOverlay {
         ])
         let bottomConstraint = button.bottomAnchor.constraint(
             equalTo: naverMapView.safeAreaLayoutGuide.bottomAnchor,
-            constant: hasRoute ? -250 : -24
+            constant: hasRoute ? -250 : -104
         )
         bottomConstraint.isActive = true
         locationButton = button
@@ -40,7 +40,7 @@ final class NaverLocationOverlay {
     }
 
     func updateButtonLayout(hasRoute: Bool) {
-        let targetConstant: CGFloat = hasRoute ? -250 : -24
+        let targetConstant: CGFloat = hasRoute ? -250 : -104
         guard locationButtonBottomConstraint?.constant != targetConstant else { return }
         locationButtonBottomConstraint?.constant = targetConstant
         locationButton?.superview?.layoutIfNeeded()
