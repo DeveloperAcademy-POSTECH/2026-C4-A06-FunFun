@@ -12,7 +12,6 @@ struct WalkingNavigationView: View {
     @State private var cameraCommandSequence = 0
     @State private var isSearchExpanded = false
     @State private var searchQuery = ""
-    @FocusState private var isSearchFieldFocused: Bool
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -108,18 +107,15 @@ struct WalkingNavigationView: View {
         } message: {
             Text("현재 위치를 출발점으로 목적지까지 다시 탐색할 수 있습니다.")
         }
-        .overlay {
-            if isSearchExpanded {
-                expandedSearchPanel
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-            }
-        }
-        .animation(.easeInOut(duration: 0.3), value: isSearchExpanded)
-        .task(id: searchQuery) {
-            guard isSearchExpanded else { return }
-            try? await Task.sleep(for: .milliseconds(400))
-            guard !Task.isCancelled else { return }
-            await viewModel.searchPlaces(keyword: searchQuery)
+        .sheet(isPresented: $isSearchExpanded) {
+            WalkingSearchModalView(
+                viewModel: viewModel,
+                isPresented: $isSearchExpanded,
+                searchQuery: $searchQuery
+            )
+                .presentationDetents([.fraction(0.9)])
+                .presentationDragIndicator(.visible)
+                .presentationCornerRadius(30)
         }
     }
 
@@ -232,7 +228,6 @@ struct WalkingNavigationView: View {
 
             Button {
                 isSearchExpanded = true
-                isSearchFieldFocused = true
             } label: {
                 HStack(spacing: 16) {
                     Image(systemName: "magnifyingglass")
@@ -348,116 +343,6 @@ struct WalkingNavigationView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 20)
         .background(Color.white.opacity(0.5), in: RoundedRectangle(cornerRadius: 25))
-    }
-
-    private var expandedSearchPanel: some View {
-        VStack(spacing: 6) {
-            Capsule()
-                .fill(Color(.systemGray3))
-                .frame(width: 51, height: 5)
-                .padding(.top, 12)
-
-            // Search bar
-            HStack(spacing: 16) {
-                Image(systemName: "magnifyingglass")
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundStyle(Color(.systemGray))
-
-                TextField("어디로 갈까요?", text: $searchQuery)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Color(red: 0.3, green: 0.3, blue: 0.3))
-                    .focused($isSearchFieldFocused)
-                    .submitLabel(.search)
-
-                if !searchQuery.isEmpty {
-                    Button {
-                        searchQuery = ""
-                        viewModel.clearPlaceSearchResults()
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 18))
-                            .foregroundStyle(Color(.systemGray3))
-                    }
-                }
-
-                Image(systemName: "mic.fill")
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundStyle(Color(.systemGray))
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .frame(height: 50)
-            .background(Color.white.opacity(0.8), in: RoundedRectangle(cornerRadius: 25))
-            .padding(.horizontal, 12)
-
-            // Results container
-            if !viewModel.placeSearchResults.isEmpty || (viewModel.isSearchingPlaces && placeSearchResultsEmpty) {
-                searchResultsContainer
-            }
-
-            Spacer(minLength: 0)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(
-            Color(red: 233/255, green: 233/255, blue: 238/255).opacity(0.1)
-                .background(.ultraThinMaterial)
-                .ignoresSafeArea()
-        )
-    }
-
-    private var placeSearchResultsEmpty: Bool {
-        viewModel.placeSearchResults.isEmpty
-    }
-
-    private var searchResultsContainer: some View {
-        ScrollView {
-            LazyVStack(spacing: 8) {
-                ForEach(viewModel.placeSearchResults) { place in
-                    searchResultRow(place)
-                        .onAppear {
-                            if place.id == viewModel.placeSearchResults.last?.id {
-                                Task { await viewModel.loadMoreSearchResults() }
-                            }
-                        }
-                }
-                if viewModel.isSearchingPlaces {
-                    ProgressView()
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 8)
-                }
-            }
-        }
-        .padding(20)
-        .background(Color.white.opacity(0.8), in: RoundedRectangle(cornerRadius: 30))
-        .padding(.horizontal, 12)
-    }
-
-    private func searchResultRow(_ place: PlaceSearchResult) -> some View {
-        Button {
-            viewModel.setStartFromCurrentLocation()
-            viewModel.selectPlace(place, for: .destination)
-            searchQuery = ""
-            isSearchFieldFocused = false
-            isSearchExpanded = false
-            Task { await viewModel.searchRoute() }
-        } label: {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(place.name)
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.1))
-                    .lineLimit(1)
-                Text(place.address)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(Color(red: 0.7, green: 0.7, blue: 0.7))
-                    .lineLimit(1)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .buttonStyle(.plain)
-        .overlay(alignment: .bottom) {
-            Divider()
-                .padding(.top, 4)
-        }
     }
 
     private func navigationInfoPanel(route: WalkingRoute) -> some View {
