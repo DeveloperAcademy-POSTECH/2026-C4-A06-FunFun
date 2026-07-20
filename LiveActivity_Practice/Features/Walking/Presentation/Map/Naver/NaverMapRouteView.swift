@@ -21,6 +21,7 @@ struct NaverMapRouteView: UIViewRepresentable {
         naverMapView.showLocationButton = false
         mapView.positionMode = .normal
         mapView.touchDelegate = context.coordinator
+        mapView.logoAlign = .leftTop
 
         context.coordinator.location.setupLocationButton(on: naverMapView, hasRoute: state.route != nil)
         context.coordinator.camera.prepareInitialCamera(location: state.currentLocation, on: mapView)
