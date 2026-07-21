@@ -73,15 +73,7 @@ nonisolated struct WalkingManeuver: Identifiable, Codable, Hashable, Sendable {
 
     var instruction: String {
         guard let landmark else { return description }
-        let action: String = switch turn {
-        case .left, .slightLeft: "왼쪽으로 이동하세요"
-        case .right, .slightRight: "오른쪽으로 이동하세요"
-        case .crosswalk: "횡단보도를 건너세요"
-        case .stairs: "계단으로 이동하세요"
-        case .destination: "목적지에 도착했습니다"
-        default: description
-        }
-        return "\(landmark.name)을(를) 기준으로 \(action)"
+        return "\(landmark.name)을(를) 기준으로 \(turn.instruction)"
     }
 }
 
@@ -97,4 +89,6 @@ nonisolated struct WalkingProgress: Hashable, Sendable {
     let distanceToNextManeuver: Int
     let nextManeuver: WalkingManeuver?
     let isOffRoute: Bool
+    let isApproachingTurn: Bool
+    let estimatedArrival: Date
 }
