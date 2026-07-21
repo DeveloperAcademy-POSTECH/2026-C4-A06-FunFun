@@ -93,20 +93,6 @@ struct WalkingNavigationView: View {
         .onChange(of: viewModel.route) { _, route in
             if route != nil { issueCameraCommand(.route) }
         }
-        .confirmationDialog(
-            "경로를 벗어났습니다",
-            isPresented: $viewModel.shouldPresentReroutePrompt,
-            titleVisibility: .visible
-        ) {
-            Button("현재 위치에서 재탐색") {
-                Task { await viewModel.rerouteFromCurrentLocation() }
-            }
-            Button("기존 경로 유지", role: .cancel) {
-                viewModel.keepCurrentRoute()
-            }
-        } message: {
-            Text("현재 위치를 출발점으로 목적지까지 다시 탐색할 수 있습니다.")
-        }
         .sheet(isPresented: $isSearchExpanded) {
             WalkingSearchModalView(
                 viewModel: viewModel,

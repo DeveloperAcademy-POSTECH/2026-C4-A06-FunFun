@@ -5,11 +5,11 @@ import CoreLocation
 import NMapsMap
 
 final class NaverLocationOverlay {
-    weak var locationButton: NMFLocationButton?
+    weak var locationButton: MyLocationButton?
     var locationButtonBottomConstraint: NSLayoutConstraint?
 
     func setupLocationButton(on naverMapView: NMFNaverMapView, hasRoute: Bool) {
-        let button = NMFLocationButton()
+        let button = MyLocationButton()
         button.mapView = naverMapView.mapView
         button.translatesAutoresizingMaskIntoConstraints = false
         button.accessibilityLabel = "내 위치 찾기"
