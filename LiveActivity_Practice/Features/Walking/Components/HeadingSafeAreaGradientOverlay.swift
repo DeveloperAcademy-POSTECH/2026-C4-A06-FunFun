@@ -37,7 +37,7 @@ struct HeadingSafeAreaGradientOverlay: View {
             x: indicator.position.x / size.width,
             y: indicator.position.y / size.height
         )
-        let fadeDistance: CGFloat = 150
+        let fadeDistance: CGFloat = 120
         let endPoint = UnitPoint(
             x: (indicator.position.x - indicator.directionX * fadeDistance) / size.width,
             y: (indicator.position.y - indicator.directionY * fadeDistance) / size.height
@@ -53,20 +53,18 @@ struct HeadingSafeAreaGradientOverlay: View {
             endPoint: endPoint
         )
             .mask {
-                EdgeBandShape(thickness: 110, cornerRadius: 52)
-                    .fill(style: FillStyle(eoFill: true))
-                    .mask {
-                        RadialGradient(
-                            stops: [
-                                .init(color: .white, location: 0),
-                                .init(color: .white.opacity(0.8), location: 0.45),
-                                .init(color: .clear, location: 1)
-                            ],
-                            center: startPoint,
-                            startRadius: 0,
-                            endRadius: 170
-                        )
-                    }
+                RadialGradient(
+                    stops: [
+                        .init(color: .white, location: 0),
+                        .init(color: .white.opacity(0.55), location: 0.3),
+                        .init(color: .white.opacity(0.18), location: 0.7),
+                        .init(color: .clear, location: 1)
+                    ],
+                    center: startPoint,
+                    startRadius: 0,
+                    endRadius: 150
+                )
+                .scaleEffect(x: 1.2, y: 1, anchor: startPoint)
             }
     }
 
@@ -123,24 +121,4 @@ private struct EdgeIndicator: Equatable {
     let position: CGPoint
     let directionX: CGFloat
     let directionY: CGFloat
-}
-
-private struct EdgeBandShape: Shape {
-    let thickness: CGFloat
-    let cornerRadius: CGFloat
-
-    func path(in rect: CGRect) -> Path {
-        var path = Path(roundedRect: rect, cornerRadius: cornerRadius)
-        let innerRect = rect.insetBy(dx: thickness, dy: thickness)
-
-        path.addRoundedRect(
-            in: innerRect,
-            cornerSize: CGSize(
-                width: max(0, cornerRadius - thickness),
-                height: max(0, cornerRadius - thickness)
-            )
-        )
-
-        return path
-    }
 }
