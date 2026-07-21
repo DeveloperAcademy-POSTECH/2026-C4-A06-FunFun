@@ -226,7 +226,7 @@ struct CustomBottomSheet: View {
                 .padding(8)
 
             Text(destinationName.isEmpty ? "목적지" : destinationName)
-                .font(.system(size: 16, weight: .bold))
+                .appTypography(.headlineM)
                 .foregroundStyle(Color(white: 0.48))
                 .lineLimit(2)
 

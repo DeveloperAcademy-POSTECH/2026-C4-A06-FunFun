@@ -51,7 +51,7 @@ struct WalkingSearchModalView: View {
                 .foregroundStyle(Color(.systemGray))
 
             TextField("어디로 갈까요?", text: $searchQuery)
-                .font(.system(size: 16, weight: .semibold))
+                .appTypography(.labelL)
                 .foregroundStyle(Color(red: 0.3, green: 0.3, blue: 0.3))
                 .focused($isSearchFieldFocused)
                 .submitLabel(.search)

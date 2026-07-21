@@ -15,24 +15,26 @@ enum AppTypography {
         let weight: PretendardWeight
         let relativeTo: Font.TextStyle
     }
+}
 
+extension AppTypography.Style {
     // MARK: - Headline
 
-    static let headlineL = Style(
+    static let headlineL = Self(
         size: 36,
         lineHeight: 45,
         weight: .bold,
         relativeTo: .largeTitle
     )
 
-    static let headlineM = Style(
+    static let headlineM = Self(
         size: 32,
         lineHeight: 40,
         weight: .bold,
         relativeTo: .largeTitle
     )
 
-    static let headlineS = Style(
+    static let headlineS = Self(
         size: 28,
         lineHeight: 35,
         weight: .bold,
@@ -41,21 +43,21 @@ enum AppTypography {
 
     // MARK: - Title
 
-    static let title1 = Style(
+    static let title1 = Self(
         size: 24,
         lineHeight: 30,
         weight: .bold,
         relativeTo: .title2
     )
 
-    static let title2 = Style(
+    static let title2 = Self(
         size: 20,
         lineHeight: 25,
         weight: .bold,
         relativeTo: .title3
     )
 
-    static let title3 = Style(
+    static let title3 = Self(
         size: 18,
         lineHeight: 22.5,
         weight: .bold,
@@ -64,21 +66,21 @@ enum AppTypography {
 
     // MARK: - Label
 
-    static let labelL = Style(
+    static let labelL = Self(
         size: 16,
         lineHeight: 24,
         weight: .semiBold,
         relativeTo: .callout
     )
 
-    static let labelM = Style(
+    static let labelM = Self(
         size: 14,
         lineHeight: 20,
         weight: .bold,
         relativeTo: .subheadline
     )
 
-    static let labelS = Style(
+    static let labelS = Self(
         size: 12,
         lineHeight: 16,
         weight: .bold,
@@ -87,14 +89,14 @@ enum AppTypography {
 
     // MARK: - Body
 
-    static let body1 = Style(
+    static let body1 = Self(
         size: 16,
         lineHeight: 24,
         weight: .regular,
         relativeTo: .body
     )
 
-    static let body2 = Style(
+    static let body2 = Self(
         size: 14,
         lineHeight: 20,
         weight: .regular,
@@ -103,21 +105,21 @@ enum AppTypography {
 
     // MARK: - Caption
 
-    static let captionL = Style(
+    static let captionL = Self(
         size: 16,
         lineHeight: 24,
         weight: .regular,
         relativeTo: .caption
     )
 
-    static let captionM = Style(
+    static let captionM = Self(
         size: 14,
         lineHeight: 20,
         weight: .regular,
         relativeTo: .caption
     )
 
-    static let captionS = Style(
+    static let captionS = Self(
         size: 12,
         lineHeight: 20,
         weight: .regular,
