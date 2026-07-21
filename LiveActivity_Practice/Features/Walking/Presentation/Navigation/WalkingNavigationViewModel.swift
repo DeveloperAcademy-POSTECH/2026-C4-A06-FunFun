@@ -59,7 +59,6 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     private let placeSearchClient: TMAPClientProtocol
     private let activityManager: WalkingLiveActivityManager
     private let locationManager = CLLocationManager()
-    private var lastActivityUpdate = Date.distantPast
     private var lastManeuverID: Int?
     private var shouldTrackLocation = false
     
@@ -628,7 +627,7 @@ extension WalkingNavigationViewModel: CLLocationManagerDelegate {
         /// 경로를 따라 가는 상황임을 판단
         guard let route else { return }
         
-        ///
+        
         if let routeMatch = matchToRoute(current: coordinate, routePath: route.path) {
             updateDeviationState(
                 at: coordinate,
@@ -636,7 +635,7 @@ extension WalkingNavigationViewModel: CLLocationManagerDelegate {
                 horizontalAccuracy: location.horizontalAccuracy
             )
             
-            // deviation
+            /// deviation
             if isNavigating, deviationState == .onRoute {
                 passedRouteIndex = max(passedRouteIndex, routeMatch.segmentIndex)
             }
@@ -661,7 +660,6 @@ extension WalkingNavigationViewModel: CLLocationManagerDelegate {
         // 1) 다음 턴이 바뀜  2) 경로 이탈 상태
         if maneuverChanged || newProgress.isOffRoute {
             lastManeuverID = newProgress.nextManeuver?.id
-            lastActivityUpdate = .now
             Task {
                 await activityManager.update(newProgress,
                                              showTime: showTimeInsteadOfDistance,
