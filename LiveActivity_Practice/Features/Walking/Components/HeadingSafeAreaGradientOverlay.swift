@@ -7,16 +7,20 @@
 import CoreLocation
 import SwiftUI
 
-/// `CLHeading`이 가리키는 실제 방위의 safe area 경계에만 글로우를 표시한다.
-/// 화면의 위쪽이 기기가 향하는 전방이므로, 북쪽은 상단·동쪽은 오른쪽에 나타난다.
+/// 지도 회전을 반영한 인디케이터 방향의 화면 가장자리에서 안쪽으로 글로우를 표시한다.
 struct HeadingSafeAreaGradientOverlay: View {
     let heading: CLLocationDirection?
+    let mapHeading: CLLocationDirection?
+    let indicatorPosition: CGPoint?
 
     var body: some View {
         GeometryReader { proxy in
             if let indicator = indicator(in: proxy) {
-                edgeGradient(for: indicator)
-                    .position(indicator.position)
+                directionalEdgeGradient(
+                    color: Color("Colors/Green-green-400"),
+                    indicator: indicator,
+                    size: proxy.size
+                )
                     .animation(.easeOut(duration: 0.18), value: indicator)
             }
         }
@@ -24,122 +28,119 @@ struct HeadingSafeAreaGradientOverlay: View {
         .accessibilityHidden(true)
     }
 
-    @ViewBuilder
-    private func edgeGradient(for indicator: EdgeIndicator) -> some View {
-        switch indicator.edge {
-        case .top:
-            verticalGradient(from: .top)
-                .frame(width: indicator.length, height: indicator.depth)
-        case .bottom:
-            verticalGradient(from: .bottom)
-                .frame(width: indicator.length, height: indicator.depth)
-        case .leading:
-            horizontalGradient(from: .leading)
-                .frame(width: indicator.depth, height: indicator.length)
-        case .trailing:
-            horizontalGradient(from: .trailing)
-                .frame(width: indicator.depth, height: indicator.length)
-        }
-    }
-
-    private func verticalGradient(from edge: VerticalEdge) -> some View {
-        LinearGradient(
-            colors: [.red.opacity(0.78), .red.opacity(0.26), .clear],
-            startPoint: edge == .top ? .top : .bottom,
-            endPoint: edge == .top ? .bottom : .top
+    private func directionalEdgeGradient(
+        color: Color,
+        indicator: EdgeIndicator,
+        size: CGSize
+    ) -> some View {
+        let startPoint = UnitPoint(
+            x: indicator.position.x / size.width,
+            y: indicator.position.y / size.height
         )
-        .mask(horizontalFalloff)
-    }
-
-    private func horizontalGradient(from edge: HorizontalEdge) -> some View {
-        LinearGradient(
-            colors: [.red.opacity(0.78), .red.opacity(0.26), .clear],
-            startPoint: edge == .leading ? .leading : .trailing,
-            endPoint: edge == .leading ? .trailing : .leading
+        let fadeDistance: CGFloat = 150
+        let endPoint = UnitPoint(
+            x: (indicator.position.x - indicator.directionX * fadeDistance) / size.width,
+            y: (indicator.position.y - indicator.directionY * fadeDistance) / size.height
         )
-        .mask(verticalFalloff)
-    }
 
-    private var horizontalFalloff: some View {
-        LinearGradient(
+        return LinearGradient(
             stops: [
-                .init(color: .clear, location: 0),
-                .init(color: .black, location: 0.22),
-                .init(color: .black, location: 0.78),
+                .init(color: color.opacity(0.85), location: 0),
+                .init(color: color.opacity(0.42), location: 0.35),
                 .init(color: .clear, location: 1)
             ],
-            startPoint: .leading,
-            endPoint: .trailing
+            startPoint: startPoint,
+            endPoint: endPoint
         )
-    }
-
-    private var verticalFalloff: some View {
-        LinearGradient(
-            stops: [
-                .init(color: .clear, location: 0),
-                .init(color: .black, location: 0.22),
-                .init(color: .black, location: 0.78),
-                .init(color: .clear, location: 1)
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
+            .mask {
+                EdgeBandShape(thickness: 110, cornerRadius: 52)
+                    .fill(style: FillStyle(eoFill: true))
+                    .mask {
+                        RadialGradient(
+                            stops: [
+                                .init(color: .white, location: 0),
+                                .init(color: .white.opacity(0.8), location: 0.45),
+                                .init(color: .clear, location: 1)
+                            ],
+                            center: startPoint,
+                            startRadius: 0,
+                            endRadius: 170
+                        )
+                    }
+            }
     }
 
     private func indicator(in proxy: GeometryProxy) -> EdgeIndicator? {
         guard let heading, heading >= 0 else { return nil }
 
-        let safeArea = CGRect(
-            x: proxy.safeAreaInsets.leading,
-            y: proxy.safeAreaInsets.top,
-            width: proxy.size.width - proxy.safeAreaInsets.leading - proxy.safeAreaInsets.trailing,
-            height: proxy.size.height - proxy.safeAreaInsets.top - proxy.safeAreaInsets.bottom
-        )
-        guard safeArea.width > 0, safeArea.height > 0 else { return nil }
+        let bounds = CGRect(origin: .zero, size: proxy.size)
+        guard bounds.width > 0, bounds.height > 0 else { return nil }
 
-        let radians = heading.truncatingRemainder(dividingBy: 360) * .pi / 180
+        let screenHeading = (heading - (mapHeading ?? 0) + 360)
+            .truncatingRemainder(dividingBy: 360)
+        let radians = screenHeading * .pi / 180
         let directionX = sin(radians)
         let directionY = -cos(radians)
-        let center = CGPoint(x: safeArea.midX, y: safeArea.midY)
-        let horizontalDistance = safeArea.width / 2 / max(abs(directionX), 0.0001)
-        let verticalDistance = safeArea.height / 2 / max(abs(directionY), 0.0001)
-        let depth: CGFloat = 84
-        let length = min(220, max(120, min(safeArea.width, safeArea.height) * 0.55))
+        let origin = indicatorPosition ?? CGPoint(x: bounds.midX, y: bounds.midY)
+        guard origin.x >= bounds.minX,
+              origin.x <= bounds.maxX,
+              origin.y >= bounds.minY,
+              origin.y <= bounds.maxY else { return nil }
 
-        if verticalDistance <= horizontalDistance {
-            let isTop = directionY < 0
-            return EdgeIndicator(
-                edge: isTop ? .top : .bottom,
-                position: CGPoint(
-                    x: center.x + directionX * verticalDistance,
-                    y: isTop ? safeArea.minY + depth / 2 : safeArea.maxY - depth / 2
-                ),
-                length: length,
-                depth: depth
-            )
+        let horizontalDistance: CGFloat
+        if directionX > 0.0001 {
+            horizontalDistance = (bounds.maxX - origin.x) / directionX
+        } else if directionX < -0.0001 {
+            horizontalDistance = (bounds.minX - origin.x) / directionX
         } else {
-            let isLeading = directionX < 0
-            return EdgeIndicator(
-                edge: isLeading ? .leading : .trailing,
-                position: CGPoint(
-                    x: isLeading ? safeArea.minX + depth / 2 : safeArea.maxX - depth / 2,
-                    y: center.y + directionY * horizontalDistance
-                ),
-                length: length,
-                depth: depth
-            )
+            horizontalDistance = .greatestFiniteMagnitude
         }
+
+        let verticalDistance: CGFloat
+        if directionY > 0.0001 {
+            verticalDistance = (bounds.maxY - origin.y) / directionY
+        } else if directionY < -0.0001 {
+            verticalDistance = (bounds.minY - origin.y) / directionY
+        } else {
+            verticalDistance = .greatestFiniteMagnitude
+        }
+
+        let distance = min(horizontalDistance, verticalDistance)
+        guard distance.isFinite, distance >= 0 else { return nil }
+
+        return EdgeIndicator(
+            position: CGPoint(
+                x: min(bounds.maxX, max(bounds.minX, origin.x + directionX * distance)),
+                y: min(bounds.maxY, max(bounds.minY, origin.y + directionY * distance))
+            ),
+            directionX: directionX,
+            directionY: directionY
+        )
     }
 }
 
 private struct EdgeIndicator: Equatable {
-    enum Edge: Equatable { case top, bottom, leading, trailing }
-
-    let edge: Edge
     let position: CGPoint
-    let length: CGFloat
-    let depth: CGFloat
+    let directionX: CGFloat
+    let directionY: CGFloat
 }
 
-private enum VerticalEdge: Equatable { case top, bottom }
-private enum HorizontalEdge: Equatable { case leading, trailing }
+private struct EdgeBandShape: Shape {
+    let thickness: CGFloat
+    let cornerRadius: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path(roundedRect: rect, cornerRadius: cornerRadius)
+        let innerRect = rect.insetBy(dx: thickness, dy: thickness)
+
+        path.addRoundedRect(
+            in: innerRect,
+            cornerSize: CGSize(
+                width: max(0, cornerRadius - thickness),
+                height: max(0, cornerRadius - thickness)
+            )
+        )
+
+        return path
+    }
+}

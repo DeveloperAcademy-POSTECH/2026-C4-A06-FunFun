@@ -4,6 +4,7 @@
 //  Created by 현진백 on 2026/07/14.
 //
 
+import CoreLocation
 import SwiftUI
 
 struct WalkingNavigationView: View {
@@ -12,6 +13,8 @@ struct WalkingNavigationView: View {
     @State private var cameraCommandSequence = 0
     @State private var isSearchExpanded = false
     @State private var searchQuery = ""
+    @State private var mapHeading: CLLocationDirection = 0
+    @State private var indicatorPosition: CGPoint?
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -34,13 +37,21 @@ struct WalkingNavigationView: View {
                     onMapTapped: { coordinate in
                         guard !viewModel.isNavigating, !isSearchExpanded else { return }
                         viewModel.selectCoordinateAsDestination(coordinate)
+                    },
+                    onMapViewportChanged: { heading, position in
+                        mapHeading = heading
+                        indicatorPosition = position
                     }
                 )
             )
                 .ignoresSafeArea()
 
             if viewModel.isNavigating && viewModel.showGradientOverlay {
-                HeadingSafeAreaGradientOverlay(heading: viewModel.currentHeading)
+                HeadingSafeAreaGradientOverlay(
+                    heading: viewModel.currentHeading,
+                    mapHeading: mapHeading,
+                    indicatorPosition: indicatorPosition
+                )
                     .ignoresSafeArea()
             }
 
