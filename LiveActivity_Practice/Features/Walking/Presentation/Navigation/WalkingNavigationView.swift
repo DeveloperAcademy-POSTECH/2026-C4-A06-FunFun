@@ -29,6 +29,8 @@ struct WalkingNavigationView: View {
                     cameraCommand: cameraCommand,
                     showLandmarks: viewModel.showLandmarks,
                     landmarkScaleThreshold: viewModel.landmarkMinZoom,
+                    showTurnMarkers: viewModel.showTurnMarkers,
+                    approachingThreshold: viewModel.approachingThreshold,
                     onMapTapped: { coordinate in
                         guard !viewModel.isNavigating, !isSearchExpanded else { return }
                         viewModel.selectCoordinateAsDestination(coordinate)
@@ -163,6 +165,7 @@ struct WalkingNavigationView: View {
                         Toggle("그라디언트 오버레이", isOn: $viewModel.showGradientOverlay)
                     }
                     Section("지도") {
+                        Toggle("턴 마커 표시", isOn: $viewModel.showTurnMarkers)
                         Toggle("랜드마크 표시", isOn: $viewModel.showLandmarks)
                         if viewModel.showLandmarks {
                             VStack(alignment: .leading, spacing: 4) {

@@ -30,6 +30,8 @@ struct MapPresentationState: Equatable {
     let cameraCommand: MapCameraCommand?
     let showLandmarks: Bool
     let landmarkScaleThreshold: Double
+    let showTurnMarkers: Bool
+    let approachingThreshold: Double
     var onMapTapped: ((Coordinate) -> Void)?
 
     static func == (lhs: MapPresentationState, rhs: MapPresentationState) -> Bool {
@@ -45,6 +47,8 @@ struct MapPresentationState: Equatable {
         && lhs.cameraCommand == rhs.cameraCommand
         && lhs.showLandmarks == rhs.showLandmarks
         && lhs.landmarkScaleThreshold == rhs.landmarkScaleThreshold
+        && lhs.showTurnMarkers == rhs.showTurnMarkers
+        && lhs.approachingThreshold == rhs.approachingThreshold
     }
 }
 

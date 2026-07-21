@@ -41,6 +41,7 @@ struct NaverMapRouteView: UIViewRepresentable {
         let camera = NaverCameraController()
         let route = NaverRouteRenderer()
         let landmark = NaverLandmarkRenderer()
+        let turn = NaverTurnRenderer()
         let location = NaverLocationOverlay()
         var onMapTapped: ((Coordinate) -> Void)?
 
@@ -48,6 +49,8 @@ struct NaverMapRouteView: UIViewRepresentable {
         private var renderedPassedRouteIndex = -1
         private var renderedShowLandmarks = true
         private var renderedLandmarkScale: Double = 50
+        private var renderedShowTurnMarkers = false
+        private var renderedApproachingThreshold: Double = 10
 
         func mapView(_ mapView: NMFMapView, didTapMap latlng: NMGLatLng, point: CGPoint) {
             onMapTapped?(Coordinate(latitude: latlng.lat, longitude: latlng.lng))
@@ -62,7 +65,7 @@ struct NaverMapRouteView: UIViewRepresentable {
 
             camera.centerOnInitialLocationIfNeeded(state.currentLocation, on: mapView)
 
-            if renderedRoute != state.route || renderedPassedRouteIndex != state.passedRouteIndex || renderedShowLandmarks != state.showLandmarks || renderedLandmarkScale != state.landmarkScaleThreshold {
+            if renderedRoute != state.route || renderedPassedRouteIndex != state.passedRouteIndex || renderedShowLandmarks != state.showLandmarks || renderedLandmarkScale != state.landmarkScaleThreshold || renderedShowTurnMarkers != state.showTurnMarkers || renderedApproachingThreshold != state.approachingThreshold {
                 route.render(route: state.route, passedRouteIndex: state.passedRouteIndex, on: mapView)
                 if state.showLandmarks {
                     let landmarks = state.route?.mapLandmarkSelections() ?? []
@@ -70,10 +73,18 @@ struct NaverMapRouteView: UIViewRepresentable {
                 } else {
                     landmark.clearAll()
                 }
+                if state.showTurnMarkers {
+                    let maneuvers = state.route?.maneuvers ?? []
+                    turn.render(maneuvers: maneuvers, passedRouteIndex: state.passedRouteIndex, approachingRadius: state.approachingThreshold, on: mapView)
+                } else {
+                    turn.clearAll()
+                }
                 renderedRoute = state.route
                 renderedPassedRouteIndex = state.passedRouteIndex
                 renderedShowLandmarks = state.showLandmarks
                 renderedLandmarkScale = state.landmarkScaleThreshold
+                renderedShowTurnMarkers = state.showTurnMarkers
+                renderedApproachingThreshold = state.approachingThreshold
             }
 
             route.renderDeviationPath(state.deviationPath, on: mapView)
@@ -86,6 +97,7 @@ struct NaverMapRouteView: UIViewRepresentable {
         func tearDown() {
             route.clearAll()
             landmark.clearAll()
+            turn.clearAll()
             location.tearDown()
         }
     }

@@ -51,6 +51,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject, CLLocationMa
     @Published var showLandmarks = true
     @Published var landmarkMinZoom: Double = 50
     @Published var approachingThreshold: Double = 10
+    @Published var showTurnMarkers = false
     @Published var showGradientOverlay = true
 
     private let repository: WalkingRouteRepositoryProtocol
