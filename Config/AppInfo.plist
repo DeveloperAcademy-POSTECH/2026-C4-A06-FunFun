@@ -6,6 +6,18 @@
 	<string>$(NCP_CLIENT_KEY)</string>
 	<key>TMAP_APP_KEY</key>
 	<string>$(TMAP_APP_KEY)</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Pretendard-Thin.otf</string>
+		<string>Pretendard-Semibold.otf</string>
+		<string>Pretendard-Light.otf</string>
+		<string>Pretendard-Medium.otf</string>
+		<string>Pretendard-Regular.otf</string>
+		<string>Pretendard-ExtraLight.otf</string>
+		<string>Pretendard-Black.otf</string>
+		<string>Pretendard-Blold.otf</string>
+		<string>Pretendard-ExtraBold.otf</string>
+	</array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>
