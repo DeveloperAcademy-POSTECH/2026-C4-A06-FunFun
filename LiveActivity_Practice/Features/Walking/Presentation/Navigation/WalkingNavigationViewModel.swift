@@ -88,7 +88,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         super.init()
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
-        locationManager.distanceFilter = 1
+        locationManager.distanceFilter = 2
         locationManager.activityType = .fitness
     }
 
