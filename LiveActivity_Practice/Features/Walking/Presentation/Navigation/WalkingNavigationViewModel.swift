@@ -322,7 +322,8 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         do {
             let newRoute = try await repository.makeRoute(from: currentLocation, to: destination)
             route = newRoute
-            progress = initialProgress(newRoute)
+            let newProgress = initialProgress(newRoute)
+            progress = newProgress
             passedRouteIndex = -1
             lastManeuverID = nil
             resetDeviationState()
@@ -330,6 +331,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
             updateNavigationBearing(at: currentLocation, route: newRoute)
             navigationAlignmentSequence += 1
             navigationAlignmentID = navigationAlignmentSequence
+            await activityManager.update(newProgress, showTime: showTimeInsteadOfDistance)
         } catch {
             deviationState = .offRoute(distance: distanceFromRoute)
             errorMessage = "경로를 다시 찾지 못했습니다: \(error.localizedDescription)"
