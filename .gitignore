@@ -1,0 +1,4 @@
+# Local API keys
+Config/Secrets.xcconfig
+*.xcuserstate
+.DS_Store

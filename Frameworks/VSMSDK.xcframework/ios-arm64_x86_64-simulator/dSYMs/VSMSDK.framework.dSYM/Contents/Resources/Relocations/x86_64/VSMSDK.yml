@@ -1,0 +1,7 @@
+---
+triple:          'x86_64-apple-darwin'
+binary-path:     '/Users/t1100478/Library/Developer/Xcode/DerivedData/VSMSDK-apidbsmwndecunhhrtwmjxgjtavc/Build/Intermediates.noindex/ArchiveIntermediates/VSMSDK/InstallationBuildProductsLocation/Library/Frameworks/VSMSDK.framework/VSMSDK'
+relocations:
+  - { offset: 0x33, size: 0x8, addend: 0x0, symName: _VSMSDKVersionString, symObjAddr: 0x0, symBinAddr: 0x671140, symSize: 0x0 }
+  - { offset: 0x67, size: 0x8, addend: 0x0, symName: _VSMSDKVersionNumber, symObjAddr: 0x28, symBinAddr: 0x671168, symSize: 0x0 }
+...

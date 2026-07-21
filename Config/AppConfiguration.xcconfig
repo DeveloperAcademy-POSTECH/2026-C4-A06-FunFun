@@ -1,0 +1,5 @@
+// `Secrets.xcconfig`는 지도 SDK 키를 담는 로컬 파일이며 Git에 포함하지 않는다.
+// 파일이 없는 새 클론도 빌드할 수 있도록 선택적으로 포함한다.
+TMAP_APP_KEY =
+NCP_CLIENT_KEY =
+#include? "Secrets.xcconfig"
