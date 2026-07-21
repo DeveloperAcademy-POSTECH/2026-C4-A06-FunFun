@@ -1,4 +1,4 @@
-//  WalkingActivityAttributes.swift
+//  WalkingActivityAttributes.swift 
 //  LiveActivity_Practice
 //
 //  Created by 현진백 on 2026/07/14.
@@ -32,4 +32,18 @@ nonisolated struct WalkingActivityAttributes: ActivityAttributes {
     }
 
     let destinationName: String
+}
+
+extension WalkingActivityAttributes.ContentState {
+    init(progress: WalkingProgress, showTime: Bool) {
+        self.remainingDistance = progress.remainingDistance
+        self.estimatedArrival = progress.estimatedArrival
+        self.distanceToNextTurn = progress.distanceToNextManeuver
+        self.maneuver = progress.nextManeuver?.turn ?? .destination
+        self.landmarkName = progress.nextManeuver?.landmark?.name
+        self.instruction = progress.nextManeuver?.instruction ?? "목적지에 도착했습니다"
+        self.isOffRoute = progress.isOffRoute
+        self.isApproachingTurn = progress.isApproachingTurn
+        self.showTimeInsteadOfDistance = showTime
+    }
 }

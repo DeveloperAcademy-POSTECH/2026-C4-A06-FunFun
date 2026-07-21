@@ -113,8 +113,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         guard let progress else { return }
         Task {
             await activityManager.update(progress,
-                                         showTime: showTimeInsteadOfDistance,
-                                         approachingThreshold: Int(approachingThreshold))
+                                         showTime: showTimeInsteadOfDistance)
         }
     }
 
@@ -276,7 +275,8 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     func startNavigation() async {
         guard let route else { return }
         do {
-            try await activityManager.start(destinationName: destinationName, route: route)
+            let startProgress = initialProgress(route)
+            try await activityManager.start(destinationName: destinationName, route: route, initialProgress: startProgress, showTime: showTimeInsteadOfDistance)
             isNavigating = true
             passedRouteIndex = -1
             navigationBearing = nil
@@ -395,12 +395,17 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         return Coordinate(latitude: lat, longitude: lon)
     }
 
+    private let walkingSpeed = 1.25
+
     private func initialProgress(_ route: WalkingRoute) -> WalkingProgress {
-        WalkingProgress(
+        let firstDistance = route.maneuvers.first.map { Int(route.path.first?.distance(to: $0.coordinate) ?? 0) } ?? route.totalDistance
+        return WalkingProgress(
             remainingDistance: route.totalDistance,
-            distanceToNextManeuver: route.maneuvers.first.map { Int(route.path.first?.distance(to: $0.coordinate) ?? 0) } ?? route.totalDistance,
+            distanceToNextManeuver: firstDistance,
             nextManeuver: route.maneuvers.first,
-            isOffRoute: false
+            isOffRoute: false,
+            isApproachingTurn: firstDistance < Int(approachingThreshold),
+            estimatedArrival: .now.addingTimeInterval(Double(route.totalDistance) / walkingSpeed)
         )
     }
 
@@ -418,7 +423,9 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
             remainingDistance: Int(remaining),
             distanceToNextManeuver: nextDistance,
             nextManeuver: next,
-            isOffRoute: self.isOffRoute
+            isOffRoute: self.isOffRoute,
+            isApproachingTurn: nextDistance < Int(approachingThreshold),
+            estimatedArrival: .now.addingTimeInterval(remaining / walkingSpeed)
         )
     }
 
@@ -650,21 +657,11 @@ extension WalkingNavigationViewModel: CLLocationManagerDelegate {
             updateNavigationBearing(at: coordinate, route: route)
         }
         
-        // 다음 턴이 바뀌었는지 (이전 턴을 지나쳐서 새로운 턴이 다음 턴이 된 경우)
-        let maneuverChanged = lastManeuverID != newProgress.nextManeuver?.id
+        lastManeuverID = lastManeuverID != newProgress.nextManeuver?.id ?  newProgress.nextManeuver?.id : lastManeuverID
         
-        // approaching 판단 기준 거리 (기본 10m)
-        let threshold = Int(approachingThreshold)
-        
-        // 2가지 중 하나라도 해당하면 Live Activity 업데이트
-        // 1) 다음 턴이 바뀜  2) 경로 이탈 상태
-        if maneuverChanged || newProgress.isOffRoute {
-            lastManeuverID = newProgress.nextManeuver?.id
-            Task {
-                await activityManager.update(newProgress,
-                                             showTime: showTimeInsteadOfDistance,
-                                             approachingThreshold: threshold)
-            }
+        Task {
+            await activityManager.update(newProgress,
+                                         showTime: showTimeInsteadOfDistance)
         }
     }
 
