@@ -185,11 +185,11 @@ struct WalkingLiveActivity: Widget {
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(livePrimary)
                     Spacer()
-                    Text(context.state.maneuver.instruction)
+                    Text(context.state.landmarkName.map { "\($0)에서" } ?? " ")
                         .font(.system(size: 18, weight: .bold))
-                        .lineLimit(1)
-                    Text(context.state.landmarkName ?? " ")
+                    Text(context.state.maneuver.instruction)
                         .font(.system(size: 14, weight: .bold))
+                        .lineLimit(1)
                 }
                 Spacer()
                 Image(systemName: context.state.maneuver.symbolName)
@@ -205,11 +205,11 @@ struct WalkingLiveActivity: Widget {
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(livePrimary)
                     Spacer()
-                    Text("앞으로 가세요")
+                    Text(context.state.landmarkName.map { "\($0)까지" } ?? "다음 안내까지")
                         .font(.system(size: 18, weight: .bold))
-                        .lineLimit(1)
-                    Text(context.state.landmarkName ?? " ")
+                    Text("앞으로 가세요")
                         .font(.system(size: 14, weight: .bold))
+                        .lineLimit(1)
                 }
                 Spacer()
                 Image(systemName: "arrow.up")
@@ -295,14 +295,12 @@ struct WalkingLiveActivity: Widget {
             HStack(alignment: .center) {
                 VStack(alignment: .leading, spacing: 16) {
                     HStack(spacing: 2) {
-                        if let landmarkName = context.state.landmarkName {
-                            Text("\(landmarkName)까지")
-                                .font(.system(size: 12))
-                                .foregroundStyle(Color.white)
-                            Text(context.state.distanceToNextTurnText)
-                                .font(.system(size: 12))
-                                .foregroundStyle(Color.white)
-                        }
+                        Text(context.state.landmarkName.map { "\($0)까지" } ?? "다음 안내까지")
+                            .font(.system(size: 12))
+                            .foregroundStyle(Color.white)
+                        Text(context.state.distanceToNextTurnText)
+                            .font(.system(size: 12))
+                            .foregroundStyle(Color.white)
                     }
                     Text("앞으로 가세요")
                         .font(.system(size: 24, weight: .bold))
