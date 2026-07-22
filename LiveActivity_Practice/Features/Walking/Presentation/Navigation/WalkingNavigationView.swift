@@ -34,6 +34,7 @@ struct WalkingNavigationView: View {
                     landmarkScaleThreshold: viewModel.landmarkMinZoom,
                     showTurnMarkers: viewModel.showTurnMarkers,
                     approachingThreshold: viewModel.approachingThreshold,
+                    previewDestination: viewModel.previewDestination,
                     onMapTapped: { coordinate in
                         guard !viewModel.isNavigating, !isSearchExpanded else { return }
                         viewModel.selectCoordinateAsDestination(coordinate)
@@ -57,7 +58,7 @@ struct WalkingNavigationView: View {
 
             VStack(spacing: 12) {
                 HStack {
-                    if viewModel.route != nil || viewModel.isNavigating || viewModel.tappedCoordinate != nil {
+                    if viewModel.route != nil || viewModel.isNavigating || viewModel.tappedCoordinate != nil || viewModel.previewDestination != nil {
                         backButton
                     }
                     Spacer()
@@ -72,16 +73,24 @@ struct WalkingNavigationView: View {
 
                 Spacer()
 
-                if viewModel.isLoading {
-                    ProgressView("최단 경로와 랜드마크 검색 중…")
-                        .padding()
-                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
-                } else if let route = viewModel.route {
+                if let route = viewModel.route {
                     if viewModel.isNavigating {
                         navigationInfoPanel(route: route)
                     } else {
                         routeSummary(route)
                     }
+                } else if let place = viewModel.previewDestination {
+                    BottomPlaceView(
+                        place: place,
+                        isLoading: viewModel.isLoading,
+                        onConfirm: {
+                            Task { await viewModel.searchRoute() }
+                        }
+                    )
+                } else if viewModel.isLoading {
+                    ProgressView("최단 경로와 랜드마크 검색 중…")
+                        .padding()
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
                 } else if viewModel.tappedCoordinate != nil {
                     tappedDestinationPanel
                 } else if let error = viewModel.errorMessage {
@@ -92,7 +101,11 @@ struct WalkingNavigationView: View {
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
                 }
 
-                if !viewModel.isNavigating && viewModel.route == nil {
+                if !viewModel.isNavigating,
+                   viewModel.route == nil,
+                   viewModel.previewDestination == nil,
+                   viewModel.tappedCoordinate == nil,
+                   !viewModel.isLoading {
                     homeSearchPanel
                 }
             }
@@ -105,6 +118,11 @@ struct WalkingNavigationView: View {
         }
         .onChange(of: viewModel.route) { _, route in
             if route != nil { issueCameraCommand(.route) }
+        }
+        .onChange(of: viewModel.previewDestination) { _, destination in
+            if let destination {
+                issueCameraCommand(.coordinate(destination.coordinate))
+            }
         }
         .sheet(isPresented: $isSearchExpanded) {
             WalkingSearchModalView(

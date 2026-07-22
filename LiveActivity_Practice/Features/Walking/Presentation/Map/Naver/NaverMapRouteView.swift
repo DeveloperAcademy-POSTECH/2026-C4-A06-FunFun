@@ -49,6 +49,7 @@ struct NaverMapRouteView: UIViewRepresentable {
         let landmark = NaverLandmarkRenderer()
         let turn = NaverTurnRenderer()
         let location = NaverLocationOverlay()
+        let destinationPreview = NaverDestinationPreviewRenderer()
         var onMapTapped: ((Coordinate) -> Void)?
         var onMapViewportChanged: ((CLLocationDirection, CGPoint?) -> Void)?
 
@@ -115,6 +116,7 @@ struct NaverMapRouteView: UIViewRepresentable {
             )
 
             camera.centerOnInitialLocationIfNeeded(state.currentLocation, on: mapView)
+            destinationPreview.render(place: state.previewDestination, on: mapView)
 
             if renderedRoute != state.route || renderedPassedRouteIndex != state.passedRouteIndex || renderedShowLandmarks != state.showLandmarks || renderedLandmarkScale != state.landmarkScaleThreshold || renderedShowTurnMarkers != state.showTurnMarkers || renderedApproachingThreshold != state.approachingThreshold {
                 route.render(route: state.route, passedRouteIndex: state.passedRouteIndex, on: mapView)
@@ -150,6 +152,7 @@ struct NaverMapRouteView: UIViewRepresentable {
             landmark.clearAll()
             turn.clearAll()
             location.tearDown()
+            destinationPreview.clear()
         }
     }
 }

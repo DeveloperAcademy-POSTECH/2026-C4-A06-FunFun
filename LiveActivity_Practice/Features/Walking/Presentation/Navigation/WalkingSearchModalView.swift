@@ -116,9 +116,5 @@ struct WalkingSearchModalView: View {
         searchQuery = ""
         isSearchFieldFocused = false
         isPresented = false
-
-        Task {
-            await viewModel.searchRoute()
-        }
     }
 }
