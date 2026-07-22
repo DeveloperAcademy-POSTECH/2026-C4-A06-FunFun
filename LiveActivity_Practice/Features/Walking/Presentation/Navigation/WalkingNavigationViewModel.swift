@@ -417,7 +417,23 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
             $0.element.distance(to: current) < $1.element.distance(to: current)
         }) else { return initialProgress(route) }
 
+        // 목적지 좌표 10m 이내 근접 시 도착 처리
+        if let destination = route.path.last {
+            let distanceToDestination = Int(current.distance(to: destination))
+            if distanceToDestination <= Int(approachingThreshold) {
+                return WalkingProgress(
+                    remainingDistance: distanceToDestination,
+                    distanceToNextManeuver: distanceToDestination,
+                    nextManeuver: route.maneuvers.last,
+                    isOffRoute: self.isOffRoute,
+                    isApproachingTurn: true,
+                    estimatedArrival: .now.addingTimeInterval(Double(distanceToDestination) / walkingSpeed)
+                )
+            }
+        }
+
         let next = route.maneuvers.first { $0.routeIndex >= max(nearest.offset, passedRouteIndex + 1) }
+            ?? route.maneuvers.last
         let nextDistance = next.map { Int(current.distance(to: $0.coordinate)) } ?? 0
         let remaining = zip(route.path[nearest.offset...], route.path.dropFirst(nearest.offset + 1))
             .reduce(0.0) { $0 + $1.0.distance(to: $1.1) }

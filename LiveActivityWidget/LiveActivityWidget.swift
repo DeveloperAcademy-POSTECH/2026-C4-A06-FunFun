@@ -141,21 +141,12 @@ struct WalkingLiveActivity: Widget {
                     Button(intent: OpenAppIntent()) {
                         Text("앱으로 가기")
                             .font(.system(size: 16, weight: .semibold))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                    }
-                    .buttonStyle(.plain)
-                    .background(Color(white: 0.2), in: Capsule())
-
-                    Button(intent: OpenAppIntent()) {
-                        Text("재탐색하기")
-                            .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(livePrimary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
                     }
                     .buttonStyle(.plain)
-                    .background(Color(red: 16.0/255, green: 31.0/255, blue: 23.0/255), in: Capsule())
+                    .background(Color(white: 0.2), in: Capsule())
                 }
             }
         case .arriving:

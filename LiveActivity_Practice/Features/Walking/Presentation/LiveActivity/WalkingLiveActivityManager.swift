@@ -60,7 +60,15 @@ final class WalkingLiveActivityManager {
         for activity in Activity<WalkingActivityAttributes>.activities {
             if isArriving && !hasTriggeredArrival {
                 hasTriggeredArrival = true
-                await activity.end(content, dismissalPolicy: .after(.now.addingTimeInterval(8)))
+                await activity.update(content, alertConfiguration: AlertConfiguration(
+                    title: "목적지 근처에 도착했어요",
+                    body: "길 안내를 종료할게요",
+                    sound: .default
+                ))
+                Task { @MainActor in
+                    try await Task.sleep(nanoseconds: 5_000_000_000)
+                    await activity.end(content, dismissalPolicy: .after(.now.addingTimeInterval(5)))
+                }
             } else if justEnteredApproach {
                 await activity.update(content, alertConfiguration: AlertConfiguration(
                     title: "\(state.instruction)",
