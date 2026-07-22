@@ -65,7 +65,10 @@ final class WalkingLiveActivityManager {
                     body: "길 안내를 종료할게요",
                     sound: .default
                 ))
-                await activity.end(content, dismissalPolicy: .after(.now.addingTimeInterval(5)))
+                Task { @MainActor in
+                    try await Task.sleep(nanoseconds: 5_000_000_000)
+                    await activity.end(content, dismissalPolicy: .after(.now.addingTimeInterval(5)))
+                }
             } else if justEnteredApproach {
                 await activity.update(content, alertConfiguration: AlertConfiguration(
                     title: "\(state.instruction)",
