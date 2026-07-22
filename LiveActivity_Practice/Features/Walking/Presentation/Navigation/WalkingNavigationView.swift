@@ -13,6 +13,9 @@ struct WalkingNavigationView: View {
     @State private var cameraCommandSequence = 0
     @State private var isSearchExpanded = false
     @State private var searchQuery = ""
+    @State private var showSettings = false
+    @State private var isExitAlertPresented = false
+    @State private var isNavigationSheetExpanded = false
     @State private var mapHeading: CLLocationDirection = 0
     @State private var indicatorPosition: CGPoint?
 
