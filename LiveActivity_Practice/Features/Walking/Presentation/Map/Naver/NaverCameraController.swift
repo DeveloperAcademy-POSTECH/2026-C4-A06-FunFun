@@ -62,6 +62,9 @@ final class NaverCameraController {
                 update.animation = .easeOut
                 mapView.moveCamera(update)
             }
+        case let .coordinate(coordinate):
+            moveCamera(to: coordinate, zoom: 16, on: mapView, animated: true)
+            hasCenteredInitialLocation = true
         }
         lastCameraCommandID = command.id
     }

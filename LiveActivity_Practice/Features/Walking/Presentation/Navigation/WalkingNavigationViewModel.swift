@@ -26,6 +26,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     @Published var destinationLongitude = "127.031812"
     @Published var destinationName = ""
     @Published private(set) var placeSearchResults: [PlaceSearchResult] = []
+    @Published private(set) var previewDestination: PlaceSearchResult?
     @Published private(set) var isSearchingPlaces = false
     @Published private(set) var canLoadMoreSearchResults = false
     private var currentSearchPage = 1
@@ -102,6 +103,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     @Published private(set) var tappedCoordinate: Coordinate?
 
     func selectCoordinateAsDestination(_ coordinate: Coordinate) {
+        previewDestination = nil
         tappedCoordinate = coordinate
         destinationName = String(format: "(%.4f, %.4f)", coordinate.latitude, coordinate.longitude)
         destinationLatitude = String(coordinate.latitude)
@@ -119,6 +121,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     }
 
     func clearTappedCoordinate() {
+        previewDestination = nil
         tappedCoordinate = nil
         destinationName = ""
         destinationLatitude = ""
@@ -219,6 +222,8 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
             destinationLatitude = String(place.coordinate.latitude)
             destinationLongitude = String(place.coordinate.longitude)
             hasSelectedDestination = true
+            tappedCoordinate = nil
+            previewDestination = place
         }
         placeSearchResults = []
         errorMessage = nil
@@ -237,6 +242,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         }
         route = nil
         progress = nil
+        previewDestination = nil
         passedRouteIndex = -1
         destinationName = ""
         destinationLatitude = ""
@@ -268,6 +274,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
             route = try await repository.makeRoute(from: start, to: destination)
             progress = route.map(initialProgress)
             passedRouteIndex = -1
+            previewDestination = nil
         } catch {
             errorMessage = error.localizedDescription
         }

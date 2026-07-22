@@ -13,6 +13,9 @@ struct WalkingNavigationView: View {
     @State private var cameraCommandSequence = 0
     @State private var isSearchExpanded = false
     @State private var searchQuery = ""
+    @State private var showSettings = false
+    @State private var isExitAlertPresented = false
+    @State private var isNavigationSheetExpanded = false
     @State private var mapHeading: CLLocationDirection = 0
     @State private var indicatorPosition: CGPoint?
 
@@ -34,6 +37,7 @@ struct WalkingNavigationView: View {
                     landmarkScaleThreshold: viewModel.landmarkMinZoom,
                     showTurnMarkers: viewModel.showTurnMarkers,
                     approachingThreshold: viewModel.approachingThreshold,
+                    previewDestination: viewModel.previewDestination,
                     onMapTapped: { coordinate in
                         guard !viewModel.isNavigating, !isSearchExpanded else { return }
                         viewModel.selectCoordinateAsDestination(coordinate)
@@ -56,12 +60,24 @@ struct WalkingNavigationView: View {
             }
 
             VStack(spacing: 12) {
-                HStack {
-                    if viewModel.route != nil || viewModel.isNavigating || viewModel.tappedCoordinate != nil {
-                        backButton
+                if viewModel.isNavigating {
+                    CustomTopToolbar(
+                        destinationName: viewModel.destinationName,
+                        onBack: {
+                            isExitAlertPresented = true
+                        },
+                        onSettings: {
+                            showSettings = true
+                        }
+                    )
+                } else {
+                    HStack {
+                        if viewModel.route != nil || viewModel.tappedCoordinate != nil || viewModel.previewDestination != nil {
+                            backButton
+                        }
+                        Spacer()
+                        settingsButton
                     }
-                    Spacer()
-                    settingsButton
                 }
 
                 if viewModel.isNavigating {
@@ -72,16 +88,29 @@ struct WalkingNavigationView: View {
 
                 Spacer()
 
-                if viewModel.isLoading {
-                    ProgressView("최단 경로와 랜드마크 검색 중…")
-                        .padding()
-                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
-                } else if let route = viewModel.route {
+                if let route = viewModel.route {
                     if viewModel.isNavigating {
-                        navigationInfoPanel(route: route)
+                        CustomBottomSheet(
+                            route: route,
+                            progress: viewModel.progress,
+                            destinationName: viewModel.destinationName,
+                            isExpanded: $isNavigationSheetExpanded
+                        )
                     } else {
                         routeSummary(route)
                     }
+                } else if let place = viewModel.previewDestination {
+                    BottomPlaceView(
+                        place: place,
+                        isLoading: viewModel.isLoading,
+                        onConfirm: {
+                            Task { await viewModel.searchRoute() }
+                        }
+                    )
+                } else if viewModel.isLoading {
+                    ProgressView("최단 경로와 랜드마크 검색 중…")
+                        .padding()
+                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
                 } else if viewModel.tappedCoordinate != nil {
                     tappedDestinationPanel
                 } else if let error = viewModel.errorMessage {
@@ -92,19 +121,53 @@ struct WalkingNavigationView: View {
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
                 }
 
-                if !viewModel.isNavigating && viewModel.route == nil {
+                if !viewModel.isNavigating,
+                   viewModel.route == nil,
+                   viewModel.previewDestination == nil,
+                   viewModel.tappedCoordinate == nil,
+                   !viewModel.isLoading {
                     homeSearchPanel
                 }
             }
             .padding()
 
         }
+        .overlay(alignment: .center) {
+            if isExitAlertPresented {
+                ZStack {
+                    Color.black.opacity(0.12)
+                        .ignoresSafeArea()
+
+                    NavigationExitAlert(
+                        onContinue: {
+                            isExitAlertPresented = false
+                        },
+                        onExit: exitNavigation
+                    )
+                    .padding(.horizontal, 50)
+                    .transition(.opacity.combined(with: .scale(scale: 0.96)))
+                }
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: isExitAlertPresented)
         .task {
             viewModel.startLocationTracking()
             issueCameraCommand(.userLocation)
         }
         .onChange(of: viewModel.route) { _, route in
+            isNavigationSheetExpanded = false
             if route != nil { issueCameraCommand(.route) }
+        }
+        .onChange(of: viewModel.previewDestination) { _, destination in
+            if let destination {
+                issueCameraCommand(.coordinate(destination.coordinate))
+            }
+        }
+        .onChange(of: viewModel.isNavigating) { _, isNavigating in
+            if !isNavigating {
+                isExitAlertPresented = false
+                isNavigationSheetExpanded = false
+            }
         }
         .sheet(isPresented: $isSearchExpanded) {
             WalkingSearchModalView(
@@ -115,6 +178,10 @@ struct WalkingNavigationView: View {
                 .presentationDetents([.fraction(0.9)])
                 .presentationDragIndicator(.visible)
                 .presentationCornerRadius(30)
+        }
+        .sheet(isPresented: $showSettings) {
+            settingsView
+                .presentationDetents([.medium])
         }
     }
 
@@ -137,8 +204,6 @@ struct WalkingNavigationView: View {
         }
     }
 
-    @State private var showSettings = false
-
     private var settingsButton: some View {
         Button {
             showSettings = true
@@ -149,49 +214,49 @@ struct WalkingNavigationView: View {
                 .frame(width: 30, height: 30)
                 .background(.ultraThinMaterial, in: Circle())
         }
-        .sheet(isPresented: $showSettings) {
-            NavigationStack {
-                Form {
-                    Section("Compact 표시") {
-                        Toggle("남은 거리를 시간(분)으로 표시", isOn: $viewModel.showTimeInsteadOfDistance)
-                            .onChange(of: viewModel.showTimeInsteadOfDistance) {
+    }
+
+    private var settingsView: some View {
+        NavigationStack {
+            Form {
+                Section("Compact 표시") {
+                    Toggle("남은 거리를 시간(분)으로 표시", isOn: $viewModel.showTimeInsteadOfDistance)
+                        .onChange(of: viewModel.showTimeInsteadOfDistance) {
+                            viewModel.refreshLiveActivity()
+                        }
+                }
+                Section("화면 효과") {
+                    Toggle("그라디언트 오버레이", isOn: $viewModel.showGradientOverlay)
+                }
+                Section("지도") {
+                    Toggle("턴 마커 표시", isOn: $viewModel.showTurnMarkers)
+                    Toggle("랜드마크 표시", isOn: $viewModel.showLandmarks)
+                    if viewModel.showLandmarks {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("축척 \(Int(viewModel.landmarkMinZoom))m 이하에서 표시")
+                                .font(.subheadline)
+                            Slider(value: $viewModel.landmarkMinZoom, in: 10...100, step: 10)
+                        }
+                    }
+                }
+                Section("Approaching 기준 거리") {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("\(Int(viewModel.approachingThreshold))m")
+                            .font(.subheadline.monospacedDigit())
+                        Slider(value: $viewModel.approachingThreshold, in: 0...30, step: 1)
+                            .onChange(of: viewModel.approachingThreshold) {
                                 viewModel.refreshLiveActivity()
                             }
                     }
-                    Section("화면 효과") {
-                        Toggle("그라디언트 오버레이", isOn: $viewModel.showGradientOverlay)
-                    }
-                    Section("지도") {
-                        Toggle("턴 마커 표시", isOn: $viewModel.showTurnMarkers)
-                        Toggle("랜드마크 표시", isOn: $viewModel.showLandmarks)
-                        if viewModel.showLandmarks {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("축척 \(Int(viewModel.landmarkMinZoom))m 이하에서 표시")
-                                    .font(.subheadline)
-                                Slider(value: $viewModel.landmarkMinZoom, in: 10...100, step: 10)
-                            }
-                        }
-                    }
-                    Section("Approaching 기준 거리") {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("\(Int(viewModel.approachingThreshold))m")
-                                .font(.subheadline.monospacedDigit())
-                            Slider(value: $viewModel.approachingThreshold, in: 0...30, step: 1)
-                                .onChange(of: viewModel.approachingThreshold) {
-                                    viewModel.refreshLiveActivity()
-                                }
-                        }
-                    }
-                }
-                .navigationTitle("설정")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button("닫기") { showSettings = false }
-                    }
                 }
             }
-            .presentationDetents([.medium])
+            .navigationTitle("설정")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("닫기") { showSettings = false }
+                }
+            }
         }
     }
 
@@ -345,52 +410,13 @@ struct WalkingNavigationView: View {
         .background(Color.white.opacity(0.5), in: RoundedRectangle(cornerRadius: 25))
     }
 
-    private func navigationInfoPanel(route: WalkingRoute) -> some View {
-        VStack(spacing: 10) {
-            Capsule()
-                .fill(Color(.systemGray3))
-                .frame(width: 40, height: 5)
-
-            if let progress = viewModel.progress, let maneuver = progress.nextManeuver {
-                HStack(spacing: 16) {
-                    Image(systemName: maneuver.turn.symbolName)
-                        .font(.system(size: 36, weight: .bold))
-                        .foregroundStyle(.blue)
-                        .frame(width: 80, height: 80)
-                        .background(Color(.systemGray6), in: RoundedRectangle(cornerRadius: 40))
-
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(maneuver.instruction)
-                            .font(.system(size: 22, weight: .bold))
-                            .foregroundStyle(.black)
-                            .lineLimit(2)
-
-                        if let nextLandmarkName = nextLandmarkName(after: maneuver, in: route) {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("다음")
-                                    .font(.system(size: 11, weight: .medium))
-                                    .foregroundStyle(Color(white: 0.565))
-                                Text(nextLandmarkName)
-                                    .font(.system(size: 18, weight: .semibold))
-                                    .foregroundStyle(.black)
-                            }
-                        }
-                    }
-                }
-            }
+    private func exitNavigation() {
+        isExitAlertPresented = false
+        viewModel.clearTappedCoordinate()
+        Task {
+            await viewModel.dismissRoute()
+            issueCameraCommand(.userLocation)
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 10)
-        .padding(.bottom, 20)
-        .frame(maxWidth: .infinity)
-        .background(Color.white.opacity(0.5), in: RoundedRectangle(cornerRadius: 30))
-    }
-
-    private func nextLandmarkName(after current: WalkingManeuver, in route: WalkingRoute) -> String? {
-        guard let index = route.maneuvers.firstIndex(where: { $0.id == current.id }) else { return nil }
-        let next = route.maneuvers.index(after: index)
-        guard next < route.maneuvers.endIndex else { return nil }
-        return route.maneuvers[next].landmark?.name
     }
 
     private func issueCameraCommand(_ target: MapCameraCommand.Target) {
