@@ -33,6 +33,7 @@ struct MapPresentationState: Equatable {
     let showTurnMarkers: Bool
     let approachingThreshold: Double
     var onMapTapped: ((Coordinate) -> Void)?
+    var onMapViewportChanged: ((CLLocationDirection, CGPoint?) -> Void)? = nil
 
     static func == (lhs: MapPresentationState, rhs: MapPresentationState) -> Bool {
         lhs.route == rhs.route
