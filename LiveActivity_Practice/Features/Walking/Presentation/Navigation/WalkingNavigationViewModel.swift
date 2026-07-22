@@ -418,6 +418,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         }) else { return initialProgress(route) }
 
         let next = route.maneuvers.first { $0.routeIndex >= max(nearest.offset, passedRouteIndex + 1) }
+            ?? route.maneuvers.last
         let nextDistance = next.map { Int(current.distance(to: $0.coordinate)) } ?? 0
         let remaining = zip(route.path[nearest.offset...], route.path.dropFirst(nearest.offset + 1))
             .reduce(0.0) { $0 + $1.0.distance(to: $1.1) }
