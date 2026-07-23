@@ -699,7 +699,7 @@ extension WalkingNavigationViewModel: CLLocationManagerDelegate {
             isArrived = true
             Task { @MainActor in
                 try? await Task.sleep(nanoseconds: 5_000_000_000)
-                await stopNavigation()
+                await dismissRoute()
             }
         }
     }
