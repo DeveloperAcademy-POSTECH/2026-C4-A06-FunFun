@@ -38,10 +38,10 @@ struct WalkingSearchResultsTableView: UIViewRepresentable {
                 var content = cell.defaultContentConfiguration()
                 content.text = place.name
                 content.secondaryText = place.address
-                content.textProperties.font = UIFont.systemFont(ofSize: 14, weight: .bold)
+                content.textProperties.font = AppTypography.Style.labelM.uiFont()
                 content.textProperties.color = UIColor(white: 0.1, alpha: 1)
                 content.textProperties.numberOfLines = 1
-                content.secondaryTextProperties.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+                content.secondaryTextProperties.font = AppTypography.Style.captionS.uiFont()
                 content.secondaryTextProperties.color = UIColor(white: 0.7, alpha: 1)
                 content.secondaryTextProperties.numberOfLines = 1
                 content.directionalLayoutMargins = NSDirectionalEdgeInsets(

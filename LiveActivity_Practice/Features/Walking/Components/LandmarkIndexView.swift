@@ -102,12 +102,9 @@ final class LandmarkIndexView: UIView {
     }
 
     private func updateIndexLabel() {
-        let fontSize: CGFloat = abs(index) >= 10 ? 11 : 14
+        let style: AppTypography.Style = abs(index) >= 10 ? .labelS : .labelM
         indexLabel.text = String(index)
-        indexLabel.font = UIFont(
-            name: PretendardWeight.bold.fontName,
-            size: fontSize
-        ) ?? .systemFont(ofSize: fontSize, weight: .bold)
+        indexLabel.font = style.uiFont()
         accessibilityLabel = "\(index)번 랜드마크"
     }
 }

@@ -53,10 +53,7 @@ final class LandmarkBubbleView: UIView {
         layer.insertSublayer(bubbleLayer, at: 0)
 
         indexLabel.text = "\(index)"
-        indexLabel.font = UIFont(
-            name: PretendardWeight.bold.fontName,
-            size: 17
-        ) ?? .systemFont(ofSize: 17, weight: .bold)
+        indexLabel.font = AppTypography.Style.title3.uiFont()
         indexLabel.textColor = accentColor
         indexLabel.textAlignment = .center
         indexLabel.backgroundColor = .white
@@ -66,10 +63,7 @@ final class LandmarkBubbleView: UIView {
         indexLabel.clipsToBounds = true
 
         nameLabel.text = name
-        nameLabel.font = UIFont(
-            name: PretendardWeight.bold.fontName,
-            size: 11
-        ) ?? .systemFont(ofSize: 11, weight: .bold)
+        nameLabel.font = AppTypography.Style.labelS.uiFont()
         nameLabel.textColor = .white
         nameLabel.numberOfLines = 1
         nameLabel.lineBreakMode = .byTruncatingTail
