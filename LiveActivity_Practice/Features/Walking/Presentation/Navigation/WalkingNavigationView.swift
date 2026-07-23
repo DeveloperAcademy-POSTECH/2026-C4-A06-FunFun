@@ -219,29 +219,26 @@ struct WalkingNavigationView: View {
             Task { await viewModel.dismissRoute() }
             issueCameraCommand(.userLocation)
         } label: {
-            ZStack {
-                Circle()
-                //.fill(Color.white.opacity(0.05))
-                //.background(.ultraThinMaterial, in: Circle())
-                    .fill(.ultraThinMaterial)
-                    .frame(width: 50, height: 50)
-                Image(systemName: "chevron.backward")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(Color("Colors/text-text-1"))
-            }
+            Image(systemName: "chevron.left")
+                .font(.system(size: 22, weight: .bold))
+                .foregroundStyle(Color("Colors/text-text-1"))
+                .frame(width: 44, height: 44)
         }
+        .modifier(WalkingToolbarButtonStyle())
+        .accessibilityLabel("뒤로가기")
     }
     
     private var settingsButton: some View {
         Button {
             showSettings = true
         } label: {
-            Image(systemName: "gearshape.fill")
-                .font(.system(size: 12))
-                .foregroundStyle(.secondary)
-                .frame(width: 30, height: 30)
-                .background(.ultraThinMaterial, in: Circle())
+            Image(systemName: "gearshape")
+                .font(.system(size: 22, weight: .bold))
+                .foregroundStyle(Color("Colors/text-text-1"))
+                .frame(width: 44, height: 44)
         }
+        .modifier(WalkingToolbarButtonStyle())
+        .accessibilityLabel("설정")
     }
     
     private var settingsView: some View {
@@ -524,6 +521,25 @@ private struct RouteSummaryGlassSurface: ViewModifier {
             content.glassEffect(.regular, in: shape)
         } else {
             content.background(.regularMaterial, in: shape)
+        }
+    }
+}
+
+private struct WalkingToolbarButtonStyle: ViewModifier {
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content
+                .buttonStyle(.glass)
+                .buttonBorderShape(.circle)
+        } else {
+            content
+                .buttonStyle(.plain)
+                .background(.ultraThinMaterial, in: Circle())
+                .overlay {
+                    Circle()
+                        .stroke(.white.opacity(0.5), lineWidth: 1)
+                }
         }
     }
 }
