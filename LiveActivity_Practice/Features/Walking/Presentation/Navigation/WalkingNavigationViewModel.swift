@@ -49,6 +49,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     @Published var shouldPresentReroutePrompt = false
     @Published private(set) var isLoading = false
     @Published private(set) var isNavigating = false
+    @Published private(set) var isArrived = false
     @Published var errorMessage: String?
     @Published var showTimeInsteadOfDistance = false
     @Published var showLandmarks = true
@@ -313,6 +314,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         locationManager.allowsBackgroundLocationUpdates = false
         await activityManager.end()
         isNavigating = false
+        isArrived = false
         navigationBearing = nil
         navigationAlignmentID = nil
         resetDeviationState()
@@ -424,10 +426,10 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
             $0.element.distance(to: current) < $1.element.distance(to: current)
         }) else { return initialProgress(route) }
 
-        // 목적지 좌표 10m 이내 근접 시 도착 처리
+        // 목적지 좌표 5m 이내 근접 시 도착 처리
         if let destination = route.path.last {
             let distanceToDestination = Int(current.distance(to: destination))
-            if distanceToDestination <= Int(approachingThreshold) {
+            if distanceToDestination <= 5 {
                 return WalkingProgress(
                     remainingDistance: distanceToDestination,
                     distanceToNextManeuver: distanceToDestination,
@@ -688,6 +690,17 @@ extension WalkingNavigationViewModel: CLLocationManagerDelegate {
         Task {
             await activityManager.update(newProgress,
                                          showTime: showTimeInsteadOfDistance)
+        }
+
+        // 도착 감지 → 5초 후 자동 종료
+        if newProgress.nextManeuver?.turn == .destination,
+           newProgress.isApproachingTurn,
+           !isArrived {
+            isArrived = true
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 5_000_000_000)
+                await dismissRoute()
+            }
         }
     }
 
