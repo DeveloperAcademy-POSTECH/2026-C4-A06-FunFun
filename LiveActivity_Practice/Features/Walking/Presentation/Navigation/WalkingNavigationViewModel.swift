@@ -47,6 +47,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     @Published private(set) var passedRouteIndex = -1
     @Published private(set) var distanceFromRoute: CLLocationDistance = 0
     @Published var shouldPresentReroutePrompt = false
+    @Published private(set) var isOffRouteBannerHidden = false
     @Published private(set) var isLoading = false
     @Published private(set) var isNavigating = false
     @Published private(set) var isArrived = false
@@ -290,6 +291,8 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     }
 
     func startNavigation() async {
+        setStartFromCurrentLocation()
+        await searchRoute()
         guard let route else { return }
         do {
             let startProgress = initialProgress(route)
@@ -358,6 +361,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     func keepCurrentRoute() {
         shouldPresentReroutePrompt = false
         hasAskedForCurrentDeviation = true
+        isOffRouteBannerHidden = true
     }
 
     private func requestLocationAccess() {
@@ -538,9 +542,12 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         let recoveryThreshold: CLLocationDistance = 15
 
         if isOffRoute {
+
             if routeMatch.distance <= recoveryThreshold {
+
                 resetDeviationState()
             } else {
+
                 deviationState = .offRoute(distance: routeMatch.distance)
                 appendDeviationCoordinate(current)
             }
@@ -554,8 +561,10 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         }
 
         consecutiveOffRouteUpdates += 1
+
         deviationState = .suspected(distance: routeMatch.distance)
         guard consecutiveOffRouteUpdates >= 3 else { return }
+
 
         deviationState = .offRoute(distance: routeMatch.distance)
         deviationPath = [routeMatch.snappedCoordinate]
@@ -578,6 +587,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         consecutiveOffRouteUpdates = 0
         hasAskedForCurrentDeviation = false
         shouldPresentReroutePrompt = false
+        isOffRouteBannerHidden = false
     }
 
     private func updateNavigationBearing(at current: Coordinate, route: WalkingRoute) {
