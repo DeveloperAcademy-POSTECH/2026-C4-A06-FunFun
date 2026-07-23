@@ -38,6 +38,7 @@ struct WalkingNavigationView: View {
                     showTurnMarkers: viewModel.showTurnMarkers,
                     approachingThreshold: viewModel.approachingThreshold,
                     previewDestination: viewModel.previewDestination,
+                    locationButtonBottomInset: locationButtonBottomInset,
                     onMapTapped: { coordinate in
                         guard !viewModel.isNavigating, !isSearchExpanded else { return }
                         viewModel.selectCoordinateAsDestination(coordinate)

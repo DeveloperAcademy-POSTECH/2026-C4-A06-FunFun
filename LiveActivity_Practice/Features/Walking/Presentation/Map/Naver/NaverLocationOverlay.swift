@@ -3,12 +3,16 @@
 
 import CoreLocation
 import NMapsMap
+import UIKit
 
 final class NaverLocationOverlay {
     weak var locationButton: MyLocationButton?
     var locationButtonBottomConstraint: NSLayoutConstraint?
 
-    func setupLocationButton(on naverMapView: NMFNaverMapView, hasRoute: Bool) {
+    func setupLocationButton(
+        on naverMapView: NMFNaverMapView,
+        bottomInset: CGFloat
+    ) {
         let button = MyLocationButton()
         button.mapView = naverMapView.mapView
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -21,7 +25,7 @@ final class NaverLocationOverlay {
         ])
         let bottomConstraint = button.bottomAnchor.constraint(
             equalTo: naverMapView.safeAreaLayoutGuide.bottomAnchor,
-            constant: hasRoute ? -250 : -104
+            constant: -bottomInset
         )
         bottomConstraint.isActive = true
         locationButton = button
@@ -42,11 +46,23 @@ final class NaverLocationOverlay {
         overlay.heading = CGFloat(heading ?? 0)
     }
 
-    func updateButtonLayout(hasRoute: Bool) {
-        let targetConstant: CGFloat = hasRoute ? -250 : -104
-        guard locationButtonBottomConstraint?.constant != targetConstant else { return }
-        locationButtonBottomConstraint?.constant = targetConstant
-        locationButton?.superview?.layoutIfNeeded()
+    func updateButtonLayout(bottomInset: CGFloat) {
+        let targetConstant = -bottomInset
+        guard let bottomConstraint = locationButtonBottomConstraint,
+              bottomConstraint.constant != targetConstant else { return }
+
+        let superview = locationButton?.superview
+        superview?.layoutIfNeeded()
+        bottomConstraint.constant = targetConstant
+
+        UIView.animate(
+            withDuration: 0.38,
+            delay: 0,
+            usingSpringWithDamping: 0.88,
+            initialSpringVelocity: 0
+        ) {
+            superview?.layoutIfNeeded()
+        }
     }
 
     func tearDown() {
