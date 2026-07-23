@@ -38,13 +38,37 @@ struct WalkingSearchStartDestinationView: View {
                 }
                 .padding([.horizontal], 16)
                 .padding([.vertical], 12)
-                .foregroundStyle(.gray)
-                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24))
+                .background(
+                    Color.black.opacity(0.08),
+                    in: Capsule()
+                )
             }
+            .buttonStyle(.plain)
         }
         .padding([.horizontal], 12)
         .padding([.vertical], 8)
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 29))
+        .modifier(WalkingSearchGlassSurface())
+    }
+}
+
+private struct WalkingSearchGlassSurface: ViewModifier {
+    private let shape = RoundedRectangle(
+        cornerRadius: 29,
+        style: .continuous
+    )
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content
+                .glassEffect(.regular, in: shape)
+        } else {
+            content
+                .background(.ultraThinMaterial, in: shape)
+                .overlay {
+                    shape.stroke(.white.opacity(0.5), lineWidth: 1)
+                }
+        }
     }
 }
 

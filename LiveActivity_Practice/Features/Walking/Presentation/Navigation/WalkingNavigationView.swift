@@ -480,7 +480,7 @@ struct WalkingNavigationView: View {
         }
         .padding([.horizontal], 24)
         .padding([.vertical], 27)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 100))
+        .modifier(RouteSummaryGlassSurface())
     }
     
     private func formattedTime(_ totalSeconds: Int) -> String {
@@ -513,4 +513,17 @@ struct WalkingNavigationView: View {
         meters >= 1000 ? String(format: "%.1fkm", Double(meters) / 1000) : "\(meters)m"
     }
 
+}
+
+private struct RouteSummaryGlassSurface: ViewModifier {
+    private let shape = RoundedRectangle(cornerRadius: 100)
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content.glassEffect(.regular, in: shape)
+        } else {
+            content.background(.regularMaterial, in: shape)
+        }
+    }
 }
