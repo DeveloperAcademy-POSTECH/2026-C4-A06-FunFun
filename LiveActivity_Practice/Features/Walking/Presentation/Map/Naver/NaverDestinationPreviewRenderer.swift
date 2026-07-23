@@ -18,15 +18,15 @@ final class NaverDestinationPreviewRenderer {
         renderedPlace = place
 
         guard let place else { return }
-
         let marker = NMFMarker(
             position: NMGLatLng(
                 lat: place.coordinate.latitude,
                 lng: place.coordinate.longitude
             )
         )
-        marker.captionText = place.name
-        marker.iconTintColor = .systemRed
+        marker.iconImage = NMFOverlayImage(image: UIImage(imageLiteralResourceName: "ic-destination"))
+        marker.width = 37
+        marker.height = 48
         marker.mapView = mapView
         self.marker = marker
     }
