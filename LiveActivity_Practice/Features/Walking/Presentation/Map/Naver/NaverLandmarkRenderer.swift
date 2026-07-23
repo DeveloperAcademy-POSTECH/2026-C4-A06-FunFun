@@ -79,22 +79,6 @@ final class NaverLandmarkRenderer {
             landmarkConnectors.append(connector)
         }
 
-        let turnMarker = NMFMarker(position: maneuverPosition)
-        let turnConfiguration = UIImage.SymbolConfiguration(pointSize: 18, weight: .bold)
-        if let turnImage = UIImage(
-            systemName: selection.maneuver.turn.symbolName,
-            withConfiguration: turnConfiguration
-        )?.withTintColor(.systemOrange, renderingMode: .alwaysOriginal) {
-            turnMarker.iconImage = NMFOverlayImage(image: turnImage)
-        }
-        turnMarker.width = 24
-        turnMarker.height = 24
-        turnMarker.anchor = CGPoint(x: 0.5, y: 0.5)
-        turnMarker.zIndex = 9_000
-        turnMarker.minZoom = currentMinZoom
-        turnMarker.mapView = mapView
-        landmarkMarkers.append(turnMarker)
-
         let landmarkMarker = NMFMarker(position: landmarkPosition)
         landmarkMarker.iconImage = NMFOverlayImage(
             image: Self.landmarkBubbleImage(index: index, name: selection.landmark.name, isPassed: isPassed),
