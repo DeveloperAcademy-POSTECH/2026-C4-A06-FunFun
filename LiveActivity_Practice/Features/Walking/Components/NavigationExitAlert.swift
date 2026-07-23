@@ -24,7 +24,7 @@ struct NavigationExitAlert: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
             Text("경로 안내를 종료할까요?")
-                .font(.system(size: 17, weight: .bold))
+                .appTypography(.title3)
                 .foregroundStyle(Color("Colors/text-text-1"))
                 .frame(maxWidth: .infinity, alignment: .center)
 
@@ -61,7 +61,7 @@ struct NavigationExitAlert: View {
     ) -> some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 17, weight: .semibold))
+                .appTypography(.labelL)
                 .foregroundStyle(foregroundStyle)
                 .frame(maxWidth: .infinity)
                 .frame(height: 48)

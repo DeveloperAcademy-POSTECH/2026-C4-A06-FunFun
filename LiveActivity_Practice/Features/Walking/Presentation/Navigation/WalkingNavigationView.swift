@@ -117,13 +117,14 @@ struct WalkingNavigationView: View {
                     routeSummary(route)
                 } else if viewModel.isLoading {
                     ProgressView("최단 경로와 랜드마크 검색 중…")
+                        .appTypography(.body1)
                         .padding()
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
                 } else if viewModel.tappedCoordinate != nil {
                     tappedDestinationPanel
                 } else if let error = viewModel.errorMessage {
                     Text(error)
-                        .font(.footnote)
+                        .appTypography(.captionS)
                         .foregroundStyle(.red)
                         .padding()
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
@@ -259,7 +260,7 @@ struct WalkingNavigationView: View {
                     if viewModel.showLandmarks {
                         VStack(alignment: .leading, spacing: 4) {
                             Text("축척 \(Int(viewModel.landmarkMinZoom))m 이하에서 표시")
-                                .font(.subheadline)
+                                .appTypography(.body2)
                             Slider(value: $viewModel.landmarkMinZoom, in: 10...100, step: 10)
                         }
                     }
@@ -267,7 +268,8 @@ struct WalkingNavigationView: View {
                 Section("Approaching 기준 거리") {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("\(Int(viewModel.approachingThreshold))m")
-                            .font(.subheadline.monospacedDigit())
+                            .monospacedDigit()
+                            .appTypography(.body2)
                         Slider(value: $viewModel.approachingThreshold, in: 0...30, step: 1)
                             .onChange(of: viewModel.approachingThreshold) {
                                 viewModel.refreshLiveActivity()
@@ -292,7 +294,7 @@ struct WalkingNavigationView: View {
                     .foregroundStyle(.red)
                     .font(.title3)
                 Text(viewModel.destinationName)
-                    .font(.subheadline.weight(.semibold))
+                    .appTypography(.labelM)
                     .lineLimit(1)
                 Spacer()
             }
@@ -300,7 +302,12 @@ struct WalkingNavigationView: View {
             Button {
                 Task { await viewModel.searchRoute() }
             } label: {
-                Label("경로 찾기", systemImage: "figure.walk")
+                Label {
+                    Text("경로 찾기")
+                        .appTypography(.labelL)
+                } icon: {
+                    Image(systemName: "figure.walk")
+                }
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.borderedProminent)
@@ -325,7 +332,7 @@ struct WalkingNavigationView: View {
                         .foregroundStyle(Color("Colors/text-text-1"))
                     
                     Text("어디로 갈까요?")
-                        .font(.system(size: 16, weight: .semibold))
+                        .appTypography(.labelL)
                         .foregroundStyle(Color(red: 0.3, green: 0.3, blue: 0.3))
                     
                     Spacer()
@@ -348,10 +355,10 @@ struct WalkingNavigationView: View {
             
             VStack(alignment: .leading, spacing: 2) {
                 Text("목적지")
-                    .font(.caption)
+                    .appTypography(.captionS)
                     .foregroundStyle(.secondary)
                 Text(viewModel.destinationName.isEmpty ? "목적지" : viewModel.destinationName)
-                    .font(.subheadline.weight(.semibold))
+                    .appTypography(.labelM)
                     .lineLimit(1)
             }
             
@@ -379,14 +386,14 @@ struct WalkingNavigationView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     if viewModel.isRerouting {
                         Text("경로 재탐색 중…")
-                            .font(.system(size: 20, weight: .semibold))
+                            .appTypography(.title2)
                             .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.1))
                     } else {
                         Text("경로에서 벗어난 것 같아요")
-                            .font(.system(size: 20, weight: .semibold))
+                            .appTypography(.title2)
                             .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.1))
                         Text("현재 위치에서 재탐색할까요?")
-                            .font(.system(size: 14, weight: .medium))
+                            .appTypography(.body2)
                             .foregroundStyle(Color(red: 0.3, green: 0.3, blue: 0.3))
                     }
                 }
@@ -493,16 +500,21 @@ struct WalkingNavigationView: View {
     @ViewBuilder
     private func navigationDetails(for route: WalkingRoute) -> some View {
         if let progress = viewModel.progress, let next = progress.nextManeuver {
-            Label(next.instruction, systemImage: next.turn.symbolName)
+            Label {
+                Text(next.instruction)
+                    .appTypography(.body1)
+            } icon: {
+                Image(systemName: next.turn.symbolName)
+            }
                 .lineLimit(2)
             Text("다음 안내까지 \(distanceText(progress.distanceToNextManeuver))")
-                .font(.caption)
+                .appTypography(.captionS)
                 .foregroundStyle(.secondary)
         }
 
         let landmarkCount = Set(route.maneuvers.compactMap(\.landmark?.id)).count
         Text("경로 랜드마크 \(landmarkCount)개")
-            .font(.caption)
+            .appTypography(.captionS)
             .foregroundStyle(.secondary)
     }
 
