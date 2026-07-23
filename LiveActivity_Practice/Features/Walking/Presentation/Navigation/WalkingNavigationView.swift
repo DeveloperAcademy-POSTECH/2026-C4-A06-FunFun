@@ -38,6 +38,7 @@ struct WalkingNavigationView: View {
                     showTurnMarkers: viewModel.showTurnMarkers,
                     approachingThreshold: viewModel.approachingThreshold,
                     previewDestination: viewModel.previewDestination,
+                    locationButtonBottomInset: locationButtonBottomInset,
                     onMapTapped: { coordinate in
                         guard !viewModel.isNavigating, !isSearchExpanded else { return }
                         viewModel.selectCoordinateAsDestination(coordinate)
@@ -199,6 +200,18 @@ struct WalkingNavigationView: View {
                 .presentationDetents([.medium])
         }
     }
+
+    private var locationButtonBottomInset: CGFloat {
+        guard viewModel.isNavigating else {
+            return viewModel.route != nil ? 250 : 104
+        }
+
+        let sheetHeight: CGFloat = isNavigationSheetExpanded ? 520 : 120
+        let sheetBottomMargin: CGFloat = 16
+        let buttonToSheetGap: CGFloat = 16
+
+        return sheetHeight + sheetBottomMargin + buttonToSheetGap
+    }
     
     private var backButton: some View {
         Button {
@@ -206,29 +219,26 @@ struct WalkingNavigationView: View {
             Task { await viewModel.dismissRoute() }
             issueCameraCommand(.userLocation)
         } label: {
-            ZStack {
-                Circle()
-                //.fill(Color.white.opacity(0.05))
-                //.background(.ultraThinMaterial, in: Circle())
-                    .fill(.ultraThinMaterial)
-                    .frame(width: 50, height: 50)
-                Image(systemName: "chevron.backward")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(Color("Colors/text-text-1"))
-            }
+            Image(systemName: "chevron.left")
+                .font(.system(size: 22, weight: .bold))
+                .foregroundStyle(Color("Colors/text-text-1"))
+                .frame(width: 44, height: 44)
         }
+        .modifier(WalkingToolbarButtonStyle())
+        .accessibilityLabel("뒤로가기")
     }
     
     private var settingsButton: some View {
         Button {
             showSettings = true
         } label: {
-            Image(systemName: "gearshape.fill")
-                .font(.system(size: 12))
-                .foregroundStyle(.secondary)
-                .frame(width: 30, height: 30)
-                .background(.ultraThinMaterial, in: Circle())
+            Image(systemName: "gearshape")
+                .font(.system(size: 22, weight: .bold))
+                .foregroundStyle(Color("Colors/text-text-1"))
+                .frame(width: 44, height: 44)
         }
+        .modifier(WalkingToolbarButtonStyle())
+        .accessibilityLabel("설정")
     }
     
     private var settingsView: some View {
@@ -319,10 +329,6 @@ struct WalkingNavigationView: View {
                         .foregroundStyle(Color(red: 0.3, green: 0.3, blue: 0.3))
                     
                     Spacer()
-                    
-                    Image(systemName: "mic.fill")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(Color("Colors/text-text-1"))
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
@@ -331,7 +337,7 @@ struct WalkingNavigationView: View {
             .buttonStyle(.plain)
         }
         .padding(10)
-        .background(Color.white.opacity(0.3), in: RoundedRectangle(cornerRadius: 30))
+        .modifier(HomeSearchGlassSurface())
     }
     
     private var navigationDestinationPanel: some View {
@@ -471,7 +477,7 @@ struct WalkingNavigationView: View {
         }
         .padding([.horizontal], 24)
         .padding([.vertical], 27)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 100))
+        .modifier(RouteSummaryGlassSurface())
     }
     
     private func formattedTime(_ totalSeconds: Int) -> String {
@@ -504,4 +510,36 @@ struct WalkingNavigationView: View {
         meters >= 1000 ? String(format: "%.1fkm", Double(meters) / 1000) : "\(meters)m"
     }
 
+}
+
+private struct RouteSummaryGlassSurface: ViewModifier {
+    private let shape = RoundedRectangle(cornerRadius: 100)
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content.glassEffect(.regular, in: shape)
+        } else {
+            content.background(.regularMaterial, in: shape)
+        }
+    }
+}
+
+private struct WalkingToolbarButtonStyle: ViewModifier {
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content
+                .buttonStyle(.glass)
+                .buttonBorderShape(.circle)
+        } else {
+            content
+                .buttonStyle(.plain)
+                .background(.ultraThinMaterial, in: Circle())
+                .overlay {
+                    Circle()
+                        .stroke(.white.opacity(0.5), lineWidth: 1)
+                }
+        }
+    }
 }

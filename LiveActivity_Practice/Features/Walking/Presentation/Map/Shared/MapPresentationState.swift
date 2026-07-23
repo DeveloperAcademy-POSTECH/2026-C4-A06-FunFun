@@ -34,6 +34,7 @@ struct MapPresentationState: Equatable {
     let showTurnMarkers: Bool
     let approachingThreshold: Double
     let previewDestination: PlaceSearchResult?
+    let locationButtonBottomInset: CGFloat
     var onMapTapped: ((Coordinate) -> Void)?
     var onMapViewportChanged: ((CLLocationDirection, CGPoint?) -> Void)? = nil
 
@@ -53,6 +54,7 @@ struct MapPresentationState: Equatable {
         && lhs.showTurnMarkers == rhs.showTurnMarkers
         && lhs.approachingThreshold == rhs.approachingThreshold
         && lhs.previewDestination == rhs.previewDestination
+        && lhs.locationButtonBottomInset == rhs.locationButtonBottomInset
     }
 }
 

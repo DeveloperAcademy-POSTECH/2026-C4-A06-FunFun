@@ -66,10 +66,6 @@ struct WalkingSearchModalView: View {
                         .foregroundStyle(Color(.systemGray3))
                 }
             }
-
-            Image(systemName: "mic.fill")
-                .font(.system(size: 18, weight: .medium))
-                .foregroundStyle(Color(.systemGray))
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)

@@ -28,7 +28,10 @@ struct NaverMapRouteView: UIViewRepresentable {
 
         context.coordinator.onMapViewportChanged = state.onMapViewportChanged
         context.coordinator.updateCurrentLocation(state.currentLocation, on: mapView)
-        context.coordinator.location.setupLocationButton(on: naverMapView, hasRoute: state.route != nil)
+        context.coordinator.location.setupLocationButton(
+            on: naverMapView,
+            bottomInset: state.locationButtonBottomInset
+        )
         context.coordinator.camera.prepareInitialCamera(location: state.currentLocation, on: mapView)
         return naverMapView
     }
@@ -161,7 +164,9 @@ struct NaverMapRouteView: UIViewRepresentable {
             }
 
             route.renderDeviationPath(state.deviationPath, on: mapView)
-            location.updateButtonLayout(hasRoute: state.route != nil)
+            location.updateButtonLayout(
+                bottomInset: state.locationButtonBottomInset
+            )
 
             if camera.handleNavigationAlignment(state: state, on: mapView) { return }
             camera.handleCameraCommand(state: state, on: mapView)
