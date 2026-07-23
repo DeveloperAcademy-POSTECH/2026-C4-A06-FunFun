@@ -200,6 +200,18 @@ struct WalkingNavigationView: View {
                 .presentationDetents([.medium])
         }
     }
+
+    private var locationButtonBottomInset: CGFloat {
+        guard viewModel.isNavigating else {
+            return viewModel.route != nil ? 250 : 104
+        }
+
+        let sheetHeight: CGFloat = isNavigationSheetExpanded ? 520 : 120
+        let sheetBottomMargin: CGFloat = 16
+        let buttonToSheetGap: CGFloat = 16
+
+        return sheetHeight + sheetBottomMargin + buttonToSheetGap
+    }
     
     private var backButton: some View {
         Button {
