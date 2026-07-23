@@ -9,19 +9,19 @@ import UIKit
 /// 도착지 설정하기 전 미리보기를 위한 객체입니다.
 final class NaverDestinationPreviewRenderer {
     private var marker: NMFMarker?
-    private var renderedPlace: PlaceSearchResult?
+    private var renderedCoordinate: Coordinate?
 
-    func render(place: PlaceSearchResult?, on mapView: NMFMapView) {
-        guard renderedPlace != place else { return }
+    func render(coordinate: Coordinate?, on mapView: NMFMapView) {
+        guard renderedCoordinate != coordinate else { return }
 
         clear()
-        renderedPlace = place
+        renderedCoordinate = coordinate
 
-        guard let place else { return }
+        guard let coordinate else { return }
         let marker = NMFMarker(
             position: NMGLatLng(
-                lat: place.coordinate.latitude,
-                lng: place.coordinate.longitude
+                lat: coordinate.latitude,
+                lng: coordinate.longitude
             )
         )
         marker.iconImage = NMFOverlayImage(image: UIImage(imageLiteralResourceName: "ic-destination"))
@@ -34,6 +34,6 @@ final class NaverDestinationPreviewRenderer {
     func clear() {
         marker?.mapView = nil
         marker = nil
-        renderedPlace = nil
+        renderedCoordinate = nil
     }
 }
