@@ -4,7 +4,9 @@
 import UIKit
 
 /// 현 위치 찾기 버튼
-final class MyLocationButton: NMFLocationButton {
+final class MyLocationButton: UIButton {
+    var onTap: (() -> Void)?
+
     private let glassEffectView: UIVisualEffectView = {
         let effect: UIVisualEffect
         if #available(iOS 26.0, *) {

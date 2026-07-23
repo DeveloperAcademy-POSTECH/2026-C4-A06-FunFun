@@ -11,7 +11,8 @@ final class NaverLocationOverlay {
 
     func setupLocationButton(
         on naverMapView: NMFNaverMapView,
-        bottomInset: CGFloat
+        bottomInset: CGFloat,
+        onTap: @escaping () -> Void
     ) {
         let button = MyLocationButton()
         button.onTap = onTap

@@ -28,10 +28,14 @@ struct NaverMapRouteView: UIViewRepresentable {
 
         context.coordinator.onMapViewportChanged = state.onMapViewportChanged
         context.coordinator.updateCurrentLocation(state.currentLocation, on: mapView)
+        context.coordinator.updateRouteAlignmentState(state)
         context.coordinator.location.setupLocationButton(
             on: naverMapView,
             bottomInset: state.locationButtonBottomInset
-        )
+        ) { [weak coordinator = context.coordinator, weak mapView] in
+            guard let coordinator, let mapView else { return }
+            coordinator.handleLocationButtonTap(on: mapView)
+        }
         context.coordinator.camera.prepareInitialCamera(location: state.currentLocation, on: mapView)
         return naverMapView
     }
