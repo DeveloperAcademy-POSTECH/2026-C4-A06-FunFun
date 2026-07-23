@@ -26,28 +26,13 @@ struct CustomTopToolbar: View {
     }
 
     var body: some View {
-        HStack(spacing: 16) {
+        HStack(spacing: 20) {
             toolbarButton(
                 systemName: "chevron.left",
                 accessibilityLabel: "뒤로가기",
                 action: onBack
             )
-
-            Text(displayDestinationName)
-                .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(Color("Colors/Gray-gray-700"))
-                .lineLimit(1)
-                .minimumScaleFactor(0.8)
-                .frame(maxWidth: .infinity)
-                .frame(height: 50)
-                .padding(.horizontal, 20)
-                .background(.ultraThinMaterial, in: Capsule())
-                .overlay {
-                    Capsule()
-                        .stroke(.white.opacity(0.5), lineWidth: 1)
-                }
-                .accessibilityLabel("목적지 " + displayDestinationName)
-
+            Spacer()
             toolbarButton(
                 systemName: "gearshape",
                 accessibilityLabel: "설정",
@@ -75,9 +60,10 @@ struct CustomTopToolbar: View {
                 .overlay {
                     Circle()
                         .stroke(.white.opacity(0.5), lineWidth: 1)
-                }
+                }        
         }
         .buttonStyle(.plain)
+        
         .accessibilityLabel(accessibilityLabel)
     }
 }
