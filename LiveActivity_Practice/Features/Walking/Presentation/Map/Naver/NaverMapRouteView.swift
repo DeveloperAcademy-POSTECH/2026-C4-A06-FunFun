@@ -20,6 +20,7 @@ struct NaverMapRouteView: UIViewRepresentable {
         naverMapView.showScaleBar = false
         naverMapView.showZoomControls = false
         naverMapView.showLocationButton = false
+        mapView.locationOverlay.icon = NMFOverlayImage(name: "indicator")
         mapView.positionMode = .normal
         mapView.touchDelegate = context.coordinator
         mapView.addCameraDelegate(delegate:context.coordinator)

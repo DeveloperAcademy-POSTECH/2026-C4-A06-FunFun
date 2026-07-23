@@ -35,6 +35,9 @@ final class NaverLocationOverlay {
             return
         }
         overlay.hidden = false
+        overlay.icon = NMFOverlayImage(name: "indicator")
+        overlay.iconWidth = 28
+        overlay.iconHeight = 36
         overlay.location = NMGLatLng(lat: location.latitude, lng: location.longitude)
         overlay.heading = CGFloat(heading ?? 0)
     }
