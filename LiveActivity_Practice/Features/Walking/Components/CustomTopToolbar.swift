@@ -62,10 +62,9 @@ struct CustomTopToolbar: View {
             Button(action: action) {
                 toolbarButtonLabel(systemName: systemName)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.glass)
             .buttonBorderShape(.circle)
             .accessibilityLabel(accessibilityLabel)
-            .glassEffect(.regular, in: Circle())
         } else {
             Button(action: action) {
                 toolbarButtonLabel(systemName: systemName)
@@ -84,7 +83,7 @@ struct CustomTopToolbar: View {
         Image(systemName: systemName)
             .font(.system(size: 22, weight: .bold))
             .foregroundStyle(Color("Colors/text-text-1"))
-            .frame(width: 48, height: 48)
+            .frame(width: 44, height: 44)
     }
 }
 
