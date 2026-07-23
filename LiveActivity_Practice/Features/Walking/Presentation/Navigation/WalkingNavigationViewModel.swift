@@ -291,8 +291,6 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     }
 
     func startNavigation() async {
-        setStartFromCurrentLocation()
-        await searchRoute()
         guard let route else { return }
         do {
             let startProgress = initialProgress(route)
