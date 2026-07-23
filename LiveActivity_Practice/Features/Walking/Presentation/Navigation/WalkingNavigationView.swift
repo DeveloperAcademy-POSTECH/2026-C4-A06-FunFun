@@ -132,6 +132,14 @@ struct WalkingNavigationView: View {
             .padding()
 
         }
+        .overlay(alignment: .bottom) {
+            if viewModel.isArrived {
+                ArrivalLandingView(destinationName: viewModel.destinationName)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .zIndex(10)
+            }
+        }
+        .animation(.easeInOut(duration: 0.3), value: viewModel.isArrived)
         .overlay(alignment: .center) {
             if isExitAlertPresented {
                 ZStack {

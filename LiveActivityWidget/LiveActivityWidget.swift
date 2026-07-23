@@ -108,7 +108,7 @@ struct WalkingLiveActivity: Widget {
         init(state: WalkingActivityAttributes.ContentState) {
             if state.isOffRoute {
                 self = .offRoute
-            } else if state.maneuver == .destination && state.distanceToNextTurn < 10 {
+            } else if state.maneuver == .destination && state.distanceToNextTurn < 5 {
                 self = .arriving
             } else if state.isApproachingTurn {
                 self = .approaching
