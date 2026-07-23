@@ -30,6 +30,28 @@ final class NaverCameraController {
               let location = state.currentLocation,
               let bearing = state.navigationBearing else { return false }
 
+        alignRoute(location: location, bearing: bearing, on: mapView)
+        lastNavigationAlignmentID = alignmentID
+        return true
+    }
+
+    @discardableResult
+    func alignRoute(
+        route: WalkingRoute,
+        location: Coordinate,
+        navigationBearing: CLLocationDirection?,
+        on mapView: NMFMapView
+    ) -> Bool {
+        guard let bearing = navigationBearing ?? initialBearing(of: route) else { return false }
+        alignRoute(location: location, bearing: bearing, on: mapView)
+        return true
+    }
+
+    private func alignRoute(
+        location: Coordinate,
+        bearing: CLLocationDirection,
+        on mapView: NMFMapView
+    ) {
         let position = NMFCameraPosition(
             NMGLatLng(lat: location.latitude, lng: location.longitude),
             zoom: 16,
@@ -41,8 +63,29 @@ final class NaverCameraController {
         update.animationDuration = 0.4
         mapView.moveCamera(update)
         hasCenteredInitialLocation = true
-        lastNavigationAlignmentID = alignmentID
-        return true
+    }
+
+    private func initialBearing(of route: WalkingRoute) -> CLLocationDirection? {
+        guard route.path.count >= 2 else { return nil }
+
+        let lookAheadDistance: CLLocationDistance = 20
+        var targetIndex = 0
+        var accumulatedDistance: CLLocationDistance = 0
+        while targetIndex < route.path.count - 1, accumulatedDistance < lookAheadDistance {
+            accumulatedDistance += route.path[targetIndex].distance(to: route.path[targetIndex + 1])
+            targetIndex += 1
+        }
+
+        guard targetIndex > 0 else { return nil }
+        let start = route.path[0]
+        let end = route.path[targetIndex]
+        let startLatitude = start.latitude * .pi / 180
+        let endLatitude = end.latitude * .pi / 180
+        let longitudeDelta = (end.longitude - start.longitude) * .pi / 180
+        let y = sin(longitudeDelta) * cos(endLatitude)
+        let x = cos(startLatitude) * sin(endLatitude)
+            - sin(startLatitude) * cos(endLatitude) * cos(longitudeDelta)
+        return (atan2(y, x) * 180 / .pi + 360).truncatingRemainder(dividingBy: 360)
     }
 
     func handleCameraCommand(state: MapPresentationState, on mapView: NMFMapView) {

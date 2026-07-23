@@ -14,7 +14,7 @@ final class NaverLocationOverlay {
         bottomInset: CGFloat
     ) {
         let button = MyLocationButton()
-        button.mapView = naverMapView.mapView
+        button.onTap = onTap
         button.translatesAutoresizingMaskIntoConstraints = false
         button.accessibilityLabel = "내 위치 찾기"
         naverMapView.addSubview(button)
@@ -66,7 +66,7 @@ final class NaverLocationOverlay {
     }
 
     func tearDown() {
-        locationButton?.mapView = nil
+        locationButton?.onTap = nil
         locationButtonBottomConstraint?.isActive = false
     }
 }

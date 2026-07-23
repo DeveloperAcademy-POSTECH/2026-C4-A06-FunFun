@@ -1,7 +1,6 @@
 //  MyLocationButton.swift
 //  LiveActivity_Practice
 
-import NMapsMap
 import UIKit
 
 /// 현 위치 찾기 버튼
@@ -36,11 +35,13 @@ final class MyLocationButton: NMFLocationButton {
     override init(frame: CGRect) {
         super.init(frame: frame)
         configureAppearance()
+        configureAction()
     }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         configureAppearance()
+        configureAction()
     }
 
     override func layoutSubviews() {
@@ -75,5 +76,16 @@ final class MyLocationButton: NMFLocationButton {
             symbolImageView.widthAnchor.constraint(equalToConstant: 24),
             symbolImageView.heightAnchor.constraint(equalToConstant: 24)
         ])
+    }
+
+    private func configureAction() {
+        addAction(
+            UIAction { [weak self] _ in
+                DispatchQueue.main.async { [weak self] in
+                    self?.onTap?()
+                }
+            },
+            for: .touchUpInside
+        )
     }
 }
