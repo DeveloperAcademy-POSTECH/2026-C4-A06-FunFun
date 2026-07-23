@@ -18,6 +18,24 @@ enum AppTypography {
 }
 
 extension AppTypography.Style {
+    func uiFont() -> UIFont {
+        guard let font = UIFont(
+            name: weight.fontName,
+            size: size
+        ) else {
+            assertionFailure(
+                "\(weight.fontName) 폰트가 등록되지 않았습니다."
+            )
+
+            return UIFont.systemFont(
+                ofSize: size,
+                weight: weight.fallbackWeight
+            )
+        }
+
+        return font
+    }
+
     // MARK: - Headline
 
     static let headlineL = Self(
