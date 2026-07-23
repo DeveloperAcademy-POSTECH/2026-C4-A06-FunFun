@@ -26,51 +26,80 @@ struct CustomTopToolbar: View {
     }
 
     var body: some View {
+        toolbarContent
+        .frame(maxWidth: .infinity)
+    }
+
+    private var toolbarContent: some View {
         HStack(spacing: 20) {
             toolbarButton(
                 systemName: "chevron.left",
                 accessibilityLabel: "뒤로가기",
                 action: onBack
             )
+
             Spacer()
+
             toolbarButton(
                 systemName: "gearshape",
                 accessibilityLabel: "설정",
                 action: onSettings
             )
         }
-        .frame(maxWidth: .infinity)
     }
 
     private var displayDestinationName: String {
         destinationName.isEmpty ? "목적지" : destinationName
     }
 
+    @ViewBuilder
     private func toolbarButton(
         systemName: String,
         accessibilityLabel: String,
         action: @escaping () -> Void
     ) -> some View {
-        Button(action: action) {
-            Image(systemName: systemName)
-                .font(.system(size: 25, weight: .bold))
-                .foregroundStyle(Color("Colors/text-text-1"))
-                .frame(width: 50, height: 50)
-                .background(.ultraThinMaterial, in: Circle())
-                .overlay {
-                    Circle()
-                        .stroke(.white.opacity(0.5), lineWidth: 1)
-                }        
+        if #available(iOS 26.0, *) {
+            Button(action: action) {
+                toolbarButtonLabel(systemName: systemName)
+            }
+            .buttonStyle(.plain)
+            .buttonBorderShape(.circle)
+            .accessibilityLabel(accessibilityLabel)
+            .glassEffect(.regular, in: Circle())
+        } else {
+            Button(action: action) {
+                toolbarButtonLabel(systemName: systemName)
+                    .background(.ultraThinMaterial, in: Circle())
+                    .overlay {
+                        Circle()
+                            .stroke(.white.opacity(0.5), lineWidth: 1)
+                    }
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(accessibilityLabel)
         }
-        .buttonStyle(.plain)
-        
-        .accessibilityLabel(accessibilityLabel)
+    }
+
+    private func toolbarButtonLabel(systemName: String) -> some View {
+        Image(systemName: systemName)
+            .font(.system(size: 22, weight: .bold))
+            .foregroundStyle(Color("Colors/text-text-1"))
+            .frame(width: 48, height: 48)
     }
 }
 
 #Preview("Custom Top Toolbar") {
     ZStack(alignment: .top) {
-        Color.green.opacity(0.7)
+        LinearGradient(
+            colors: [
+                .blue,
+                .purple,
+                .orange,
+                .green
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
             .ignoresSafeArea()
 
         CustomTopToolbar(
