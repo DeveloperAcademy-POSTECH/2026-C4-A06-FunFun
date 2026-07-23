@@ -72,9 +72,22 @@
 		T10000000000000000000010 /* LiveActivity_PracticeTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LiveActivity_PracticeTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		C0F00CB530128ED9008BDDB8 /* Exceptions for "LiveActivity_Practice" folder in "LiveActivityWidget" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"Core/Utils/Font+Util.swift",
+			);
+			target = A10000000000000000000030 /* LiveActivityWidget */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		B7F679EC3000C6E000631B6E /* LiveActivity_Practice */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C0F00CB530128ED9008BDDB8 /* Exceptions for "LiveActivity_Practice" folder in "LiveActivityWidget" target */,
+			);
 			path = LiveActivity_Practice;
 			sourceTree = "<group>";
 		};

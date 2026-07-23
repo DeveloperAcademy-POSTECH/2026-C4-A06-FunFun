@@ -127,20 +127,20 @@ struct WalkingLiveActivity: Widget {
                     warningIcon
                     VStack(alignment: .leading, spacing: 4) {
                         Text("경로에서 벗어난 것 같아요")
-                            .font(.system(size: 20, weight: .bold))
+                            .appTypography(.title2)
                         Text("현재 위치에서 재탐색할까요?")
-                            .font(.system(size: 14))
+                            .appTypography(.body2)
                             .foregroundStyle(Color(white: 0.5))
                     }
                     Spacer()
                     Text("\(context.state.remainingDistance)m")
-                        .font(.system(size: 14, weight: .bold))
+                        .appTypography(.labelM)
                         .monospacedDigit()
                 }
                 HStack(spacing: 12) {
                     Button(intent: OpenAppIntent()) {
                         Text("앱으로 가기")
-                            .font(.system(size: 16, weight: .semibold))
+                            .appTypography(.labelL)
                             .foregroundStyle(livePrimary)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 12)
@@ -153,33 +153,33 @@ struct WalkingLiveActivity: Widget {
             VStack(alignment: .leading, spacing: 8) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("목적지 근처에 도착했어요")
-                        .font(.system(size: 20, weight: .bold))
+                        .appTypography(.title2)
                     Text("길 안내를 종료할게요")
-                        .font(.system(size: 14))
+                        .appTypography(.body2)
                         .foregroundStyle(Color(white: 0.7))
                 }
-                Button(intent: OpenAppIntent()) {
-                    Text("앱으로 가기")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(livePrimary)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                }
-                .buttonStyle(.plain)
-                .background(Color(red: 16.0/255, green: 31.0/255, blue: 23.0/255), in: Capsule())
+//                Button(intent: OpenAppIntent()) {
+//                    Text("앱으로 가기")
+//                        .appTypography(.labelL)
+//                        .foregroundStyle(livePrimary)
+//                        .frame(maxWidth: .infinity)
+//                        .padding(.vertical, 12)
+//                }
+//                .buttonStyle(.plain)
+//                .background(Color(red: 16.0/255, green: 31.0/255, blue: 23.0/255), in: Capsule())
             }
         case .approaching:
             // TODO: 10m 미만 Expanded 디자인
             HStack(alignment: .center) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(context.state.distanceToNextTurnText)
-                        .font(.system(size: 16, weight: .semibold))
+                        .appTypography(.labelL)
                         .foregroundStyle(livePrimary)
                     Spacer()
                     Text(context.state.landmarkName.map { "\($0)에서" } ?? " ")
-                        .font(.system(size: 18, weight: .bold))
+                        .appTypography(.title2)
                     Text(context.state.maneuver.instruction)
-                        .font(.system(size: 14, weight: .bold))
+                        .appTypography(.labelL)
                         .lineLimit(1)
                 }
                 Spacer()
@@ -193,13 +193,13 @@ struct WalkingLiveActivity: Widget {
             HStack(alignment: .center) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(context.state.distanceToNextTurnText)
-                        .font(.system(size: 16, weight: .semibold))
+                        .appTypography(.labelL)
                         .foregroundStyle(livePrimary)
                     Spacer()
                     Text(context.state.landmarkName.map { "\($0)까지" } ?? "다음 안내까지")
-                        .font(.system(size: 18, weight: .bold))
+                        .appTypography(.title2)
                     Text("앞으로 가세요")
-                        .font(.system(size: 14, weight: .bold))
+                        .appTypography(.labelL)
                         .lineLimit(1)
                 }
                 Spacer()
@@ -242,11 +242,11 @@ struct WalkingLiveActivity: Widget {
                 VStack(alignment: .leading, spacing: 16) {
                     if let landmarkName = context.state.landmarkName {
                         Text("\(landmarkName)에서")
-                            .font(.system(size: 12))
+                            .appTypography(.captionM)
                             .foregroundStyle(Color.white)
                     }
                     Text(context.state.maneuver.instruction)
-                        .font(.system(size: 24, weight: .bold))
+                        .appTypography(.title1)
                         .foregroundStyle(Color.white)
                         .lineLimit(1)
                 }
@@ -263,10 +263,10 @@ struct WalkingLiveActivity: Widget {
                 Spacer()
                 VStack(alignment: .leading, spacing: 4) {
                     Text("경로를 벗어난 것 같아요")
-                        .font(.system(size: 24, weight: .bold))
+                        .appTypography(.title1)
                         .foregroundStyle(Color.white)
                     Text("앱에서 지도를 확인하세요")
-                        .font(.system(size: 14))
+                        .appTypography(.body2)
                         .foregroundStyle(Color(white: 0.7))
                 }
                 Spacer()
@@ -275,10 +275,10 @@ struct WalkingLiveActivity: Widget {
         case .arriving:
             VStack(alignment: .leading, spacing: 4) {
                 Text("목적지 근처에 도착했어요")
-                    .font(.system(size: 24, weight: .bold))
+                    .appTypography(.title2)
                     .foregroundStyle(Color.white)
                 Text("길 안내를 종료할게요")
-                    .font(.system(size: 14))
+                    .appTypography(.body2)
                     .foregroundStyle(Color(white: 0.7))
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -287,14 +287,14 @@ struct WalkingLiveActivity: Widget {
                 VStack(alignment: .leading, spacing: 16) {
                     HStack(spacing: 2) {
                         Text(context.state.landmarkName.map { "\($0)까지" } ?? "다음 안내까지")
-                            .font(.system(size: 12))
+                            .appTypography(.captionM)
                             .foregroundStyle(Color.white)
                         Text(context.state.distanceToNextTurnText)
-                            .font(.system(size: 12))
+                            .appTypography(.captionM)
                             .foregroundStyle(Color.white)
                     }
                     Text("앞으로 가세요")
-                        .font(.system(size: 24, weight: .bold))
+                        .appTypography(.title1)
                         .foregroundStyle(Color.white)
                         .lineLimit(1)
                 }
