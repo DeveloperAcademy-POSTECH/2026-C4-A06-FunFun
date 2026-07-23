@@ -55,6 +55,7 @@ struct WalkingNavigationView: View {
             if viewModel.isNavigating && viewModel.showGradientOverlay {
                 HeadingSafeAreaGradientOverlay(
                     heading: viewModel.currentHeading,
+                    navigationBearing: viewModel.navigationBearing,
                     mapHeading: mapHeading,
                     indicatorPosition: indicatorPosition
                 )
