@@ -58,6 +58,11 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     @Published var showTurnMarkers = false
     @Published var showGradientOverlay = true
 
+    var landmarkCount: Int {
+        guard let route else { return 0 }
+        return Set(route.maneuvers.compactMap { $0.landmark?.id }).count
+    }
+
     private let repository: WalkingRouteRepositoryProtocol
     private let placeSearchClient: TMAPClientProtocol
     private let activityManager: WalkingLiveActivityManager
