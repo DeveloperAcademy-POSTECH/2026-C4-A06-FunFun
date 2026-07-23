@@ -14,9 +14,13 @@ import SwiftUI
 ///   - expandedHeight: 펼친 콘텐츠의 높이입니다.
 ///
 struct CustomBottomSheet: View {
+    // MARK: - Inputs
+
     let route: WalkingRoute
     let progress: WalkingProgress?
     let destinationName: String
+
+    // MARK: - Expansion State
 
     private let expandedHeight: CGFloat
     private let expansionBinding: Binding<Bool>?
@@ -36,6 +40,8 @@ struct CustomBottomSheet: View {
         self.expandedHeight = expandedHeight
         _internalIsExpanded = State(initialValue: isExpanded?.wrappedValue ?? false)
     }
+
+    // MARK: - Route Presentation Values
 
     private var isExpanded: Bool {
         expansionBinding?.wrappedValue ?? internalIsExpanded
@@ -59,50 +65,76 @@ struct CustomBottomSheet: View {
         }
     }
 
+    private var sheetCornerRadius: CGFloat {
+        isExpanded ? 60 : 120
+    }
+
+    // MARK: - Main Layout
+
     var body: some View {
         VStack(spacing: 0) {
             expansionButton
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    setExpanded(!isExpanded)
+                }
+                .simultaneousGesture(expansionDragGesture)
 
-            if isExpanded {
-                expandedContent
-                    .transition(.opacity.combined(with: .move(edge: .bottom)))
-            } else {
-                currentInstructionCard(isInset: false)
-                    .padding(.horizontal, 10)
-                    .padding(.bottom, 14)
-                    .transition(.opacity)
+            VStack(spacing: 0) {
+                currentInstructionCard(isInset: isExpanded)
+                    .padding(.leading, isExpanded ? 12 : 30)
+                    .padding(.trailing, isExpanded ? 12 : 20)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        setExpanded(!isExpanded)
+                    }
+                    .simultaneousGesture(expansionDragGesture)
+
+                if isExpanded {
+                    expandedRouteDetails
+                        .padding(.top, 10)
+                        .transition(
+                            .opacity.combined(
+                                with: .move(edge: .bottom)
+                            )
+                        )
+                }
             }
+            .padding(.bottom, isExpanded ? 16 : 20)
+            .frame(
+                height: isExpanded ? expandedHeight : 100,
+                alignment: .top
+            )
         }
         .frame(maxWidth: .infinity)
-        .background(sheetBackground, in: RoundedRectangle(cornerRadius: 30, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 30, style: .continuous)
-                .stroke(.white.opacity(0.5), lineWidth: 1)
-        }
+        .modifier(
+            BottomSheetGlassSurface(
+                cornerRadius: sheetCornerRadius
+            )
+        )
         .shadow(color: .black.opacity(0.08), radius: 18, y: 5)
         .animation(.spring(response: 0.38, dampingFraction: 0.88), value: isExpanded)
-        .contentShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
-        .onTapGesture {
-            setExpanded(!isExpanded)
-        }
-        .simultaneousGesture(expansionDragGesture)
+        .contentShape(
+            RoundedRectangle(
+                cornerRadius: sheetCornerRadius,
+                style: .continuous
+            )
+        )
         .accessibilityElement(children: .contain)
         .accessibilityAction(named: isExpanded ? "전체 경로 접기" : "전체 경로 펼치기") {
             setExpanded(!isExpanded)
         }
     }
 
-    private var sheetBackground: some ShapeStyle {
-        .ultraThinMaterial
-    }
+    // MARK: - Expansion Controls
 
     private var expansionButton: some View {
         Capsule()
             .fill(Color(white: 0.64))
-            .frame(width: 48, height: 5)
+            .frame(width: 40, height: 5)
             .frame(maxWidth: .infinity)
             .padding(.top, 10)
-            .padding(.bottom, 9)
+            .padding(.bottom, 5)
             .accessibilityHidden(true)
     }
 
@@ -119,68 +151,75 @@ struct CustomBottomSheet: View {
             }
     }
 
-    private var expandedContent: some View {
-        VStack(spacing: 0) {
-            currentInstructionCard(isInset: true)
-                .padding(.horizontal, 13)
+    // MARK: - Expanded Route Content
 
-            if upcomingManeuvers.isEmpty {
-                Spacer(minLength: 12)
-            } else {
-                ScrollView {
-                    LazyVStack(spacing: 0) {
-                        ForEach(upcomingManeuvers) { maneuver in
-                            upcomingRow(maneuver)
-                        }
+    private var expandedRouteDetails: some View {
+        ScrollView {
+            LazyVStack(spacing: 0) {
+                ForEach(upcomingManeuvers) { maneuver in
+                    VStack(spacing: 8) {
+                        upcomingRow(maneuver)
+
+                        Divider()
+                            .overlay(Color(white: 0.82))
+                            .padding(.horizontal, 14)
                     }
-                    .padding(.horizontal, 22)
+                    .padding(.bottom, 7)
                 }
-                .scrollIndicators(.hidden)
-            }
 
-            destinationFooter
-                .padding(.horizontal, 22)
+                destinationFooter
+                    .padding(.horizontal, 14)
+            }
         }
-        .frame(height: expandedHeight)
+        .padding(.horizontal, 20)
+        .scrollIndicators(.hidden)
+        .frame(maxHeight: .infinity)
     }
+
+    // MARK: - Current Maneuver
 
     @ViewBuilder
     private func currentInstructionCard(isInset: Bool) -> some View {
         if let maneuver = currentManeuver {
-            HStack(spacing: 14) {
-                VStack(alignment: .leading, spacing: 5) {
+            HStack(spacing: 16) {
+                VStack(alignment: .leading, spacing: isInset ? 4 : 3) {
                     Text("남은 거리 \(distanceText(progress?.distanceToNextManeuver ?? route.totalDistance))")
-                        .font(.system(size: isInset ? 18 : 15, weight: .bold))
+                        .appTypography(isInset ? .labelM : .labelL)
                         .foregroundStyle(Color(white: 0.5))
 
                     Text(instructionText(for: maneuver))
-                        .font(.system(size: isInset ? 25 : 21, weight: .bold))
+                        .appTypography(isInset ? .title3 : .title2)
                         .foregroundStyle(.black)
-                        .lineLimit(3)
-                        .minimumScaleFactor(0.82)
+                        .frame(
+                            maxWidth: isInset ? .infinity : 200,
+                            alignment: .leading
+                        )
+                        .lineLimit(2)
+                        .minimumScaleFactor(0.70)
                 }
-                .padding(18)
-
-                Spacer(minLength: 8)
+                .padding(.leading, isInset ? 6 : 0)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
                 Image(systemName: maneuver.turn.symbolName)
-                    .font(.system(size: isInset ? 46 : 42, weight: .semibold))
+                    .font(.system(size: isInset ? 42 : 54, weight: .semibold))
                     .foregroundStyle(Color(red: 0.075, green: 0.42, blue: 1))
-                    .frame(width: isInset ? 48 : 48, height: 48)
+                    .frame(
+                        width: isInset ? 62 : 80,
+                        height: isInset ? 62 : 80
+                    )
             }
-            .padding(.horizontal, isInset ? 28 : 16)
-            .frame(minHeight: isInset ? 114 : 80)
+            .padding(.leading, isInset ? 24 : 0)
+            .padding(.trailing, isInset ? 20 : 0)
+            .frame(height: isInset ? 94 : 80)
             .background {
-                if isInset {
-                    RoundedRectangle(cornerRadius: 55, style: .continuous)
-                        .fill(Color(white: 0.88).opacity(0.82))
-                }
+                Capsule()
+                    .fill(.black.opacity(isInset ? 0.1 : 0))
             }
             .accessibilityElement(children: .combine)
         } else {
             HStack {
                 Text("경로 안내를 확인해 주세요")
-                    .font(.headline)
+                    .appTypography(.labelL)
                 Spacer()
                 Image(systemName: "figure.walk")
                     .font(.title)
@@ -191,11 +230,13 @@ struct CustomBottomSheet: View {
         }
     }
 
+    // MARK: - Upcoming Maneuvers
+
     private func upcomingRow(_ maneuver: WalkingManeuver) -> some View {
         HStack(spacing: 16) {
             Text(maneuver.landmark?.name ?? shortInstruction(for: maneuver))
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Color(white: 0.48))
+                .appTypography(.labelL)
+                .foregroundStyle(Color(white: 0.5))
                 .lineLimit(2)
 
             Spacer(minLength: 8)
@@ -203,43 +244,40 @@ struct CustomBottomSheet: View {
             Image(systemName: maneuver.turn.symbolName)
                 .font(.system(size: 24, weight: .regular))
                 .foregroundStyle(Color(red: 0.60, green: 0.75, blue: 1))
-                .frame(width: 24, height: 24)
+                .frame(width: 40, height: 40)
         }
         .padding(.horizontal, 24)
-        .frame(minHeight: 76)
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(Color(white: 0.82))
-                .frame(height: 1)
-        }
+        .frame(height: 40)
         .accessibilityElement(children: .combine)
     }
 
+    // MARK: - Destination
+
     private var destinationFooter: some View {
-        HStack(spacing: 14) {
-            Image(systemName: "mappin")
-                .font(.system(size: 20, weight: .bold))
-                .foregroundStyle(.white)
-                .frame(width: 36, height: 36)
-                .background(Color(red: 1, green: 0.42, blue: 0.44), in: Circle())
-                .background(Color(red: 1, green: 0.80, blue: 0.81), in: Circle().inset(by: -8))
-                .padding(8)
+        HStack(spacing: 10) {
+            Image("ic-arrival")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 40, height: 40)
+                .accessibilityHidden(true)
 
             Text(destinationName.isEmpty ? "목적지" : destinationName)
-                .appTypography(.headlineM)
-                .foregroundStyle(Color(white: 0.48))
+                .appTypography(.labelL)
+                .foregroundStyle(Color(white: 0.5))
                 .lineLimit(2)
 
             Spacer(minLength: 8)
 
             Text("남은 시간 \(remainingMinutes)분")
-                .font(.system(size: 14, weight: .medium))
+                .appTypography(.captionM)
                 .foregroundStyle(Color(white: 0.5))
                 .fixedSize()
         }
-        .frame(minHeight: 82)
+        .frame(height: 60)
         .accessibilityElement(children: .combine)
     }
+
+    // MARK: - Route Text Formatting
 
     private var remainingMinutes: Int {
         guard route.totalDistance > 0, let progress else {
@@ -287,5 +325,93 @@ struct CustomBottomSheet: View {
         meters >= 1_000
             ? String(format: "%.1fkm", Double(meters) / 1_000)
             : "\(meters)m"
+    }
+}
+
+// MARK: - Version-Adaptive Glass Surface
+
+private struct BottomSheetGlassSurface: ViewModifier {
+    let cornerRadius: CGFloat
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        let shape = RoundedRectangle(
+            cornerRadius: cornerRadius,
+            style: .continuous
+        )
+
+        if #available(iOS 26.0, *) {
+            content
+                .glassEffect(
+                    .regular,
+                    in: shape
+                )
+        } else {
+            content
+                .background(.ultraThinMaterial, in: shape)
+                .overlay {
+                    shape
+                        .stroke(
+                            .white.opacity(0.5),
+                            lineWidth: 1
+                        )
+                }
+        }
+    }
+}
+
+// MARK: - Preview
+
+#Preview("Custom Bottom Sheet") {
+    @Previewable @State var isExpanded = false
+
+    let coordinate = Coordinate(
+        latitude: 37.5663,
+        longitude: 126.9779
+    )
+
+    let maneuver = WalkingManeuver(
+        id: 0,
+        coordinate: coordinate,
+        turn: .left,
+        description: "효자중학교에서 왼쪽",
+        routeIndex: 0,
+        landmark: nil
+    )
+
+    ZStack(alignment: .bottom) {
+        LinearGradient(
+            colors: [
+                .blue,
+                .purple,
+                .orange,
+                .green
+            ],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+        .ignoresSafeArea()
+
+        CustomBottomSheet(
+            route: WalkingRoute(
+                totalDistance: 800,
+                totalTime: 600,
+                path: [],
+                maneuvers: [maneuver]
+            ),
+            progress: WalkingProgress(
+                remainingDistance: 600,
+                distanceToNextManeuver: 30,
+                nextManeuver: maneuver,
+                isOffRoute: false,
+                isApproachingTurn: true,
+                estimatedArrival: Date().addingTimeInterval(600)
+            ),
+            destinationName: "쿨오프",
+            isExpanded: $isExpanded,
+            expandedHeight: 500
+        )
+        .padding(.horizontal, 20)
+        .padding(.bottom, 10)
     }
 }
