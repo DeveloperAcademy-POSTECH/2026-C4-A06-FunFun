@@ -97,17 +97,13 @@ struct WalkingNavigationView: View {
                 
                 Spacer()
                 
-                if let route = viewModel.route {
-                    if viewModel.isNavigating {
-                        CustomBottomSheet(
-                            route: route,
-                            progress: viewModel.progress,
-                            destinationName: viewModel.destinationName,
-                            isExpanded: $isNavigationSheetExpanded
-                        )
-                    } else {
-                        routeSummary(route)
-                    }
+                if viewModel.isNavigating, let route = viewModel.route {
+                    CustomBottomSheet(
+                        route: route,
+                        progress: viewModel.progress,
+                        destinationName: viewModel.destinationName,
+                        isExpanded: $isNavigationSheetExpanded
+                    )
                 } else if let place = viewModel.previewDestination {
                     BottomPlaceView(
                         place: place,
@@ -116,6 +112,8 @@ struct WalkingNavigationView: View {
                             Task { await viewModel.searchRoute() }
                         }
                     )
+                } else if let route = viewModel.route {
+                    routeSummary(route)
                 } else if viewModel.isLoading {
                     ProgressView("최단 경로와 랜드마크 검색 중…")
                         .padding()
