@@ -5,7 +5,7 @@ import CoreLocation
 import NMapsMap
 import UIKit
 
-final class NaverLocationOverlay {
+final class NaverLocationOverlay: NSObject, NMFMapViewOptionDelegate {
     weak var locationButton: MyLocationButton?
     var locationButtonBottomConstraint: NSLayoutConstraint?
 
@@ -15,6 +15,7 @@ final class NaverLocationOverlay {
     ) {
         let button = MyLocationButton()
         button.mapView = naverMapView.mapView
+        naverMapView.mapView.addOptionDelegate(delegate: self)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.accessibilityLabel = "내 위치 찾기"
         naverMapView.addSubview(button)
@@ -65,7 +66,14 @@ final class NaverLocationOverlay {
         }
     }
 
+    func mapViewOptionChanged(_ mapView: NMFMapView) {
+        mapView.locationOverlay.icon = NMFOverlayImage(name: "indicator")
+        mapView.locationOverlay.iconWidth = 28
+        mapView.locationOverlay.iconHeight = 38
+    }
+
     func tearDown() {
+        locationButton?.mapView?.removeOptionDelegate(delegate: self)
         locationButton?.mapView = nil
         locationButtonBottomConstraint?.isActive = false
     }
