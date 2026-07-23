@@ -90,7 +90,7 @@ struct WalkingNavigationView: View {
                 }
 
                 if viewModel.isNavigating {
-                    if viewModel.isOffRoute {
+                    if viewModel.isOffRoute && !viewModel.isOffRouteBannerHidden {
                         offRouteBanner
                     }
                 }
@@ -398,7 +398,7 @@ struct WalkingNavigationView: View {
                         Task { await viewModel.rerouteFromCurrentLocation() }
                     } label: {
                         Text("재탐색")
-                            .font(.system(size: 16, weight: .semibold))
+                            .appTypography(.labelL)
                             .foregroundStyle(Color(red: 0.075, green: 0.42, blue: 1))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 8)
@@ -410,7 +410,7 @@ struct WalkingNavigationView: View {
                         viewModel.keepCurrentRoute()
                     } label: {
                         Text("기존 경로 유지")
-                            .font(.system(size: 16, weight: .semibold))
+                            .appTypography(.labelL)
                             .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.1))
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 8)
