@@ -159,7 +159,10 @@ struct NaverMapRouteView: UIViewRepresentable {
             )
 
             camera.centerOnInitialLocationIfNeeded(state.currentLocation, on: mapView)
-            destinationPreview.render(place: state.previewDestination, on: mapView)
+            let previewCoordinate = state.route == nil
+                ? state.previewDestination?.coordinate ?? state.tappedCoordinate
+                : nil
+            destinationPreview.render(coordinate: previewCoordinate, on: mapView)
 
             if renderedRoute != state.route || renderedPassedRouteIndex != state.passedRouteIndex || renderedShowLandmarks != state.showLandmarks || renderedLandmarkScale != state.landmarkScaleThreshold || renderedShowTurnMarkers != state.showTurnMarkers || renderedApproachingThreshold != state.approachingThreshold {
                 route.render(route: state.route, passedRouteIndex: state.passedRouteIndex, on: mapView)
