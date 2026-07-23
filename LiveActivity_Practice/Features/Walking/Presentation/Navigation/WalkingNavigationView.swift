@@ -344,7 +344,7 @@ struct WalkingNavigationView: View {
             .buttonStyle(.plain)
         }
         .padding(10)
-        .background(Color.white.opacity(0.3), in: RoundedRectangle(cornerRadius: 30))
+        .modifier(HomeSearchGlassSurface())
     }
     
     private var navigationDestinationPanel: some View {
