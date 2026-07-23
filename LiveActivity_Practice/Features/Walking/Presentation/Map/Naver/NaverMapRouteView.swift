@@ -21,17 +21,21 @@ struct NaverMapRouteView: UIViewRepresentable {
         naverMapView.showZoomControls = false
         naverMapView.showLocationButton = false
         mapView.locationOverlay.icon = NMFOverlayImage(name: "indicator")
-        mapView.positionMode = .normal
+        mapView.positionMode = .disabled
         mapView.touchDelegate = context.coordinator
         mapView.addCameraDelegate(delegate:context.coordinator)
         mapView.logoAlign = .leftTop
 
         context.coordinator.onMapViewportChanged = state.onMapViewportChanged
         context.coordinator.updateCurrentLocation(state.currentLocation, on: mapView)
+        context.coordinator.updateRouteAlignmentState(state)
         context.coordinator.location.setupLocationButton(
             on: naverMapView,
             bottomInset: state.locationButtonBottomInset
-        )
+        ) { [weak coordinator = context.coordinator, weak mapView] in
+            guard let coordinator, let mapView else { return }
+            coordinator.handleLocationButtonTap(on: mapView)
+        }
         context.coordinator.camera.prepareInitialCamera(location: state.currentLocation, on: mapView)
         return naverMapView
     }
@@ -64,6 +68,8 @@ struct NaverMapRouteView: UIViewRepresentable {
         private var renderedShowTurnMarkers = false
         private var renderedApproachingThreshold: Double = 10
         private var currentLocation: Coordinate?
+        private var currentRoute: WalkingRoute?
+        private var currentNavigationBearing: CLLocationDirection?
         private var lastReportedViewport: MapViewportSnapshot?
 
         func mapView(_ mapView: NMFMapView, didTapMap latlng: NMGLatLng, point: CGPoint) {
@@ -124,7 +130,27 @@ struct NaverMapRouteView: UIViewRepresentable {
             }
         }
 
+        func updateRouteAlignmentState(_ state: MapPresentationState) {
+            currentRoute = state.route
+            currentNavigationBearing = state.navigationBearing
+        }
+
+        func handleLocationButtonTap(on mapView: NMFMapView) {
+            guard let currentLocation else { return }
+            if let currentRoute,
+               camera.alignRoute(
+                   route: currentRoute,
+                   location: currentLocation,
+                   navigationBearing: currentNavigationBearing,
+                   on: mapView
+               ) {
+                return
+            }
+            camera.moveCamera(to: currentLocation, zoom: 15, on: mapView, animated: true)
+        }
+
         func update(state: MapPresentationState, on mapView: NMFMapView) {
+            updateRouteAlignmentState(state)
             updateCurrentLocation(state.currentLocation, on: mapView)
             location.updateOverlay(
                 location: state.currentLocation,
