@@ -77,6 +77,7 @@ struct NaverMapRouteView: UIViewRepresentable {
             animated: Bool
         ) {
             reportMapViewport(from: mapView)
+            refreshLandmarkPlacement(on: mapView)
         }
 
         private func reportMapViewport(from mapView: NMFMapView) {
@@ -97,6 +98,18 @@ struct NaverMapRouteView: UIViewRepresentable {
             guard viewport != lastReportedViewport else { return }
             lastReportedViewport = viewport
             onMapViewportChanged?(heading, position)
+        }
+
+        private func refreshLandmarkPlacement(on mapView: NMFMapView) {
+            guard renderedShowLandmarks, let renderedRoute else { return }
+
+            landmark.render(
+                landmarks: renderedRoute.mapLandmarkSelections(),
+                routePath: renderedRoute.path,
+                passedRouteIndex: renderedPassedRouteIndex,
+                scaleThreshold: renderedLandmarkScale,
+                on: mapView
+            )
         }
 
         func updateCurrentLocation(_ location: Coordinate?, on mapView: NMFMapView) {
@@ -123,7 +136,13 @@ struct NaverMapRouteView: UIViewRepresentable {
                 route.render(route: state.route, passedRouteIndex: state.passedRouteIndex, on: mapView)
                 if state.showLandmarks {
                     let landmarks = state.route?.mapLandmarkSelections() ?? []
-                    landmark.render(landmarks: landmarks, passedRouteIndex: state.passedRouteIndex, scaleThreshold: state.landmarkScaleThreshold, on: mapView)
+                    landmark.render(
+                        landmarks: landmarks,
+                        routePath: state.route?.path ?? [],
+                        passedRouteIndex: state.passedRouteIndex,
+                        scaleThreshold: state.landmarkScaleThreshold,
+                        on: mapView
+                    )
                 } else {
                     landmark.clearAll()
                 }
