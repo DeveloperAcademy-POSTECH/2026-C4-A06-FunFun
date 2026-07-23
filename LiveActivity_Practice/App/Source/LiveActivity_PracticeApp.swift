@@ -4,6 +4,7 @@
 //  Created by 현진백 on 2026/07/14.
 //
 
+import ActivityKit
 import SwiftUI
 
 @main
@@ -17,6 +18,15 @@ struct LiveActivity_PracticeApp: App {
     private init(dependencies: AppDependencies) {
         self.dependencies = dependencies
         dependencies.configureMapSDKs()
+        endStaleActivities()
+    }
+
+    private func endStaleActivities() {
+        Task {
+            for activity in Activity<WalkingActivityAttributes>.activities {
+                await activity.end(nil, dismissalPolicy: .immediate)
+            }
+        }
     }
 
     var body: some Scene {
