@@ -18,7 +18,7 @@ struct WalkingNavigationView: View {
     @State private var isNavigationSheetExpanded = false
     @State private var mapHeading: CLLocationDirection = 0
     @State private var indicatorPosition: CGPoint?
-
+    
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             PersistentWalkingMapView(
@@ -48,17 +48,17 @@ struct WalkingNavigationView: View {
                     }
                 )
             )
-                .ignoresSafeArea()
-
+            .ignoresSafeArea()
+            
             if viewModel.isNavigating && viewModel.showGradientOverlay {
                 HeadingSafeAreaGradientOverlay(
                     heading: viewModel.currentHeading,
                     mapHeading: mapHeading,
                     indicatorPosition: indicatorPosition
                 )
-                    .ignoresSafeArea()
+                .ignoresSafeArea()
             }
-
+            
             VStack(spacing: 12) {
                 if viewModel.isNavigating {
                     CustomTopToolbar(
@@ -79,15 +79,15 @@ struct WalkingNavigationView: View {
                         settingsButton
                     }
                 }
-
+                
                 if viewModel.isNavigating {
                     if viewModel.isOffRoute {
                         offRouteBanner
                     }
                 }
-
+                
                 Spacer()
-
+                
                 if let route = viewModel.route {
                     if viewModel.isNavigating {
                         CustomBottomSheet(
@@ -120,7 +120,7 @@ struct WalkingNavigationView: View {
                         .padding()
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
                 }
-
+                
                 if !viewModel.isNavigating,
                    viewModel.route == nil,
                    viewModel.previewDestination == nil,
@@ -130,14 +130,14 @@ struct WalkingNavigationView: View {
                 }
             }
             .padding()
-
+            
         }
         .overlay(alignment: .center) {
             if isExitAlertPresented {
                 ZStack {
                     Color.black.opacity(0.12)
                         .ignoresSafeArea()
-
+                    
                     NavigationExitAlert(
                         onContinue: {
                             isExitAlertPresented = false
@@ -175,16 +175,16 @@ struct WalkingNavigationView: View {
                 isPresented: $isSearchExpanded,
                 searchQuery: $searchQuery
             )
-                .presentationDetents([.fraction(0.9)])
-                .presentationDragIndicator(.visible)
-                .presentationCornerRadius(30)
+            .presentationDetents([.fraction(0.9)])
+            .presentationDragIndicator(.visible)
+            .presentationCornerRadius(30)
         }
         .sheet(isPresented: $showSettings) {
             settingsView
                 .presentationDetents([.medium])
         }
     }
-
+    
     private var backButton: some View {
         Button {
             viewModel.clearTappedCoordinate()
@@ -193,8 +193,8 @@ struct WalkingNavigationView: View {
         } label: {
             ZStack {
                 Circle()
-                    //.fill(Color.white.opacity(0.05))
-                    //.background(.ultraThinMaterial, in: Circle())
+                //.fill(Color.white.opacity(0.05))
+                //.background(.ultraThinMaterial, in: Circle())
                     .fill(.ultraThinMaterial)
                     .frame(width: 50, height: 50)
                 Image(systemName: "chevron.backward")
@@ -203,7 +203,7 @@ struct WalkingNavigationView: View {
             }
         }
     }
-
+    
     private var settingsButton: some View {
         Button {
             showSettings = true
@@ -215,7 +215,7 @@ struct WalkingNavigationView: View {
                 .background(.ultraThinMaterial, in: Circle())
         }
     }
-
+    
     private var settingsView: some View {
         NavigationStack {
             Form {
@@ -259,7 +259,7 @@ struct WalkingNavigationView: View {
             }
         }
     }
-
+    
     private var tappedDestinationPanel: some View {
         VStack(spacing: 12) {
             HStack(spacing: 10) {
@@ -271,7 +271,7 @@ struct WalkingNavigationView: View {
                     .lineLimit(1)
                 Spacer()
             }
-
+            
             Button {
                 Task { await viewModel.searchRoute() }
             } label: {
@@ -284,13 +284,13 @@ struct WalkingNavigationView: View {
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
         .shadow(radius: 8)
     }
-
+    
     private var homeSearchPanel: some View {
         VStack(spacing: 6) {
             Capsule()
                 .fill(Color(.systemGray3))
                 .frame(width: 51, height: 5)
-
+            
             Button {
                 isSearchExpanded = true
             } label: {
@@ -298,13 +298,13 @@ struct WalkingNavigationView: View {
                     Image(systemName: "magnifyingglass")
                         .font(.system(size: 18, weight: .medium))
                         .foregroundStyle(Color("Colors/text-text-1"))
-
+                    
                     Text("어디로 갈까요?")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(Color(red: 0.3, green: 0.3, blue: 0.3))
-
+                    
                     Spacer()
-
+                    
                     Image(systemName: "mic.fill")
                         .font(.system(size: 18, weight: .medium))
                         .foregroundStyle(Color("Colors/text-text-1"))
@@ -318,13 +318,13 @@ struct WalkingNavigationView: View {
         .padding(10)
         .background(Color.white.opacity(0.3), in: RoundedRectangle(cornerRadius: 30))
     }
-
+    
     private var navigationDestinationPanel: some View {
         HStack(spacing: 10) {
             Image(systemName: "mappin.circle.fill")
                 .foregroundStyle(.red)
                 .font(.title3)
-
+            
             VStack(alignment: .leading, spacing: 2) {
                 Text("목적지")
                     .font(.caption)
@@ -333,7 +333,7 @@ struct WalkingNavigationView: View {
                     .font(.subheadline.weight(.semibold))
                     .lineLimit(1)
             }
-
+            
             Spacer()
         }
         .padding(14)
@@ -341,7 +341,7 @@ struct WalkingNavigationView: View {
         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
         .shadow(radius: 8)
     }
-
+    
     private var offRouteBanner: some View {
         VStack(spacing: 16) {
             HStack(spacing: 16) {
@@ -354,7 +354,7 @@ struct WalkingNavigationView: View {
                         .symbolRenderingMode(.palette)
                         .foregroundStyle(.white, Color(red: 1, green: 0.714, blue: 0.098))
                 }
-
+                
                 VStack(alignment: .leading, spacing: 2) {
                     if viewModel.isRerouting {
                         Text("경로 재탐색 중…")
@@ -369,14 +369,14 @@ struct WalkingNavigationView: View {
                             .foregroundStyle(Color(red: 0.3, green: 0.3, blue: 0.3))
                     }
                 }
-
+                
                 Spacer()
-
+                
                 if viewModel.isRerouting {
                     ProgressView()
                 }
             }
-
+            
             if !viewModel.isRerouting {
                 VStack(spacing: 6) {
                     Button {
@@ -390,7 +390,7 @@ struct WalkingNavigationView: View {
                     }
                     .buttonStyle(.plain)
                     .background(Color(red: 0.678, green: 0.8, blue: 1).opacity(0.8), in: Capsule())
-
+                    
                     Button {
                         viewModel.keepCurrentRoute()
                     } label: {
@@ -409,7 +409,7 @@ struct WalkingNavigationView: View {
         .padding(.vertical, 20)
         .background(Color.white.opacity(0.5), in: RoundedRectangle(cornerRadius: 25))
     }
-
+    
     private func exitNavigation() {
         isExitAlertPresented = false
         viewModel.clearTappedCoordinate()
@@ -418,38 +418,55 @@ struct WalkingNavigationView: View {
             issueCameraCommand(.userLocation)
         }
     }
-
+    
     private func issueCameraCommand(_ target: MapCameraCommand.Target) {
         cameraCommandSequence += 1
         cameraCommand = MapCameraCommand(id: cameraCommandSequence, target: target)
     }
-
+    
     private func routeSummary(_ route: WalkingRoute) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack {
             HStack {
-                Label(distanceText(route.totalDistance), systemImage: "figure.walk")
+                VStack(alignment: .leading) {
+                    Text("전체 랜드마크 \(viewModel.landmarkCount)개")
+                        .foregroundStyle(Color("Colors/brand-primary"))
+                        .appTypography(.captionM)
+                    Text(formattedTime(route.totalTime))
+                        .appTypography(.title1)
+                }
                 Spacer()
-                Label("약 \(max(1, route.totalTime / 60))분", systemImage: "clock")
-            }
-            .font(.headline)
-
-            if viewModel.isNavigating {
-                navigationDetails(for: route)
-            }
-
-            Button(viewModel.isNavigating ? "안내 종료" : "도보 안내 시작") {
-                Task {
-                    if viewModel.isNavigating { await viewModel.stopNavigation() }
-                    else { await viewModel.startNavigation() }
+                Button {
+                    Task {
+                        await viewModel.startNavigation()
+                    }
+                } label: {
+                    ZStack {
+                        Circle()
+                            .frame(width: 68, height: 68)
+                            .foregroundColor(Color("Colors/brand-primary"))
+                        VStack {
+                            Image(systemName: "figure.walk")
+                            Text("시작")
+                                .appTypography(.labelM)
+                        }
+                        .foregroundColor(.white)
+                    }
                 }
             }
-            .buttonStyle(.borderedProminent)
-            .tint(viewModel.isNavigating ? .red : .blue)
-            .frame(maxWidth: .infinity)
         }
-        .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
-        .shadow(radius: 8)
+        .padding([.horizontal], 24)
+        .padding([.vertical], 27)
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 100))
+    }
+    
+    private func formattedTime(_ totalSeconds: Int) -> String {
+        let minutes = max(1, totalSeconds / 60)
+        let hours = minutes / 60
+        let remainingMinutes = minutes % 60
+        if hours >= 1 {
+            return remainingMinutes > 0 ? "\(hours)시간 \(remainingMinutes)분" : "\(hours)시간"
+        }
+        return "\(minutes)분"
     }
 
     @ViewBuilder

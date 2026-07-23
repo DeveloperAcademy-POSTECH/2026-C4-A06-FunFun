@@ -24,12 +24,12 @@ final class NaverRouteRenderer {
         path?.patternInterval = 18
         path?.mapView = mapView
         routePath = path
-
+        
         if let start = route.path.first {
-            addMarker(title: "출발지", coordinate: start, color: .systemGreen, on: mapView)
+            addMarker(type: .start, coordinate: start, on: mapView)
         }
         if let destination = route.path.last {
-            addMarker(title: "목적지", coordinate: destination, color: .systemRed, on: mapView)
+            addMarker(type: .destination, coordinate: destination, on: mapView)
         }
     }
 
@@ -60,12 +60,27 @@ final class NaverRouteRenderer {
         startEndMarkers.removeAll()
     }
 
-    private func addMarker(title: String, coordinate: Coordinate, color: UIColor, on mapView: NMFMapView) {
+    private func addMarker(type: MarkerType, coordinate: Coordinate, on mapView: NMFMapView) {
         let marker = NMFMarker(position: NMGLatLng(lat: coordinate.latitude, lng: coordinate.longitude))
-        marker.captionText = title
-        marker.iconTintColor = color
+        marker.iconImage = NMFOverlayImage(image: type.image)
+        marker.width = 37
+        marker.height = 48
         marker.mapView = mapView
         startEndMarkers.append(marker)
+    }
+    
+    enum MarkerType {
+        case start
+        case destination
+        
+        var image: UIImage {
+            switch self {
+            case .start:
+                UIImage(imageLiteralResourceName: "ic-start")
+            case .destination:
+                UIImage(imageLiteralResourceName: "ic-destination")
+            }
+        }
     }
 
     /// 경로위에 표시하는 화살표
