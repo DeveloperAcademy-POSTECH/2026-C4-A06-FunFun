@@ -332,10 +332,6 @@ struct WalkingNavigationView: View {
                         .foregroundStyle(Color(red: 0.3, green: 0.3, blue: 0.3))
                     
                     Spacer()
-                    
-                    Image(systemName: "mic.fill")
-                        .font(.system(size: 18, weight: .medium))
-                        .foregroundStyle(Color("Colors/text-text-1"))
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 10)
