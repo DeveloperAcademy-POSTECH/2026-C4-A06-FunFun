@@ -87,26 +87,3 @@ struct CustomTopToolbar: View {
     }
 }
 
-#Preview("Custom Top Toolbar") {
-    ZStack(alignment: .top) {
-        LinearGradient(
-            colors: [
-                .blue,
-                .purple,
-                .orange,
-                .green
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-            .ignoresSafeArea()
-
-        CustomTopToolbar(
-            destinationName: "담박집",
-            onBack: {},
-            onSettings: {}
-        )
-        .padding(.horizontal, 16)
-        .padding(.top, 12)
-    }
-}
