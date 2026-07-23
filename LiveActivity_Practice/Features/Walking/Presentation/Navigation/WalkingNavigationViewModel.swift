@@ -230,6 +230,9 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
             hasSelectedDestination = true
             tappedCoordinate = nil
             previewDestination = place
+            route = nil
+            progress = nil
+            passedRouteIndex = -1
         }
         placeSearchResults = []
         errorMessage = nil
