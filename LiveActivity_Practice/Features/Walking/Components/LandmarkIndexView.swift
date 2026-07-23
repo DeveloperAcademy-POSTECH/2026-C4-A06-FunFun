@@ -56,6 +56,7 @@ final class LandmarkIndexView: UIView {
         circleLayer.path = UIBezierPath(
             ovalIn: bounds.insetBy(dx: circleLayer.lineWidth / 2, dy: circleLayer.lineWidth / 2)
         ).cgPath
+        circleLayer.shadowPath = circleLayer.path
     }
 
     func setAccentColor(_ color: UIColor) {
@@ -71,6 +72,10 @@ final class LandmarkIndexView: UIView {
         circleLayer.fillColor = UIColor.white.cgColor
         circleLayer.lineWidth = 2
         circleLayer.contentsScale = UIScreen.main.scale
+        circleLayer.shadowColor = UIColor.black.cgColor
+        circleLayer.shadowOpacity = 0.18
+        circleLayer.shadowOffset = CGSize(width: 0, height: 1)
+        circleLayer.shadowRadius = 1.5
         layer.insertSublayer(circleLayer, at: 0)
         updateCirclePath()
 
