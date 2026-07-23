@@ -78,8 +78,17 @@ struct WalkingNavigationView: View {
                         Spacer()
                         settingsButton
                     }
+
+                    if viewModel.route != nil && !viewModel.isNavigating {
+                        WalkingSearchStartDestinationView(
+                            destinationName: viewModel.destinationName
+                        ) {
+                            isSearchExpanded = true
+                        }
+                        .frame(height: 117)
+                    }
                 }
-                
+
                 if viewModel.isNavigating {
                     if viewModel.isOffRoute {
                         offRouteBanner
