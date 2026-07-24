@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"&gt;
+&lt;plist version="1.0"&gt;
+&lt;array&gt;
+	&lt;string&gt;Pretendard-Thin.otf&lt;/string&gt;
+	&lt;string&gt;Pretendard-SemiBold.otf&lt;/string&gt;
+	&lt;string&gt;Pretendard-Light.otf&lt;/string&gt;
+	&lt;string&gt;Pretendard-Medium.otf&lt;/string&gt;
+	&lt;string&gt;Pretendard-Regular.otf&lt;/string&gt;
+	&lt;string&gt;Pretendard-ExtraLight.otf&lt;/string&gt;
+	&lt;string&gt;Pretendard-Black.otf&lt;/string&gt;
+	&lt;string&gt;Pretendard-Bold.otf&lt;/string&gt;
+	&lt;string&gt;Pretendard-ExtraBold.otf&lt;/string&gt;
+&lt;/array&gt;
+&lt;/plist&gt;
+&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"&gt;
+&lt;plist version="1.0"&gt;
+&lt;array&gt;
+	&lt;string&gt;Pretendard-Thin.otf&lt;/string&gt;
+	&lt;string&gt;Pretendard-SemiBold.otf&lt;/string&gt;
+	&lt;string&gt;Pretendard-Light.otf&lt;/string&gt;
+	&lt;string&gt;Pretendard-Medium.otf&lt;/string&gt;
+	&lt;string&gt;Pretendard-Regular.otf&lt;/string&gt;
+	&lt;string&gt;Pretendard-ExtraLight.otf&lt;/string&gt;
+	&lt;string&gt;Pretendard-Black.otf&lt;/string&gt;
+	&lt;string&gt;Pretendard-Bold.otf&lt;/string&gt;
+	&lt;string&gt;Pretendard-ExtraBold.otf&lt;/string&gt;
+&lt;/array&gt;
+&lt;/plist&gt;
+</key>
+	<string></string>
+</dict>
+</plist>
