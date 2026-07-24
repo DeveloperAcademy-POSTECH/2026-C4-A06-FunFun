@@ -55,7 +55,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     @Published var showTimeInsteadOfDistance = false
     @Published var showLandmarks = true
     @Published var landmarkMinZoom: Double = 20
-    @Published var approachingThreshold: Double = 10
+    @Published var approachingThreshold: Double = 20
     @Published var showTurnMarkers = false
     @Published var showGradientOverlay = true
 
