@@ -55,7 +55,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     @Published var showTimeInsteadOfDistance = false
     @Published var showLandmarks = true
     @Published var landmarkMinZoom: Double = 20
-    @Published var approachingThreshold: Double = 10
+    @Published var approachingThreshold: Double = 20
     @Published var showTurnMarkers = false
     @Published var showGradientOverlay = true
 
@@ -436,10 +436,10 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
             $0.element.distance(to: current) < $1.element.distance(to: current)
         }) else { return initialProgress(route) }
 
-        // 목적지 좌표 5m 이내 근접 시 도착 처리
+        // 목적지 좌표 근접 시 도착 처리
         if let destination = route.path.last {
             let distanceToDestination = Int(current.distance(to: destination))
-            if distanceToDestination <= 5 {
+            if distanceToDestination <= Int(approachingThreshold) {
                 return WalkingProgress(
                     remainingDistance: distanceToDestination,
                     distanceToNextManeuver: distanceToDestination,
