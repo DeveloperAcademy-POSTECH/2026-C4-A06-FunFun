@@ -9,9 +9,11 @@ import Foundation
 
 @MainActor
 final class WalkingLiveActivityManager {
+    private static let passedZoneTurnTypes: Set<WalkingTurn> = [.left, .slightLeft, .right, .slightRight]
     private var wasApproachingTurn = false
     private var hasTriggeredArrival = false
     private var approachingStartDate: Date?
+    private var approachingTurnType: WalkingTurn?
     private var approachingStateDistance: Double = 8
 
     func start(destinationName: String, route: WalkingRoute, initialProgress: WalkingProgress, showTime: Bool = false) async throws {
@@ -31,11 +33,13 @@ final class WalkingLiveActivityManager {
     func update(_ progress: WalkingProgress, showTime: Bool) async {
         var effectiveProgress = progress
 
-        // approaching 최소 8초 유지
+        // approaching 최소 8초 유지 (회전 maneuver는 passed zone 기반이므로 제외)
         if progress.isApproachingTurn && approachingStartDate == nil {
             approachingStartDate = .now
+            approachingTurnType = progress.nextManeuver?.turn
         } else if !progress.isApproachingTurn, let start = approachingStartDate {
-            if Date.now.timeIntervalSince(start) < approachingStateDistance {
+            let usesPassedZone = approachingTurnType.map { Self.passedZoneTurnTypes.contains($0) } ?? false
+            if !usesPassedZone && Date.now.timeIntervalSince(start) < approachingStateDistance {
                 effectiveProgress = WalkingProgress(
                     remainingDistance: progress.remainingDistance,
                     distanceToNextManeuver: progress.distanceToNextManeuver,
@@ -46,6 +50,7 @@ final class WalkingLiveActivityManager {
                 )
             } else {
                 approachingStartDate = nil
+                approachingTurnType = nil
             }
         }
 

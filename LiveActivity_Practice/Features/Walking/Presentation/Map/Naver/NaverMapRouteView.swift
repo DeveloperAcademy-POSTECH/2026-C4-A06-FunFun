@@ -182,7 +182,7 @@ struct NaverMapRouteView: UIViewRepresentable {
                 }
                 if state.showTurnMarkers {
                     let maneuvers = state.route?.maneuvers ?? []
-                    turn.render(maneuvers: maneuvers, passedRouteIndex: state.passedRouteIndex, approachingRadius: state.approachingThreshold, on: mapView)
+                    turn.render(maneuvers: maneuvers, passedRouteIndex: state.passedRouteIndex, approachingRadius: state.approachingThreshold, routePath: state.route?.path ?? [], on: mapView)
                 } else {
                     turn.clearAll()
                 }

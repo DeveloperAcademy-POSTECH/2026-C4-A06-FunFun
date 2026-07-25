@@ -139,6 +139,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         route = nil
         progress = nil
         passedRouteIndex = -1
+        activeTurnManeuver = nil
         errorMessage = nil
     }
 
@@ -167,6 +168,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         route = nil
         progress = nil
         passedRouteIndex = -1
+        activeTurnManeuver = nil
         errorMessage = nil
     }
 
@@ -236,6 +238,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
             route = nil
             progress = nil
             passedRouteIndex = -1
+        activeTurnManeuver = nil
         }
         placeSearchResults = []
         errorMessage = nil
@@ -256,6 +259,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         progress = nil
         previewDestination = nil
         passedRouteIndex = -1
+        activeTurnManeuver = nil
         destinationName = ""
         destinationLatitude = ""
         destinationLongitude = ""
@@ -286,6 +290,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
             route = try await repository.makeRoute(from: start, to: destination)
             progress = route.map(initialProgress)
             passedRouteIndex = -1
+        activeTurnManeuver = nil
             previewDestination = nil
         } catch {
             errorMessage = error.localizedDescription
@@ -299,6 +304,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
             try await activityManager.start(destinationName: destinationName, route: route, initialProgress: startProgress, showTime: showTimeInsteadOfDistance)
             isNavigating = true
             passedRouteIndex = -1
+        activeTurnManeuver = nil
             navigationBearing = nil
             if let currentLocation {
                 updateNavigationBearing(at: currentLocation, route: route)
@@ -345,6 +351,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
             let newProgress = initialProgress(newRoute)
             progress = newProgress
             passedRouteIndex = -1
+        activeTurnManeuver = nil
             lastManeuverID = nil
             resetDeviationState()
             navigationBearing = nil
@@ -419,6 +426,11 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         return Coordinate(latitude: lat, longitude: lon)
     }
 
+    private static let passedZoneTurnTypes: Set<WalkingTurn> = [.left, .slightLeft, .right, .slightRight]
+    private static let passedZoneDistance: Double = 15
+    private static let passedZoneRadius: Double = 10
+    private var activeTurnManeuver: WalkingManeuver?
+
     private let walkingSpeed = 1.25
 
     private func initialProgress(_ route: WalkingRoute) -> WalkingProgress {
@@ -433,6 +445,20 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         )
     }
 
+    private static func passedZoneCenter(for maneuver: WalkingManeuver, routePath: [Coordinate]) -> Coordinate? {
+        let idx = maneuver.routeIndex
+        guard idx + 1 < routePath.count else { return nil }
+        let from = maneuver.coordinate
+        let to = routePath[idx + 1]
+        let dist = from.distance(to: to)
+        guard dist > 0 else { return nil }
+        let ratio = min(passedZoneDistance / dist, 1.0)
+        return Coordinate(
+            latitude: from.latitude + (to.latitude - from.latitude) * ratio,
+            longitude: from.longitude + (to.longitude - from.longitude) * ratio
+        )
+    }
+
     private func calculateProgress(at current: Coordinate, route: WalkingRoute) -> WalkingProgress {
         guard let nearest = route.path.enumerated().min(by: {
             $0.element.distance(to: current) < $1.element.distance(to: current)
@@ -442,6 +468,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         if let destination = route.path.last {
             let distanceToDestination = Int(current.distance(to: destination))
             if distanceToDestination <= Int(approachingThreshold) {
+                activeTurnManeuver = nil
                 return WalkingProgress(
                     remainingDistance: distanceToDestination,
                     distanceToNextManeuver: distanceToDestination,
@@ -453,18 +480,51 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
             }
         }
 
+        // 회전 maneuver의 passed zone 체크
+        if let activeTurn = activeTurnManeuver {
+            if let center = Self.passedZoneCenter(for: activeTurn, routePath: route.path) {
+                let distToZone = current.distance(to: center)
+                if distToZone <= Self.passedZoneRadius {
+                    // passed zone 진입 → active turn 해제, 통과 처리
+                    activeTurnManeuver = nil
+                } else {
+                    // passed zone 미진입 → 이 maneuver를 계속 표시
+                    let remaining = zip(route.path[nearest.offset...], route.path.dropFirst(nearest.offset + 1))
+                        .reduce(0.0) { $0 + $1.0.distance(to: $1.1) }
+                    return WalkingProgress(
+                        remainingDistance: Int(remaining),
+                        distanceToNextManeuver: Int(current.distance(to: activeTurn.coordinate)),
+                        nextManeuver: activeTurn,
+                        isOffRoute: self.isOffRoute,
+                        isApproachingTurn: true,
+                        estimatedArrival: .now.addingTimeInterval(remaining / walkingSpeed)
+                    )
+                }
+            }
+        }
+
         let next = route.maneuvers.first { $0.routeIndex >= max(nearest.offset, passedRouteIndex + 1) }
             ?? route.maneuvers.last
         let nextDistance = next.map { Int(current.distance(to: $0.coordinate)) } ?? 0
         let remaining = zip(route.path[nearest.offset...], route.path.dropFirst(nearest.offset + 1))
             .reduce(0.0) { $0 + $1.0.distance(to: $1.1) }
 
+        let isApproaching = nextDistance < Int(approachingThreshold)
+
+        // 회전 maneuver approaching 진입 시 active turn 설정
+        if isApproaching,
+           let maneuver = next,
+           Self.passedZoneTurnTypes.contains(maneuver.turn),
+           activeTurnManeuver == nil {
+            activeTurnManeuver = maneuver
+        }
+
         return WalkingProgress(
             remainingDistance: Int(remaining),
             distanceToNextManeuver: nextDistance,
             nextManeuver: next,
             isOffRoute: self.isOffRoute,
-            isApproachingTurn: nextDistance < Int(approachingThreshold),
+            isApproachingTurn: isApproaching,
             estimatedArrival: .now.addingTimeInterval(remaining / walkingSpeed)
         )
     }

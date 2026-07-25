@@ -5,23 +5,31 @@ import NMapsMap
 import UIKit
 
 final class NaverTurnRenderer {
+    private static let turnTypes: Set<WalkingTurn> = [.left, .slightLeft, .right, .slightRight]
+    private static let passedZoneDistance: Double = 15
+    private static let passedZoneRadius: Double = 10
+
     private var markers: [NMFMarker] = []
     private var detectionAreas: [NMFCircleOverlay] = []
+    private var passedZones: [NMFCircleOverlay] = []
 
-    func render(maneuvers: [WalkingManeuver], passedRouteIndex: Int, approachingRadius: Double, on mapView: NMFMapView) {
+    func render(maneuvers: [WalkingManeuver], passedRouteIndex: Int, approachingRadius: Double, routePath: [Coordinate], on mapView: NMFMapView) {
         clearAll()
 
         for maneuver in maneuvers {
             let isPassed = maneuver.routeIndex <= passedRouteIndex
             addTurnMarker(maneuver: maneuver, isPassed: isPassed, approachingRadius: approachingRadius, on: mapView)
+            addPassedZone(maneuver: maneuver, routePath: routePath, on: mapView)
         }
     }
 
     func clearAll() {
         markers.forEach { $0.mapView = nil }
         detectionAreas.forEach { $0.mapView = nil }
+        passedZones.forEach { $0.mapView = nil }
         markers.removeAll()
         detectionAreas.removeAll()
+        passedZones.removeAll()
     }
 
     private func addTurnMarker(maneuver: WalkingManeuver, isPassed: Bool, approachingRadius: Double, on mapView: NMFMapView) {
@@ -69,5 +77,31 @@ final class NaverTurnRenderer {
         marker.zIndex = 8_000
         marker.mapView = mapView
         markers.append(marker)
+    }
+
+    private func addPassedZone(maneuver: WalkingManeuver, routePath: [Coordinate], on mapView: NMFMapView) {
+        guard Self.turnTypes.contains(maneuver.turn) else { return }
+        let idx = maneuver.routeIndex
+        guard idx + 1 < routePath.count else { return }
+
+        let from = maneuver.coordinate
+        let to = routePath[idx + 1]
+        let dist = from.distance(to: to)
+        guard dist > 0 else { return }
+
+        // from → to 방향으로 10m 이동 (선형 보간)
+        let ratio = min(Self.passedZoneDistance / dist, 1.0)
+        let centerLat = from.latitude + (to.latitude - from.latitude) * ratio
+        let centerLng = from.longitude + (to.longitude - from.longitude) * ratio
+
+        let zone = NMFCircleOverlay()
+        zone.center = NMGLatLng(lat: centerLat, lng: centerLng)
+        zone.radius = Self.passedZoneRadius
+        zone.fillColor = UIColor.systemTeal.withAlphaComponent(0.4)
+        zone.outlineColor = UIColor.systemTeal.withAlphaComponent(0.6)
+        zone.outlineWidth = 1
+        zone.zIndex = 90
+        zone.mapView = mapView
+        passedZones.append(zone)
     }
 }
