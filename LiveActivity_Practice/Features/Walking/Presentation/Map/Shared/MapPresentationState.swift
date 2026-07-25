@@ -32,6 +32,8 @@ struct MapPresentationState: Equatable {
     let showLandmarks: Bool
     let landmarkScaleThreshold: Double
     let showTurnMarkers: Bool
+    let showRoutePoints: Bool
+    let routePointRadius: Double
     let approachingThreshold: Double
     let previewDestination: PlaceSearchResult?
     let tappedCoordinate: Coordinate?
@@ -53,6 +55,8 @@ struct MapPresentationState: Equatable {
         && lhs.showLandmarks == rhs.showLandmarks
         && lhs.landmarkScaleThreshold == rhs.landmarkScaleThreshold
         && lhs.showTurnMarkers == rhs.showTurnMarkers
+        && lhs.showRoutePoints == rhs.showRoutePoints
+        && lhs.routePointRadius == rhs.routePointRadius
         && lhs.approachingThreshold == rhs.approachingThreshold
         && lhs.previewDestination == rhs.previewDestination
         && lhs.tappedCoordinate == rhs.tappedCoordinate

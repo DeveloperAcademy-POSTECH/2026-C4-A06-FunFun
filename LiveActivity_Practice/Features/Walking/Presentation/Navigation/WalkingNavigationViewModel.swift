@@ -57,6 +57,8 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     @Published var landmarkMinZoom: Double = 20
     @Published var approachingThreshold: Double = 20
     @Published var showTurnMarkers = false
+    @Published var showRoutePoints = false
+    @Published var routePointRadius: Double = 10
     @Published var showGradientOverlay = true
 
     var landmarkCount: Int {

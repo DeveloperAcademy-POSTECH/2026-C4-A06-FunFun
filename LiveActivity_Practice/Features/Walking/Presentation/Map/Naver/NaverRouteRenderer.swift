@@ -9,6 +9,7 @@ final class NaverRouteRenderer {
     private var deviationRoutePath: NMFPath?
     private var renderedDeviationPath: [Coordinate] = []
     private var startEndMarkers: [NMFMarker] = []
+    private var routePointMarkers: [NMFCircleOverlay] = []
 
     func render(route: WalkingRoute?, passedRouteIndex: Int, on mapView: NMFMapView) {
         clearAll()
@@ -33,6 +34,23 @@ final class NaverRouteRenderer {
         }
     }
 
+    func renderRoutePoints(route: WalkingRoute?, radius: Double, on mapView: NMFMapView) {
+        routePointMarkers.forEach { $0.mapView = nil }
+        routePointMarkers.removeAll()
+        guard let route else { return }
+        for coordinate in route.path {
+            let dot = NMFCircleOverlay()
+            dot.center = NMGLatLng(lat: coordinate.latitude, lng: coordinate.longitude)
+            dot.radius = radius
+            dot.fillColor = .systemRed.withAlphaComponent(0.5)
+            dot.outlineColor = .clear
+            dot.outlineWidth = 0
+            dot.zIndex = 100
+            dot.mapView = mapView
+            routePointMarkers.append(dot)
+        }
+    }
+
     func renderDeviationPath(_ path: [Coordinate], on mapView: NMFMapView) {
         guard renderedDeviationPath != path else { return }
         deviationRoutePath?.mapView = nil
@@ -54,10 +72,12 @@ final class NaverRouteRenderer {
         routePath?.mapView = nil
         deviationRoutePath?.mapView = nil
         startEndMarkers.forEach { $0.mapView = nil }
+        routePointMarkers.forEach { $0.mapView = nil }
         routePath = nil
         deviationRoutePath = nil
         renderedDeviationPath = []
         startEndMarkers.removeAll()
+        routePointMarkers.removeAll()
     }
 
     private func addMarker(type: MarkerType, coordinate: Coordinate, on mapView: NMFMapView) {

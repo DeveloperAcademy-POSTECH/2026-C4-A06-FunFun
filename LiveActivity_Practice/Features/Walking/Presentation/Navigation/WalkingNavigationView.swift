@@ -36,6 +36,8 @@ struct WalkingNavigationView: View {
                     showLandmarks: viewModel.showLandmarks,
                     landmarkScaleThreshold: viewModel.landmarkMinZoom,
                     showTurnMarkers: viewModel.showTurnMarkers,
+                    showRoutePoints: viewModel.showRoutePoints,
+                    routePointRadius: viewModel.routePointRadius,
                     approachingThreshold: viewModel.approachingThreshold,
                     previewDestination: viewModel.previewDestination,
                     tappedCoordinate: viewModel.tappedCoordinate,
@@ -258,6 +260,14 @@ struct WalkingNavigationView: View {
                 }
                 Section("지도") {
                     Toggle("턴 마커 표시", isOn: $viewModel.showTurnMarkers)
+                    Toggle("경로 좌표 표시", isOn: $viewModel.showRoutePoints)
+                    if viewModel.showRoutePoints {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("반지름 \(Int(viewModel.routePointRadius))m")
+                                .appTypography(.body2)
+                            Slider(value: $viewModel.routePointRadius, in: 1...30, step: 1)
+                        }
+                    }
                     Toggle("랜드마크 표시", isOn: $viewModel.showLandmarks)
                     if viewModel.showLandmarks {
                         VStack(alignment: .leading, spacing: 4) {
