@@ -106,7 +106,9 @@ struct NaverMapRouteView: UIViewRepresentable {
             )
             guard viewport != lastReportedViewport else { return }
             lastReportedViewport = viewport
-            onMapViewportChanged?(heading, position)
+            DispatchQueue.main.async { [weak self] in
+                self?.onMapViewportChanged?(heading, position)
+            }
         }
 
         private func refreshLandmarkPlacement(on mapView: NMFMapView) {
@@ -202,6 +204,8 @@ struct NaverMapRouteView: UIViewRepresentable {
         }
 
         func tearDown() {
+            onMapTapped = nil
+            onMapViewportChanged = nil
             route.clearAll()
             landmark.clearAll()
             turn.clearAll()
