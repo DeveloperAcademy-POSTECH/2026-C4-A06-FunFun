@@ -499,6 +499,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
                         nextManeuver: activeTurn,
                         isOffRoute: self.isOffRoute,
                         isApproachingTurn: true,
+                        distanceFromRoute: Int(self.distanceFromRoute),
                         estimatedArrival: .now.addingTimeInterval(remaining / walkingSpeed)
                     )
                 }
