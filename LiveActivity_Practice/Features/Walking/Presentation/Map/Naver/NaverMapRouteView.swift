@@ -66,6 +66,8 @@ struct NaverMapRouteView: UIViewRepresentable {
         private var renderedShowLandmarks = true
         private var renderedLandmarkScale: Double = 50
         private var renderedShowTurnMarkers = false
+        private var renderedShowRoutePoints = false
+        private var renderedRoutePointRadius: Double = 10
         private var renderedApproachingThreshold: Double = 10
         private var currentLocation: Coordinate?
         private var currentRoute: WalkingRoute?
@@ -164,7 +166,7 @@ struct NaverMapRouteView: UIViewRepresentable {
                 : nil
             destinationPreview.render(coordinate: previewCoordinate, on: mapView)
 
-            if renderedRoute != state.route || renderedPassedRouteIndex != state.passedRouteIndex || renderedShowLandmarks != state.showLandmarks || renderedLandmarkScale != state.landmarkScaleThreshold || renderedShowTurnMarkers != state.showTurnMarkers || renderedApproachingThreshold != state.approachingThreshold {
+            if renderedRoute != state.route || renderedPassedRouteIndex != state.passedRouteIndex || renderedShowLandmarks != state.showLandmarks || renderedLandmarkScale != state.landmarkScaleThreshold || renderedShowTurnMarkers != state.showTurnMarkers || renderedShowRoutePoints != state.showRoutePoints || renderedRoutePointRadius != state.routePointRadius || renderedApproachingThreshold != state.approachingThreshold {
                 route.render(route: state.route, passedRouteIndex: state.passedRouteIndex, on: mapView)
                 if state.showLandmarks {
                     let landmarks = state.route?.mapLandmarkSelections() ?? []
@@ -180,15 +182,22 @@ struct NaverMapRouteView: UIViewRepresentable {
                 }
                 if state.showTurnMarkers {
                     let maneuvers = state.route?.maneuvers ?? []
-                    turn.render(maneuvers: maneuvers, passedRouteIndex: state.passedRouteIndex, approachingRadius: state.approachingThreshold, on: mapView)
+                    turn.render(maneuvers: maneuvers, passedRouteIndex: state.passedRouteIndex, approachingRadius: state.approachingThreshold, routePath: state.route?.path ?? [], on: mapView)
                 } else {
                     turn.clearAll()
+                }
+                if state.showRoutePoints {
+                    route.renderRoutePoints(route: state.route, radius: state.routePointRadius, on: mapView)
+                } else {
+                    route.renderRoutePoints(route: nil, radius: 0, on: mapView)
                 }
                 renderedRoute = state.route
                 renderedPassedRouteIndex = state.passedRouteIndex
                 renderedShowLandmarks = state.showLandmarks
                 renderedLandmarkScale = state.landmarkScaleThreshold
                 renderedShowTurnMarkers = state.showTurnMarkers
+                renderedShowRoutePoints = state.showRoutePoints
+                renderedRoutePointRadius = state.routePointRadius
                 renderedApproachingThreshold = state.approachingThreshold
             }
 
