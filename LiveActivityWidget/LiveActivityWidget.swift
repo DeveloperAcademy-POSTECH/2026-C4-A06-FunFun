@@ -91,10 +91,32 @@ struct WalkingLiveActivity: Widget {
         case .arriving:
             Image(systemName: "flag.checkered").foregroundStyle(.green)
         case .approaching:
-            Image(systemName: context.state.maneuver.symbolName).foregroundStyle(.blue)
+            if Int(Date().timeIntervalSince1970) % 6 < 3 {
+                Text(minimalDistanceText(context.state.distanceToNextTurn))
+                    .font(.system(size: 12, weight: .bold))
+                    .monospacedDigit()
+                    .foregroundStyle(livePrimary)
+            } else {
+                Image(systemName: context.state.maneuver.symbolName)
+                    .foregroundStyle(livePrimary)
+            }
         case .cruising:
-            Image(systemName: "figure.walk").foregroundStyle(.blue)
+            if Int(Date().timeIntervalSince1970) % 6 < 3 {
+                Text(minimalDistanceText(context.state.distanceToNextTurn))
+                    .font(.system(size: 12, weight: .bold))
+                    .monospacedDigit()
+                    .foregroundStyle(livePrimary)
+            } else {
+                Image(systemName: "arrow.up")
+                    .foregroundStyle(livePrimary)
+            }
         }
+    }
+
+    private func minimalDistanceText(_ meters: Int) -> String {
+        if meters < 100 { return "\(meters)m" }
+        if meters < 1000 { return "\(meters)" }
+        return "\(meters / 1000)km"
     }
 
     // MARK: - Expanded 분기
