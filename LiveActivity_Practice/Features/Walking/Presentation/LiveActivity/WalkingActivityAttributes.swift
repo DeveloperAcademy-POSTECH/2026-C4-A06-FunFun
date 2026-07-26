@@ -19,6 +19,7 @@ nonisolated struct WalkingActivityAttributes: ActivityAttributes {
         let instruction: String
         let isOffRoute: Bool
         let isApproachingTurn: Bool
+        let distanceFromRoute: Int
         let showTimeInsteadOfDistance: Bool
 
         /// 설정에 따라 거리(m) 또는 시간(분)으로 표시할 문자열
@@ -44,6 +45,7 @@ extension WalkingActivityAttributes.ContentState {
         self.instruction = progress.nextManeuver?.instruction ?? "목적지에 도착했습니다"
         self.isOffRoute = progress.isOffRoute
         self.isApproachingTurn = progress.isApproachingTurn
+        self.distanceFromRoute = progress.distanceFromRoute
         self.showTimeInsteadOfDistance = showTime
     }
 }

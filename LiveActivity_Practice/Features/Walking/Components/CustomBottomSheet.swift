@@ -405,6 +405,7 @@ private struct BottomSheetGlassSurface: ViewModifier {
                 nextManeuver: maneuver,
                 isOffRoute: false,
                 isApproachingTurn: true,
+                distanceFromRoute: 0,
                 estimatedArrival: Date().addingTimeInterval(600)
             ),
             destinationName: "쿨오프",

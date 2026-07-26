@@ -51,7 +51,7 @@ struct WalkingLiveActivity: Widget {
     private func compactLeading(context: ActivityViewContext<WalkingActivityAttributes>) -> some View {
         switch DisplayMode(state: context.state) {
         case .offRoute:
-            Text("\(context.state.remainingDistance)m")
+            Text("\(context.state.distanceFromRoute)m")
                 .font(.system(size: 14, weight: .semibold))
                 .monospacedDigit()
         case .arriving:
@@ -133,7 +133,7 @@ struct WalkingLiveActivity: Widget {
                             .foregroundStyle(Color(white: 0.5))
                     }
                     Spacer()
-                    Text("\(context.state.remainingDistance)m")
+                    Text("\(context.state.distanceFromRoute)m")
                         .appTypography(.labelM)
                         .monospacedDigit()
                 }

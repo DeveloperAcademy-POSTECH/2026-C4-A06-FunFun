@@ -90,5 +90,6 @@ nonisolated struct WalkingProgress: Hashable, Sendable {
     let nextManeuver: WalkingManeuver?
     let isOffRoute: Bool
     let isApproachingTurn: Bool
+    let distanceFromRoute: Int
     let estimatedArrival: Date
 }
