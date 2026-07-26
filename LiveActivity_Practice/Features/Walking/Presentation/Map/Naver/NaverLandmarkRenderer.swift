@@ -26,7 +26,6 @@ final class NaverLandmarkRenderer {
 
     private var overviewMinZoom: Double = zoomLevel(forScale: overviewScale)
     private var detailMinZoom: Double = zoomLevel(forScale: defaultDetailScale)
-    private var landmarkAreas: [NMFCircleOverlay] = []
     private var landmarkConnectors: [NMFPolylineOverlay] = []
     private var landmarkMarkers: [NMFMarker] = []
 
@@ -58,10 +57,8 @@ final class NaverLandmarkRenderer {
     }
 
     func clearAll() {
-        landmarkAreas.forEach { $0.mapView = nil }
         landmarkConnectors.forEach { $0.mapView = nil }
         landmarkMarkers.forEach { $0.mapView = nil }
-        landmarkAreas.removeAll()
         landmarkConnectors.removeAll()
         landmarkMarkers.removeAll()
     }
@@ -89,18 +86,9 @@ final class NaverLandmarkRenderer {
             on: mapView
         )
 
-        let area = NMFCircleOverlay()
-        area.center = landmarkPosition
-        area.radius = 15
         let landmarkColor: UIColor = isPassed
             ? (UIColor(named: "Colors/Gray-gray-500") ?? .systemGray)
             : LandmarkIndexView.defaultAccentColor
-        area.fillColor = landmarkColor.withAlphaComponent(0.12)
-        area.outlineColor = landmarkColor.withAlphaComponent(0.55)
-        area.outlineWidth = 1
-        area.minZoom = detailMinZoom
-        area.mapView = mapView
-        landmarkAreas.append(area)
 
         if let connector = NMFPolylineOverlay([maneuverPosition, landmarkPosition]) {
             connector.color = landmarkColor.withAlphaComponent(0.75)

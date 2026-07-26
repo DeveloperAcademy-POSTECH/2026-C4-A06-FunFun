@@ -441,6 +441,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
             nextManeuver: route.maneuvers.first,
             isOffRoute: false,
             isApproachingTurn: firstDistance < Int(approachingThreshold),
+            distanceFromRoute: 0,
             estimatedArrival: .now.addingTimeInterval(Double(route.totalDistance) / walkingSpeed)
         )
     }
@@ -475,6 +476,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
                     nextManeuver: route.maneuvers.last,
                     isOffRoute: self.isOffRoute,
                     isApproachingTurn: true,
+                    distanceFromRoute: Int(self.distanceFromRoute),
                     estimatedArrival: .now.addingTimeInterval(Double(distanceToDestination) / walkingSpeed)
                 )
             }
@@ -525,6 +527,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
             nextManeuver: next,
             isOffRoute: self.isOffRoute,
             isApproachingTurn: isApproaching,
+            distanceFromRoute: Int(self.distanceFromRoute),
             estimatedArrival: .now.addingTimeInterval(remaining / walkingSpeed)
         )
     }

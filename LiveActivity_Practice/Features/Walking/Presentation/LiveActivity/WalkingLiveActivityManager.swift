@@ -46,6 +46,7 @@ final class WalkingLiveActivityManager {
                     nextManeuver: progress.nextManeuver,
                     isOffRoute: progress.isOffRoute,
                     isApproachingTurn: true,
+                    distanceFromRoute: progress.distanceFromRoute,
                     estimatedArrival: progress.estimatedArrival
                 )
             } else {

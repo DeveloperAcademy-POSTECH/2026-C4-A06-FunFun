@@ -51,7 +51,7 @@ struct WalkingLiveActivity: Widget {
     private func compactLeading(context: ActivityViewContext<WalkingActivityAttributes>) -> some View {
         switch DisplayMode(state: context.state) {
         case .offRoute:
-            Text("\(context.state.remainingDistance)m")
+            Text("\(context.state.distanceFromRoute)m")
                 .font(.system(size: 14, weight: .semibold))
                 .monospacedDigit()
         case .arriving:
@@ -91,10 +91,32 @@ struct WalkingLiveActivity: Widget {
         case .arriving:
             Image(systemName: "flag.checkered").foregroundStyle(.green)
         case .approaching:
-            Image(systemName: context.state.maneuver.symbolName).foregroundStyle(.blue)
+            if Int(Date().timeIntervalSince1970) % 6 < 3 {
+                Text(minimalDistanceText(context.state.distanceToNextTurn))
+                    .font(.system(size: 12, weight: .bold))
+                    .monospacedDigit()
+                    .foregroundStyle(livePrimary)
+            } else {
+                Image(systemName: context.state.maneuver.symbolName)
+                    .foregroundStyle(livePrimary)
+            }
         case .cruising:
-            Image(systemName: "figure.walk").foregroundStyle(.blue)
+            if Int(Date().timeIntervalSince1970) % 6 < 3 {
+                Text(minimalDistanceText(context.state.distanceToNextTurn))
+                    .font(.system(size: 12, weight: .bold))
+                    .monospacedDigit()
+                    .foregroundStyle(livePrimary)
+            } else {
+                Image(systemName: "arrow.up")
+                    .foregroundStyle(livePrimary)
+            }
         }
+    }
+
+    private func minimalDistanceText(_ meters: Int) -> String {
+        if meters < 100 { return "\(meters)m" }
+        if meters < 1000 { return "\(meters)" }
+        return "\(meters / 1000)km"
     }
 
     // MARK: - Expanded 분기
@@ -133,7 +155,7 @@ struct WalkingLiveActivity: Widget {
                             .foregroundStyle(Color(white: 0.5))
                     }
                     Spacer()
-                    Text("\(context.state.remainingDistance)m")
+                    Text("\(context.state.distanceFromRoute)m")
                         .appTypography(.labelM)
                         .monospacedDigit()
                 }
