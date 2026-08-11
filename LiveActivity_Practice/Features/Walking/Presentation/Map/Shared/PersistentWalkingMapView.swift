@@ -9,8 +9,16 @@ import SwiftUI
 /// 지도 SDK의 네이티브 뷰를 최초 한 번만 만들고 재사용한다.
 struct PersistentWalkingMapView: View {
     let state: MapPresentationState
-
+    let mapSDK: MapSDK
+    
     var body: some View {
-        NaverMapEngine().makeMapView(state: state)
+        switch mapSDK {
+            case .naver:
+            NaverMapRouteView(state: state)
+        }
+    }
+    
+    enum MapSDK {
+        case naver
     }
 }

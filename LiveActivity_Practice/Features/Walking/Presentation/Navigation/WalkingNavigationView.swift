@@ -50,7 +50,7 @@ struct WalkingNavigationView: View {
                         mapHeading = heading
                         indicatorPosition = position
                     }
-                )
+                ), mapSDK: .naver
             )
             .ignoresSafeArea()
             
