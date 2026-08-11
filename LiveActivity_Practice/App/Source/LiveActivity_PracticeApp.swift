@@ -31,7 +31,7 @@ struct LiveActivity_PracticeApp: App {
 
     var body: some Scene {
         WindowGroup {
-            WalkingMapRootView()
+            WalkingNavigationView()
         }
     }
 }
