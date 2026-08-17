@@ -6,7 +6,7 @@
 import SwiftUI
 
 /// 경로 검색 전에 선택한 목적지 정보를 확인하는 하단 카드입니다.
-struct BottomPlaceView: View {
+struct PlaceInformationView: View {
     let place: PlaceSearchResult
     let isLoading: Bool
     let onConfirm: () -> Void
@@ -115,7 +115,7 @@ private struct BottomPlaceGlassSurface: ViewModifier {
         )
         .ignoresSafeArea()
 
-        BottomPlaceView(
+        PlaceInformationView(
             place: PlaceSearchResult(
                 id: "preview-seven-eleven",
                 name: "세븐일레븐",

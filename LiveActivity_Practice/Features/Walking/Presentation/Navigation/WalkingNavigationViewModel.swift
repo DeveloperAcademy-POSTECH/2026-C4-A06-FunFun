@@ -16,7 +16,8 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         case main // 기본 상태 : 기본 + 장소 선택
         case searching // 검색 중 : 검색 창 활성화
         case routePreview // 경로가 찾아진 상태 : 미리 보여줌
-        case navigating // 경로를 지나는 중
+        case loading // API 응답 대기중
+        case navigating // 경로를 따라가는 중
     }
 
     enum RouteDeviationState: Equatable {

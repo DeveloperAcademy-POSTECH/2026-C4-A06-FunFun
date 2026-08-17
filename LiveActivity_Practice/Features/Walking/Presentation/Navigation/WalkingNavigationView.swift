@@ -96,17 +96,19 @@ struct WalkingNavigationView: View {
                 Spacer()
                 
                 // 이동 중 + 경로가 있는 경우
+                // 경로의 주요 포인트들을 리스트로 미리볼 수 있음
                 if viewModel.isNavigating, let route = viewModel.route {
-                    CustomBottomSheet(
+                    NavigationRouteListView(
                         route: route,
                         progress: viewModel.progress,
                         destinationName: viewModel.destinationName,
                         isExpanded: $isNavigationSheetExpanded
                     )
                 }
-                // 경로 미리보기
+                
+                // 장소의 정보를 제공하는 뷰
                 else if let place = viewModel.previewDestination {
-                    BottomPlaceView(
+                    PlaceInformationView(
                         place: place,
                         isLoading: viewModel.isLoading,
                         onConfirm: {
