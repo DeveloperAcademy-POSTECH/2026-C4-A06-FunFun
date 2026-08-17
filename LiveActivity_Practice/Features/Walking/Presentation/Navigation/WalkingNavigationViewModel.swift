@@ -11,14 +11,25 @@ import Foundation
 @MainActor
 final class WalkingNavigationViewModel: NSObject, ObservableObject {
     enum SearchTarget { case start, destination }
+    
+    enum ViewState {
+        case main // 기본 상태 : 기본 + 장소 선택
+        case searching // 검색 중 : 검색 창 활성화
+        case routePreview // 경로가 찾아진 상태 : 미리 보여줌
+        case navigating // 경로를 지나는 중
+    }
 
     enum RouteDeviationState: Equatable {
         case onRoute
         case suspected(distance: CLLocationDistance)
         case offRoute(distance: CLLocationDistance)
+        case offRouteChecked
         case rerouting
     }
 
+    @Published var viewState: ViewState = .main
+    
+    
     @Published var startName = ""
     @Published var startLatitude = "37.497942"
     @Published var startLongitude = "127.027621"
@@ -81,7 +92,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
 
     var isOffRoute: Bool {
         switch deviationState {
-        case .offRoute, .rerouting: true
+        case .offRoute, .rerouting, .offRouteChecked: true
         case .onRoute, .suspected: false
         }
     }

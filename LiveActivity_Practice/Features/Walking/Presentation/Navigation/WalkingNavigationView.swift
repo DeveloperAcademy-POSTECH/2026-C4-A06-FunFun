@@ -54,6 +54,8 @@ struct WalkingNavigationView: View {
             )
             .ignoresSafeArea()
             
+            // isNavigating : 경로 알려주는 중에 떠야 하는 뷰
+            //
             if viewModel.isNavigating && viewModel.showGradientOverlay {
                 HeadingSafeAreaGradientOverlay(
                     heading: viewModel.currentHeading,
@@ -93,15 +95,16 @@ struct WalkingNavigationView: View {
                         .frame(height: 117)
                     }
                 }
-
-                if viewModel.isNavigating {
-                    if viewModel.isOffRoute && !viewModel.isOffRouteBannerHidden {
-                        offRouteBanner
-                    }
+                
+                // 경로 이탈 + 경고 문구를 보여줘도 됨
+                // 경고 문구를 보여주기
+                if viewModel.isNavigating && viewModel.isOffRoute && !viewModel.isOffRouteBannerHidden {
+                    offRouteBanner
                 }
                 
                 Spacer()
                 
+                // 이동 중 + 경로가 있는 경우
                 if viewModel.isNavigating, let route = viewModel.route {
                     CustomBottomSheet(
                         route: route,
@@ -109,7 +112,9 @@ struct WalkingNavigationView: View {
                         destinationName: viewModel.destinationName,
                         isExpanded: $isNavigationSheetExpanded
                     )
-                } else if let place = viewModel.previewDestination {
+                }
+                // 경로 미리보기
+                else if let place = viewModel.previewDestination {
                     BottomPlaceView(
                         place: place,
                         isLoading: viewModel.isLoading,
@@ -117,16 +122,25 @@ struct WalkingNavigationView: View {
                             Task { await viewModel.searchRoute() }
                         }
                     )
-                } else if let route = viewModel.route {
+                }
+                // 이동중이 아닌데, 경로가 있는 경우
+                // 루트 요약 (이건 뭐임)
+                else if let route = viewModel.route {
                     routeSummary(route)
-                } else if viewModel.isLoading {
+                }
+                // 로딩중
+                else if viewModel.isLoading {
                     ProgressView("최단 경로와 랜드마크 검색 중…")
                         .appTypography(.body1)
                         .padding()
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
-                } else if viewModel.tappedCoordinate != nil {
+                }
+                // 좌표가 눌린 경우
+                else if viewModel.tappedCoordinate != nil {
                     tappedDestinationPanel
-                } else if let error = viewModel.errorMessage {
+                }
+                // 에러 발생
+                else if let error = viewModel.errorMessage {
                     Text(error)
                         .appTypography(.captionS)
                         .foregroundStyle(.red)
@@ -134,6 +148,9 @@ struct WalkingNavigationView: View {
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
                 }
                 
+                
+                // 모든 예외의 경우
+                // Default 모드
                 if !viewModel.isNavigating,
                    viewModel.route == nil,
                    viewModel.previewDestination == nil,
