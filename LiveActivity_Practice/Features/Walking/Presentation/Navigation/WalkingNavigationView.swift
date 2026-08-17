@@ -67,33 +67,24 @@ struct WalkingNavigationView: View {
             }
             
             VStack(spacing: 12) {
-                if viewModel.isNavigating {
-                    CustomTopToolbar(
-                        destinationName: viewModel.destinationName,
-                        onBack: {
-                            isExitAlertPresented = true
-                        },
-                        onSettings: {
-                            showSettings = true
-                        }
-                    )
-                } else {
-                    HStack {
-                        if viewModel.route != nil || viewModel.tappedCoordinate != nil || viewModel.previewDestination != nil {
-                            backButton
-                        }
-                        Spacer()
-                        settingsButton
+                HStack {
+                    // Back Button이 보여지는 조건 = routePreview + navigating
+                    if viewModel.route != nil || viewModel.tappedCoordinate != nil || viewModel.previewDestination != nil {
+                        backButton
                     }
-
-                    if viewModel.route != nil && !viewModel.isNavigating {
-                        WalkingSearchStartDestinationView(
-                            destinationName: viewModel.destinationName
-                        ) {
-                            isSearchExpanded = true
-                        }
-                        .frame(height: 117)
+                    Spacer()
+                    // setting은 언제나 보여짐
+                    settingsButton
+                }
+                
+                // 출발-도착을 텍스트로 보여주는 뷰가 보여지는 조건
+                if viewModel.route != nil && !viewModel.isNavigating {
+                    RouteSummaryHeaderView(
+                        destinationName: viewModel.destinationName
+                    ) {
+                        isSearchExpanded = true
                     }
+                    .frame(height: 117)
                 }
                 
                 // 경로 이탈 + 경고 문구를 보여줘도 됨

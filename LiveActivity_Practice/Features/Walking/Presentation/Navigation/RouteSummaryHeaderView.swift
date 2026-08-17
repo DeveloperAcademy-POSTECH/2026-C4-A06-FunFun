@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct WalkingSearchStartDestinationView: View {
+struct RouteSummaryHeaderView: View {
     var destinationName: String = ""
     var onSearchTapped: () -> Void = {}
 
@@ -70,8 +70,4 @@ private struct WalkingSearchGlassSurface: ViewModifier {
                 }
         }
     }
-}
-
-#Preview {
-    WalkingSearchStartDestinationView()
 }
