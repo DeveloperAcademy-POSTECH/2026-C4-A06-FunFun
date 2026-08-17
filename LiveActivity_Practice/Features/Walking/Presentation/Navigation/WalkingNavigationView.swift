@@ -65,94 +65,181 @@ struct WalkingNavigationView: View {
                 )
                 .ignoresSafeArea()
             }
-            
-            VStack(spacing: 12) {
-                HStack {
-                    // Back Button이 보여지는 조건 = routePreview + navigating
-                    if viewModel.route != nil || viewModel.tappedCoordinate != nil || viewModel.previewDestination != nil {
+            VStack(spacing: 12){
+                // 상단
+                switch viewModel.viewState {
+                case .main:
+                    HStack {
+                        Spacer()
+                        settingsButton
+                    }
+                    
+                    Spacer()
+                    
+                    if let _ = viewModel.tappedCoordinate {
+                        tappedDestinationPanel
+                    } else {
+                        homeSearchPanel
+                    }
+                case .searching:
+                    if let place = viewModel.previewDestination {
+                        HStack {
+                            backButton
+                            Spacer()
+                            settingsButton
+                        }
+                        Spacer()
+                        PlaceInformationView(
+                            place: place,
+                            isLoading: viewModel.isLoading,
+                            onConfirm: {
+                                Task { await viewModel.searchRoute() }
+                            }
+                        )
+                    } else {
+                        EmptyView()
+                    }
+                case .routePreview:
+                    HStack {
                         backButton
+                        Spacer()
+                        settingsButton
+                    }
+                    RouteSummaryHeaderView()
+                    
+                    Spacer()
+                    
+                    if let route = viewModel.route {
+                        routeSummary(route)
+                    }
+                case .navigating:
+                    switch viewModel.deviationState {
+                    case .offRoute:
+                        offRouteBanner
+                    default:
+                        HStack {
+                            backButton
+                            Spacer()
+                            settingsButton
+                        }
                     }
                     Spacer()
-                    // setting은 언제나 보여짐
-                    settingsButton
-                }
-                
-                // 출발-도착을 텍스트로 보여주는 뷰가 보여지는 조건
-                if viewModel.route != nil && !viewModel.isNavigating {
-                    RouteSummaryHeaderView(
-                        destinationName: viewModel.destinationName
-                    ) {
-                        isSearchExpanded = true
-                    }
-                    .frame(height: 117)
-                }
-                
-                // 경로 이탈 + 경고 문구를 보여줘도 됨
-                // 경고 문구를 보여주기
-                if viewModel.isNavigating && viewModel.isOffRoute && !viewModel.isOffRouteBannerHidden {
-                    offRouteBanner
-                }
-                
-                Spacer()
-                
-                // 이동 중 + 경로가 있는 경우
-                // 경로의 주요 포인트들을 리스트로 미리볼 수 있음
-                if viewModel.isNavigating, let route = viewModel.route {
-                    NavigationRouteListView(
-                        route: route,
-                        progress: viewModel.progress,
-                        destinationName: viewModel.destinationName,
-                        isExpanded: $isNavigationSheetExpanded
-                    )
-                }
-                
-                // 장소의 정보를 제공하는 뷰
-                else if let place = viewModel.previewDestination {
-                    PlaceInformationView(
-                        place: place,
-                        isLoading: viewModel.isLoading,
-                        onConfirm: {
-                            Task { await viewModel.searchRoute() }
+                    switch viewModel.deviationState {
+                    case .rerouting:
+                        ProgressView("최단 경로와 랜드마크 검색 중…")
+                            .appTypography(.body1)
+                            .padding()
+                            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+                    default :
+                        if let route = viewModel.route {
+                            NavigationRouteListView(
+                                route: route,
+                                progress: viewModel.progress,
+                                destinationName: viewModel.destinationName,
+                                isExpanded: $isNavigationSheetExpanded
+                            )
                         }
-                    )
-                }
-                // 이동중이 아닌데, 경로가 있는 경우
-                // 루트 요약 (이건 뭐임)
-                else if let route = viewModel.route {
-                    routeSummary(route)
-                }
-                // 로딩중
-                else if viewModel.isLoading {
-                    ProgressView("최단 경로와 랜드마크 검색 중…")
-                        .appTypography(.body1)
-                        .padding()
-                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
-                }
-                // 좌표가 눌린 경우
-                else if viewModel.tappedCoordinate != nil {
-                    tappedDestinationPanel
-                }
-                // 에러 발생
-                else if let error = viewModel.errorMessage {
-                    Text(error)
-                        .appTypography(.captionS)
-                        .foregroundStyle(.red)
-                        .padding()
-                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
-                }
-                
-                
-                // 모든 예외의 경우
-                // Default 모드
-                if !viewModel.isNavigating,
-                   viewModel.route == nil,
-                   viewModel.previewDestination == nil,
-                   viewModel.tappedCoordinate == nil,
-                   !viewModel.isLoading {
-                    homeSearchPanel
+                    }
+                case .error:
+                    if let error = viewModel.errorMessage {
+                        Text(error)
+                            .appTypography(.captionS)
+                            .foregroundStyle(.red)
+                            .padding()
+                            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+                    }
+                default :
+                    EmptyView()
                 }
             }
-            .padding()
+            
+//            VStack(spacing: 12) {
+//                HStack {
+//                    // Back Button이 보여지는 조건 = routePreview + navigating
+//                    if viewModel.route != nil || viewModel.tappedCoordinate != nil || viewModel.previewDestination != nil {
+//                        backButton
+//                    }
+//                    Spacer()
+//                    // setting은 언제나 보여짐
+//                    settingsButton
+//                }
+//                
+//                // 출발-도착을 텍스트로 보여주는 뷰가 보여지는 조건
+//                if viewModel.route != nil && !viewModel.isNavigating {
+//                    RouteSummaryHeaderView(
+//                        destinationName: viewModel.destinationName
+//                    ) {
+//                        isSearchExpanded = true
+//                    }
+//                    .frame(height: 117)
+//                }
+//                
+//                // 경로 이탈 + 경고 문구를 보여줘도 됨
+//                // 경고 문구를 보여주기
+//                if viewModel.isNavigating && viewModel.isOffRoute && !viewModel.isOffRouteBannerHidden {
+//                    offRouteBanner
+//                }
+//                
+//                Spacer()
+//                
+//                // 이동 중 + 경로가 있는 경우
+//                // 경로의 주요 포인트들을 리스트로 미리볼 수 있음
+//                if viewModel.isNavigating, let route = viewModel.route {
+//                    NavigationRouteListView(
+//                        route: route,
+//                        progress: viewModel.progress,
+//                        destinationName: viewModel.destinationName,
+//                        isExpanded: $isNavigationSheetExpanded
+//                    )
+//                }
+//                
+//                // 장소의 정보를 제공하는 뷰
+//                else if let place = viewModel.previewDestination {
+//                    PlaceInformationView(
+//                        place: place,
+//                        isLoading: viewModel.isLoading,
+//                        onConfirm: {
+//                            Task { await viewModel.searchRoute() }
+//                        }
+//                    )
+//                }
+//                // 이동중이 아닌데, 경로가 있는 경우
+//                // 시작 버튼 누르면 routePreview -> navigating 상태가 변함
+//                else if let route = viewModel.route {
+//                    routeSummary(route)
+//                }
+//                // 로딩중
+//                else if viewModel.isLoading {
+//                    ProgressView("최단 경로와 랜드마크 검색 중…")
+//                        .appTypography(.body1)
+//                        .padding()
+//                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+//                }
+//                // 좌표가 눌린 경우
+//                else if viewModel.tappedCoordinate != nil {
+//                    tappedDestinationPanel
+//                }
+//                // 에러 발생
+//                else if let error = viewModel.errorMessage {
+//                    Text(error)
+//                        .appTypography(.captionS)
+//                        .foregroundStyle(.red)
+//                        .padding()
+//                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+//                }
+//                
+//                
+//                // 모든 예외의 경우
+//                // Default 모드
+//                if !viewModel.isNavigating,
+//                   viewModel.route == nil,
+//                   viewModel.previewDestination == nil,
+//                   viewModel.tappedCoordinate == nil,
+//                   !viewModel.isLoading {
+//                    homeSearchPanel
+//                }
+//            }
+//            .padding()
             
         }
         .overlay(alignment: .bottom) {

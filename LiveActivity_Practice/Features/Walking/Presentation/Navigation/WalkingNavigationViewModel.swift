@@ -18,6 +18,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         case routePreview // 경로가 찾아진 상태 : 미리 보여줌
         case loading // API 응답 대기중
         case navigating // 경로를 따라가는 중
+        case error(Error) // 에러 케이스
     }
 
     enum RouteDeviationState: Equatable {
