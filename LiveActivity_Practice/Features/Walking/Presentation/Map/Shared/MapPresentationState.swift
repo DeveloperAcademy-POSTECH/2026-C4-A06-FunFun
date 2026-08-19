@@ -35,7 +35,7 @@ struct MapPresentationState: Equatable {
     let showRoutePoints: Bool
     let routePointRadius: Double
     let approachingThreshold: Double
-    let previewDestination: PlaceSearchResult?
+    let previewDestination: Place?
     let tappedCoordinate: Coordinate?
     let locationButtonBottomInset: CGFloat
     var onMapTapped: ((Coordinate) -> Void)?

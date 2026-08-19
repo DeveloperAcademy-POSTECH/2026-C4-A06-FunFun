@@ -55,7 +55,7 @@ nonisolated struct Landmark: Identifiable, Codable, Hashable, Sendable {
     let coordinate: Coordinate
 }
 
-nonisolated struct PlaceSearchResult: Identifiable, Hashable, Sendable {
+nonisolated struct Place: Identifiable, Hashable, Sendable {
     let id: String
     let name: String
     let category: String
