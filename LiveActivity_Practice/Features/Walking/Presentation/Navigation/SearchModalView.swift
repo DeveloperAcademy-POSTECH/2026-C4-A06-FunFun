@@ -5,20 +5,19 @@
 
 import SwiftUI
 
-struct WalkingSearchModalView: View {
-    @ObservedObject var viewModel: WalkingNavigationViewModel
-    @Binding var isPresented: Bool
-    @Binding var searchQuery: String
+struct SearchModalView: View {
+    @State var viewModel: SearchViewModel
+    @State var searchQuery: String = ""
 
+    @Binding var isPresented: Bool
     @FocusState private var isSearchFieldFocused: Bool
+
+    var placeSelected: (Place) -> Void
 
     var body: some View {
         VStack(spacing: 12) {
             searchBar
-
-            if !viewModel.placeSearchResults.isEmpty || viewModel.isSearchingPlaces {
-                searchResultsContainer
-            }
+            searchResultsContainer
 
             Spacer(minLength: 0)
         }
@@ -78,11 +77,12 @@ struct WalkingSearchModalView: View {
         WalkingSearchResultsTableView(
             places: displayedSearchResults,
             isLoading: viewModel.isSearchingPlaces,
-            onSelect: selectPlace,
             onLoadMore: {
                 Task {
                     await viewModel.loadMoreSearchResults()
                 }
+            }, placeSelected: { place in
+                selectPlace(place)
             }
         )
         .background(Color.white.opacity(0.8), in: RoundedRectangle(cornerRadius: 30))
@@ -90,7 +90,7 @@ struct WalkingSearchModalView: View {
         .padding(.horizontal, 12)
     }
 
-    private var displayedSearchResults: [PlaceSearchResult] {
+    private var displayedSearchResults: [Place] {
         var seenPlaces = Set<String>()
 
         return viewModel.placeSearchResults.filter { place in
@@ -106,9 +106,8 @@ struct WalkingSearchModalView: View {
         }
     }
 
-    private func selectPlace(_ place: PlaceSearchResult) {
-        viewModel.setStartFromCurrentLocation()
-        viewModel.selectPlace(place, for: .destination)
+    private func selectPlace(_ place: Place) {
+        placeSelected(place)
         searchQuery = ""
         isSearchFieldFocused = false
         isPresented = false

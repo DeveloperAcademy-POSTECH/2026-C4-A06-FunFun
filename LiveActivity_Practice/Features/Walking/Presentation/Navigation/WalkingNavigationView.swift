@@ -12,7 +12,6 @@ struct WalkingNavigationView: View {
     @State private var cameraCommand: MapCameraCommand?
     @State private var cameraCommandSequence = 0
     @State private var isSearchExpanded = false
-    @State private var searchQuery = ""
     @State private var showSettings = false
     @State private var isExitAlertPresented = false
     @State private var isNavigationSheetExpanded = false
@@ -288,10 +287,10 @@ struct WalkingNavigationView: View {
             }
         }
         .sheet(isPresented: $isSearchExpanded) {
-            WalkingSearchModalView(
-                viewModel: viewModel,
+            SearchModalView(
+                viewModel: SearchViewModel(),
                 isPresented: $isSearchExpanded,
-                searchQuery: $searchQuery
+                placeSelected: { _ in }
             )
             .presentationDetents([.fraction(0.9)])
             .presentationDragIndicator(.visible)
