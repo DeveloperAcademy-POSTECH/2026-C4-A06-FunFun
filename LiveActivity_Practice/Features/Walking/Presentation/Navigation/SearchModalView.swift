@@ -45,9 +45,13 @@ struct SearchModalView: View {
 
     private var searchBar: some View {
         HStack(spacing: 16) {
-            Image(systemName: "magnifyingglass")
-                .font(.system(size: 18, weight: .medium))
-                .foregroundStyle(Color(.systemGray))
+            Button {
+                isPresented = false
+            } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundStyle(Color(.systemGray))
+            }
 
             TextField("어디로 갈까요?", text: $searchQuery)
                 .appTypography(.labelL)

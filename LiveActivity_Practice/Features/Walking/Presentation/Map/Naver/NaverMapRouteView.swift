@@ -29,13 +29,6 @@ struct NaverMapRouteView: UIViewRepresentable {
         context.coordinator.onMapViewportChanged = state.onMapViewportChanged
         context.coordinator.updateCurrentLocation(state.currentLocation, on: mapView)
         context.coordinator.updateRouteAlignmentState(state)
-        context.coordinator.location.setupLocationButton(
-            on: naverMapView,
-            bottomInset: state.locationButtonBottomInset
-        ) { [weak coordinator = context.coordinator, weak mapView] in
-            guard let coordinator, let mapView else { return }
-            coordinator.handleLocationButtonTap(on: mapView)
-        }
         context.coordinator.camera.prepareInitialCamera(location: state.currentLocation, on: mapView)
         return naverMapView
     }
@@ -137,20 +130,6 @@ struct NaverMapRouteView: UIViewRepresentable {
             currentNavigationBearing = state.navigationBearing
         }
 
-        func handleLocationButtonTap(on mapView: NMFMapView) {
-            guard let currentLocation else { return }
-            if let currentRoute,
-               camera.alignRoute(
-                   route: currentRoute,
-                   location: currentLocation,
-                   navigationBearing: currentNavigationBearing,
-                   on: mapView
-               ) {
-                return
-            }
-            camera.moveCamera(to: currentLocation, zoom: 15, on: mapView, animated: true)
-        }
-
         func update(state: MapPresentationState, on mapView: NMFMapView) {
             updateRouteAlignmentState(state)
             updateCurrentLocation(state.currentLocation, on: mapView)
@@ -162,7 +141,7 @@ struct NaverMapRouteView: UIViewRepresentable {
 
             camera.centerOnInitialLocationIfNeeded(state.currentLocation, on: mapView)
             let previewCoordinate = state.route == nil
-                ? state.previewDestination?.coordinate ?? state.tappedCoordinate
+                ? state.selectedPlace?.coordinate ?? state.tappedCoordinate
                 : nil
             destinationPreview.render(coordinate: previewCoordinate, on: mapView)
 
@@ -202,9 +181,6 @@ struct NaverMapRouteView: UIViewRepresentable {
             }
 
             route.renderDeviationPath(state.deviationPath, on: mapView)
-            location.updateButtonLayout(
-                bottomInset: state.locationButtonBottomInset
-            )
 
             if camera.handleNavigationAlignment(state: state, on: mapView) { return }
             camera.handleCameraCommand(state: state, on: mapView)

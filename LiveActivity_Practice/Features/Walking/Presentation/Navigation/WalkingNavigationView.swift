@@ -38,9 +38,8 @@ struct WalkingNavigationView: View {
                     showRoutePoints: viewModel.showRoutePoints,
                     routePointRadius: viewModel.routePointRadius,
                     approachingThreshold: viewModel.approachingThreshold,
-                    previewDestination: viewModel.previewDestination,
+                    selectedPlace: viewModel.selecedPlace,
                     tappedCoordinate: viewModel.tappedCoordinate,
-                    locationButtonBottomInset: locationButtonBottomInset,
                     onMapTapped: { coordinate in
                         guard !viewModel.isNavigating, !isSearchExpanded else { return }
                         viewModel.selectCoordinateAsDestination(coordinate)
@@ -64,30 +63,16 @@ struct WalkingNavigationView: View {
                 )
                 .ignoresSafeArea()
             }
-            VStack(spacing: 12){
-                // 상단
+            VStack(spacing: 12) {
                 switch viewModel.viewState {
                 case .main:
+                    homeSearchPanel
+                    Spacer()
                     HStack {
                         Spacer()
-                        settingsButton
+                        myLocationButton
                     }
-                    
-                    Spacer()
-                    
-                    if let _ = viewModel.tappedCoordinate {
-                        tappedDestinationPanel
-                    } else {
-                        homeSearchPanel
-                    }
-                case .searching:
-                    if let place = viewModel.previewDestination {
-                        HStack {
-                            backButton
-                            Spacer()
-                            settingsButton
-                        }
-                        Spacer()
+                    if let place = viewModel.selecedPlace {
                         PlaceInformationView(
                             place: place,
                             isLoading: viewModel.isLoading,
@@ -95,19 +80,20 @@ struct WalkingNavigationView: View {
                                 Task { await viewModel.searchRoute() }
                             }
                         )
-                    } else {
-                        EmptyView()
                     }
                 case .routePreview:
                     HStack {
                         backButton
                         Spacer()
-                        settingsButton
                     }
                     RouteSummaryHeaderView()
-                    
+
                     Spacer()
-                    
+
+                    HStack {
+                        Spacer()
+                        myLocationButton
+                    }
                     if let route = viewModel.route {
                         routeSummary(route)
                     }
@@ -123,13 +109,17 @@ struct WalkingNavigationView: View {
                         }
                     }
                     Spacer()
+                    HStack {
+                        Spacer()
+                        myLocationButton
+                    }
                     switch viewModel.deviationState {
                     case .rerouting:
                         ProgressView("최단 경로와 랜드마크 검색 중…")
                             .appTypography(.body1)
                             .padding()
                             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
-                    default :
+                    default:
                         if let route = viewModel.route {
                             NavigationRouteListView(
                                 route: route,
@@ -147,99 +137,10 @@ struct WalkingNavigationView: View {
                             .padding()
                             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
                     }
-                default :
+                default:
                     EmptyView()
                 }
             }
-            
-//            VStack(spacing: 12) {
-//                HStack {
-//                    // Back Button이 보여지는 조건 = routePreview + navigating
-//                    if viewModel.route != nil || viewModel.tappedCoordinate != nil || viewModel.previewDestination != nil {
-//                        backButton
-//                    }
-//                    Spacer()
-//                    // setting은 언제나 보여짐
-//                    settingsButton
-//                }
-//                
-//                // 출발-도착을 텍스트로 보여주는 뷰가 보여지는 조건
-//                if viewModel.route != nil && !viewModel.isNavigating {
-//                    RouteSummaryHeaderView(
-//                        destinationName: viewModel.destinationName
-//                    ) {
-//                        isSearchExpanded = true
-//                    }
-//                    .frame(height: 117)
-//                }
-//                
-//                // 경로 이탈 + 경고 문구를 보여줘도 됨
-//                // 경고 문구를 보여주기
-//                if viewModel.isNavigating && viewModel.isOffRoute && !viewModel.isOffRouteBannerHidden {
-//                    offRouteBanner
-//                }
-//                
-//                Spacer()
-//                
-//                // 이동 중 + 경로가 있는 경우
-//                // 경로의 주요 포인트들을 리스트로 미리볼 수 있음
-//                if viewModel.isNavigating, let route = viewModel.route {
-//                    NavigationRouteListView(
-//                        route: route,
-//                        progress: viewModel.progress,
-//                        destinationName: viewModel.destinationName,
-//                        isExpanded: $isNavigationSheetExpanded
-//                    )
-//                }
-//                
-//                // 장소의 정보를 제공하는 뷰
-//                else if let place = viewModel.previewDestination {
-//                    PlaceInformationView(
-//                        place: place,
-//                        isLoading: viewModel.isLoading,
-//                        onConfirm: {
-//                            Task { await viewModel.searchRoute() }
-//                        }
-//                    )
-//                }
-//                // 이동중이 아닌데, 경로가 있는 경우
-//                // 시작 버튼 누르면 routePreview -> navigating 상태가 변함
-//                else if let route = viewModel.route {
-//                    routeSummary(route)
-//                }
-//                // 로딩중
-//                else if viewModel.isLoading {
-//                    ProgressView("최단 경로와 랜드마크 검색 중…")
-//                        .appTypography(.body1)
-//                        .padding()
-//                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
-//                }
-//                // 좌표가 눌린 경우
-//                else if viewModel.tappedCoordinate != nil {
-//                    tappedDestinationPanel
-//                }
-//                // 에러 발생
-//                else if let error = viewModel.errorMessage {
-//                    Text(error)
-//                        .appTypography(.captionS)
-//                        .foregroundStyle(.red)
-//                        .padding()
-//                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
-//                }
-//                
-//                
-//                // 모든 예외의 경우
-//                // Default 모드
-//                if !viewModel.isNavigating,
-//                   viewModel.route == nil,
-//                   viewModel.previewDestination == nil,
-//                   viewModel.tappedCoordinate == nil,
-//                   !viewModel.isLoading {
-//                    homeSearchPanel
-//                }
-//            }
-//            .padding()
-            
         }
         .overlay(alignment: .bottom) {
             if viewModel.isArrived {
@@ -275,9 +176,9 @@ struct WalkingNavigationView: View {
             isNavigationSheetExpanded = false
             if route != nil { issueCameraCommand(.route) }
         }
-        .onChange(of: viewModel.previewDestination) { _, destination in
-            if let destination {
-                issueCameraCommand(.coordinate(destination.coordinate))
+        .onChange(of: viewModel.selecedPlace) { _, place in
+            if let place {
+                issueCameraCommand(.coordinate(place.coordinate))
             }
         }
         .onChange(of: viewModel.isNavigating) { _, isNavigating in
@@ -286,15 +187,18 @@ struct WalkingNavigationView: View {
                 isNavigationSheetExpanded = false
             }
         }
-        .sheet(isPresented: $isSearchExpanded) {
+        .fullScreenCover(isPresented: $isSearchExpanded) {
             SearchModalView(
                 viewModel: SearchViewModel(),
+                searchQuery: "",
                 isPresented: $isSearchExpanded,
-                placeSelected: { _ in }
+                placeSelected: { place in
+                    viewModel.placeSelected(place)
+                }
             )
-            .presentationDetents([.fraction(0.9)])
-            .presentationDragIndicator(.visible)
-            .presentationCornerRadius(30)
+        }
+        .transaction { transaction in
+            transaction.disablesAnimations = true
         }
         .sheet(isPresented: $showSettings) {
             settingsView
@@ -302,16 +206,18 @@ struct WalkingNavigationView: View {
         }
     }
 
-    private var locationButtonBottomInset: CGFloat {
-        guard viewModel.isNavigating else {
-            return viewModel.route != nil ? 250 : 104
+    private var myLocationButton: some View {
+        Button {
+            issueCameraCommand(.userLocation)
+            viewModel.clearSelectedPlace()
+        } label: {
+            Image(systemName: "dot.scope")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(Color("Colors/text-text-1"))
+                .frame(width: 44, height: 44)
         }
-
-        let sheetHeight: CGFloat = isNavigationSheetExpanded ? 520 : 120
-        let sheetBottomMargin: CGFloat = 16
-        let buttonToSheetGap: CGFloat = 16
-
-        return sheetHeight + sheetBottomMargin + buttonToSheetGap
+        .modifier(WalkingToolbarButtonStyle())
+        .accessibilityLabel("내 위치 찾기")
     }
     
     private var backButton: some View {
@@ -427,10 +333,6 @@ struct WalkingNavigationView: View {
     
     private var homeSearchPanel: some View {
         VStack(spacing: 6) {
-            Capsule()
-                .fill(Color(.systemGray3))
-                .frame(width: 51, height: 5)
-            
             Button {
                 isSearchExpanded = true
             } label: {

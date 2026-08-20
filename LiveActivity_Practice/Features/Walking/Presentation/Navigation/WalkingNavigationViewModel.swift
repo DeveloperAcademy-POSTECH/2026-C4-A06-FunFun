@@ -12,7 +12,6 @@ import Foundation
 final class WalkingNavigationViewModel: NSObject, ObservableObject {
     enum ViewState {
         case main // 기본 상태 : 기본 + 장소 선택
-        case searching // 검색 중 : 검색 창 활성화
         case routePreview // 경로가 찾아진 상태 : 미리 보여줌
         case loading // API 응답 대기중
         case navigating // 경로를 따라가는 중
@@ -37,16 +36,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     @Published var destinationLatitude = "37.491902"
     @Published var destinationLongitude = "127.03 1812"
     
-    
-    // 장소 검색 결과 : 이거는 다른 뷰 모델로 분리하기
-    @Published private(set) var placeSearchResults: [Place] = []
-    @Published private(set) var isSearchingPlaces = false
-    private var currentSearchPage = 1
-    private var lastSearchKeyword = ""
-    @Published private(set) var canLoadMoreSearchResults = false
-    
     //
-    @Published private(set) var previewDestination: Place?
     
     //
     @Published private(set) var hasSelectedStart = false
@@ -147,7 +137,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     
     //
     func selectCoordinateAsDestination(_ coordinate: Coordinate) {
-        previewDestination = nil
+        selecedPlace = nil
         tappedCoordinate = coordinate
         destinationName = String(format: "(%.4f, %.4f)", coordinate.latitude, coordinate.longitude)
         destinationLatitude = String(coordinate.latitude)
@@ -166,7 +156,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     
     //
     func clearTappedCoordinate() {
-        previewDestination = nil
+        selecedPlace = nil
         tappedCoordinate = nil
         destinationName = ""
         destinationLatitude = ""
@@ -179,6 +169,10 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         errorMessage = nil
     }
     
+    func clearSelectedPlace() {
+         selecedPlace = nil
+     }
+    
     func setStartFromCurrentLocation() {
         guard let location = currentLocation else {
             useCurrentLocation()
@@ -190,15 +184,13 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         hasSelectedStart = true
     }
     
-
-    
     func dismissRoute() async {
         if isNavigating {
             await stopNavigation()
         }
         route = nil
         progress = nil
-        previewDestination = nil
+        selecedPlace = nil
         passedRouteIndex = -1
         activeTurnManeuver = nil
         destinationName = ""
@@ -231,8 +223,8 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
             route = try await repository.makeRoute(from: start, to: destination)
             progress = route.map(initialProgress)
             passedRouteIndex = -1
-        activeTurnManeuver = nil
-            previewDestination = nil
+            activeTurnManeuver = nil
+            selecedPlace = nil
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -245,7 +237,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
             try await activityManager.start(destinationName: destinationName, route: route, initialProgress: startProgress, showTime: showTimeInsteadOfDistance)
             isNavigating = true
             passedRouteIndex = -1
-        activeTurnManeuver = nil
+            activeTurnManeuver = nil
             navigationBearing = nil
             if let currentLocation {
                 updateNavigationBearing(at: currentLocation, route: route)
@@ -311,6 +303,16 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         hasAskedForCurrentDeviation = true
         isOffRouteBannerHidden = true
     }
+    
+    // 장소 선택
+    
+    @Published var selecedPlace: Place?
+    
+    func placeSelected(_ place: Place) {
+        selecedPlace = place
+        
+    }
+    
     
     private func requestLocationAccess() {
         switch locationManager.authorizationStatus {
