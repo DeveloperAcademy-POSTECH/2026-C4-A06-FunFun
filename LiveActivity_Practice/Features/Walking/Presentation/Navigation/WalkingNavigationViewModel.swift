@@ -8,8 +8,8 @@ import Combine
 import CoreLocation
 import Foundation
 
-@MainActor
-final class WalkingNavigationViewModel: NSObject, ObservableObject {
+@Observable
+final class WalkingNavigationViewModel: NSObject {
     enum ViewState: Equatable {
         case main // 기본 상태 : 기본 + 장소 선택
         case routePreview // 경로가 찾아진 상태 : 미리 보여줌
@@ -18,7 +18,17 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         case error(Error) // 에러 케이스
         
         static func == (lhs: WalkingNavigationViewModel.ViewState, rhs: WalkingNavigationViewModel.ViewState) -> Bool {
-            lhs.self == rhs.self
+              switch (lhs, rhs) {
+              case (.main, .main),
+                   (.routePreview, .routePreview),
+                   (.loading, .loading),
+                   (.navigating, .navigating):
+                  return true
+              case (.error, .error):
+                  return true
+              default:
+                  return false
+              }
         }
     }
     
@@ -30,48 +40,48 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         case rerouting
     }
     
-    @Published private(set)var viewState: ViewState = .main
+    private(set)var viewState: ViewState = .main
     
-    @Published var start: Place?
-    @Published var destination: Place?
+    var start: Place?
+    var destination: Place?
+    private(set) var selecedPlace: Place?
     
     //
-    @Published private(set) var route: WalkingRoute?
-    @Published private(set) var progress: WalkingProgress?
-    @Published private(set) var currentLocation: Coordinate?
-    @Published private(set) var currentHeading: CLLocationDirection?
+    private(set) var route: WalkingRoute?
+    private(set) var progress: WalkingProgress?
+    private(set) var currentLocation: Coordinate?
+    private(set) var currentHeading: CLLocationDirection?
     
     // TODO: 이거 왜 쓰는거지?
-    @Published private(set) var currentLocationAccuracy: CLLocationAccuracy?
-    @Published private(set) var navigationBearing: CLLocationDirection?
-    @Published private(set) var navigationAlignmentID: Int?
+    private(set) var currentLocationAccuracy: CLLocationAccuracy?
+    private(set) var navigationBearing: CLLocationDirection?
+    private(set) var navigationAlignmentID: Int?
     
     //
-    @Published private(set) var deviationState: RouteDeviationState = .onRoute
-    @Published private(set) var deviationPath: [Coordinate] = []
-    @Published private(set) var distanceFromRoute: CLLocationDistance = 0
-    @Published private(set) var isOffRouteBannerHidden = false
+    private(set) var deviationState: RouteDeviationState = .onRoute
+    private(set) var deviationPath: [Coordinate] = []
+    private(set) var distanceFromRoute: CLLocationDistance = 0
+    private(set) var isOffRouteBannerHidden = false
     
     //
-    @Published private(set) var passedRouteIndex = -1
-    @Published var shouldPresentReroutePrompt = false
+    private(set) var passedRouteIndex = -1
+    var shouldPresentReroutePrompt = false
     
     //
-    @Published private(set) var isLoading = false
-    @Published private(set) var isArrived = false
-    @Published var errorMessage: String?
-    @Published var showTimeInsteadOfDistance = false
-    @Published var showLandmarks = true
+    private(set) var isArrived = false
+    var errorMessage: String?
+    var showTimeInsteadOfDistance = false
+    var showLandmarks = true
     
     //
-    @Published var landmarkMinZoom: Double = 20
-    @Published var approachingThreshold: Double = 20
+    var landmarkMinZoom: Double = 20
+    var approachingThreshold: Double = 20
     
     // 개발자용
-    @Published var showTurnMarkers = false
-    @Published var showRoutePoints = false
-    @Published var routePointRadius: Double = 10
-    @Published var showGradientOverlay = true
+    var showTurnMarkers = false
+    var showRoutePoints = false
+    var routePointRadius: Double = 10
+    var showGradientOverlay = true
     
     //
     var landmarkCount: Int {
@@ -178,9 +188,9 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
             errorMessage = "검색 결과에서 출발지와 목적지를 선택해 주세요."
             return
         }
-        isLoading = true
+        viewState = .loading
         errorMessage = nil
-        defer { isLoading = false }
+        defer { viewState = .main }
         do {
             route = try await repository.makeRoute(from: start.coordinate, to: destination.coordinate)
             progress = route.map(initialProgress)
@@ -264,9 +274,6 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         hasAskedForCurrentDeviation = true
         isOffRouteBannerHidden = true
     }
-    
-    // 장소 선택
-    @Published private(set) var selecedPlace: Place?
     
     func placeSelected(_ place: Place) {
         selecedPlace = place
@@ -406,9 +413,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         let isApproaching = nextDistance < Int(approachingThreshold)
         
         // 회전 maneuver approaching 진입 시 active turn 설정
-        if isApproaching,
-           let maneuver = next,
-           Self.passedZoneTurnTypes.contains(maneuver.turn),
+        if isApproaching, let maneuver = next, Self.passedZoneTurnTypes.contains(maneuver.turn),
            activeTurnManeuver == nil {
             activeTurnManeuver = maneuver
         }
