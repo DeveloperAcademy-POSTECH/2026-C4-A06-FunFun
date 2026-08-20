@@ -127,7 +127,7 @@ struct WalkingNavigationView: View {
                             NavigationRouteListView(
                                 route: route,
                                 progress: viewModel.progress,
-                                destinationName: viewModel.destinationName,
+                                destinationName: viewModel.destination?.name ?? "목적지",
                                 isExpanded: $isNavigationSheetExpanded
                             )
                         }
@@ -144,10 +144,11 @@ struct WalkingNavigationView: View {
                     EmptyView()
                 }
             }
+            .padding(12)
         }
         .overlay(alignment: .bottom) {
             if viewModel.isArrived {
-                ArrivalLandingView(destinationName: viewModel.destinationName)
+                ArrivalLandingView(destinationName: viewModel.destination?.name ?? "목적지")
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                     .zIndex(10)
             }
@@ -158,7 +159,6 @@ struct WalkingNavigationView: View {
                 ZStack {
                     Color.black.opacity(0.12)
                         .ignoresSafeArea()
-                    
                     NavigationExitAlert(
                         onContinue: {
                             isExitAlertPresented = false
@@ -340,7 +340,7 @@ struct WalkingNavigationView: View {
                 Text("목적지")
                     .appTypography(.captionS)
                     .foregroundStyle(.secondary)
-                Text(viewModel.destinationName.isEmpty ? "목적지" : viewModel.destinationName)
+                Text(viewModel.destination == nil ? "목적지" : viewModel.destination!.name)
                     .appTypography(.labelM)
                     .lineLimit(1)
             }

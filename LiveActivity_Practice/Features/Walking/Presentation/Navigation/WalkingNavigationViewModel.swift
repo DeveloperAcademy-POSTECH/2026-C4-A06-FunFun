@@ -28,17 +28,8 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     
     @Published private(set)var viewState: ViewState = .main
     
-    // 왜 쓰는지 모르겠는 프로퍼티
-    @Published var startName = ""
-    @Published var startLatitude = "37.497942"
-    @Published var startLongitude = "127.027621"
-    @Published var destinationName = ""
-    @Published var destinationLatitude = "37.491902"
-    @Published var destinationLongitude = "127.03 1812"
-    
-    //
-    @Published private(set) var hasSelectedStart = false
-    @Published private(set) var hasSelectedDestination = false
+    @Published var start: Place?
+    @Published var destination: Place?
     
     //
     @Published private(set) var route: WalkingRoute?
@@ -73,7 +64,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     @Published var landmarkMinZoom: Double = 20
     @Published var approachingThreshold: Double = 20
     
-    //
+    // 개발자용
     @Published var showTurnMarkers = false
     @Published var showRoutePoints = false
     @Published var routePointRadius: Double = 10
@@ -134,8 +125,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     func refreshLiveActivity() {
         guard let progress else { return }
         Task {
-            await activityManager.update(progress,
-                                         showTime: showTimeInsteadOfDistance)
+            await activityManager.update(progress, showTime: showTimeInsteadOfDistance)
         }
     }
     
@@ -153,10 +143,10 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
             useCurrentLocation()
             return
         }
-        startLatitude = String(location.latitude)
-        startLongitude = String(location.longitude)
-        startName = "현재 위치"
-        hasSelectedStart = true
+        start = Place.init(id: "", name: "현재 위치", category: "", address: "",
+                           coordinate: Coordinate(
+                            latitude: location.latitude,
+                            longitude: location.longitude))
     }
     
     func dismissRoute() async {
@@ -168,11 +158,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         selecedPlace = nil
         passedRouteIndex = -1
         activeTurnManeuver = nil
-        destinationName = ""
-        destinationLatitude = ""
-        destinationLongitude = ""
-        hasSelectedDestination = false
-        hasSelectedStart = false
+        destination = nil
         errorMessage = nil
         startLocationTracking()
     }
@@ -183,19 +169,17 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     }
     
     func searchRoute() async {
-        guard hasSelectedStart, hasSelectedDestination else {
+        setStartFromCurrentLocation()
+        
+        guard let start = start, let destination = destination else {
             errorMessage = "검색 결과에서 출발지와 목적지를 선택해 주세요."
-            return
-        }
-        guard let start = startCoordinate, let destination = destinationCoordinate else {
-            errorMessage = "출발지와 목적지 좌표를 확인해 주세요."
             return
         }
         isLoading = true
         errorMessage = nil
         defer { isLoading = false }
         do {
-            route = try await repository.makeRoute(from: start, to: destination)
+            route = try await repository.makeRoute(from: start.coordinate, to: destination.coordinate)
             progress = route.map(initialProgress)
             passedRouteIndex = -1
             activeTurnManeuver = nil
@@ -207,10 +191,10 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     }
     
     func startNavigation() async {
-        guard let route else { return }
+        guard let route, destination != nil else { return }
         do {
             let startProgress = initialProgress(route)
-            try await activityManager.start(destinationName: destinationName, route: route, initialProgress: startProgress, showTime: showTimeInsteadOfDistance)
+            try await activityManager.start(destinationName: destination!.name, route: route, initialProgress: startProgress, showTime: showTimeInsteadOfDistance)
             isNavigating = true
             passedRouteIndex = -1
             activeTurnManeuver = nil
@@ -251,12 +235,12 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         guard isNavigating,
               !isRerouting,
               let currentLocation,
-              let destination = destinationCoordinate else { return }
+              let destination = destination else { return }
         
         shouldPresentReroutePrompt = false
         deviationState = .rerouting
         do {
-            let newRoute = try await repository.makeRoute(from: currentLocation, to: destination)
+            let newRoute = try await repository.makeRoute(from: currentLocation, to: destination.coordinate)
             route = newRoute
             let newProgress = initialProgress(newRoute)
             progress = newProgress
@@ -282,18 +266,11 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     }
     
     // 장소 선택
-    
-    @Published var selecedPlace: Place?
+    @Published private(set) var selecedPlace: Place?
     
     func placeSelected(_ place: Place) {
         selecedPlace = place
-        destinationName = place.name
-        destinationLatitude = String(place.coordinate.latitude)
-        destinationLongitude = String(place.coordinate.longitude)
-        hasSelectedDestination = true
-        setStartFromCurrentLocation()
     }
-    
     
     private func requestLocationAccess() {
         switch locationManager.authorizationStatus {
@@ -338,16 +315,6 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
             address: address,
             coordinate: coordinate
         )
-    }
-    
-    private var startCoordinate: Coordinate? {
-        guard let lat = Double(startLatitude), let lon = Double(startLongitude) else { return nil }
-        return Coordinate(latitude: lat, longitude: lon)
-    }
-    
-    private var destinationCoordinate: Coordinate? {
-        guard let lat = Double(destinationLatitude), let lon = Double(destinationLongitude) else { return nil }
-        return Coordinate(latitude: lat, longitude: lon)
     }
     
     private static let passedZoneTurnTypes: Set<WalkingTurn> = [.left, .slightLeft, .right, .slightRight]
@@ -507,8 +474,8 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         guard isNavigating, deviationState != .rerouting else { return }
         
         // 목적지 50m 이내에서는 경로 이탈 감지 비활성화
-        if let destination = destinationCoordinate {
-            let distToDestination = current.distance(to: destination)
+        if let destination = destination {
+            let distToDestination = current.distance(to: destination.coordinate)
             if distToDestination <= 50 {
                 if isOffRoute { resetDeviationState() }
                 return
@@ -646,10 +613,10 @@ extension WalkingNavigationViewModel: CLLocationManagerDelegate {
             // 장소 선택 → placeSelected → setStartFromCurrentLocation
             // 이 시점에 currentLocation이 nil이면 출발지를 바로 채울 수 없어
             // 플래그를 켜두고 GPS가 오면 그때 채움
-            startLatitude = String(location.coordinate.latitude)
-            startLongitude = String(location.coordinate.longitude)
-            startName = "현재 위치"
-            hasSelectedStart = true
+            start = Place.init(id: "", name: "현재 위치", category: "", address: "",
+                               coordinate: Coordinate(
+                                latitude: location.coordinate.latitude,
+                                longitude: location.coordinate.longitude))
             shouldUseLocationAsStart = false
         }
         
