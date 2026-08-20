@@ -65,6 +65,7 @@ struct WalkingNavigationView: View {
                 )
                 .ignoresSafeArea()
             }
+            
             VStack(spacing: 12) {
                 switch viewModel.viewState {
                 case .main:
@@ -224,7 +225,7 @@ struct WalkingNavigationView: View {
     
     private var backButton: some View {
         Button {
-            viewModel.clearSelectedPlace()
+            viewModel.mainMode()
             Task { await viewModel.dismissRoute() }
             issueCameraCommand(.userLocation)
         } label: {

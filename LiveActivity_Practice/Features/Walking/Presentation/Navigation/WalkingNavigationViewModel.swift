@@ -26,7 +26,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         case rerouting
     }
     
-    @Published var viewState: ViewState = .main
+    @Published private(set)var viewState: ViewState = .main
     
     // 왜 쓰는지 모르겠는 프로퍼티
     @Published var startName = ""
@@ -35,8 +35,6 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     @Published var destinationName = ""
     @Published var destinationLatitude = "37.491902"
     @Published var destinationLongitude = "127.03 1812"
-    
-    //
     
     //
     @Published private(set) var hasSelectedStart = false
@@ -145,6 +143,11 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         selecedPlace = nil
     }
     
+    func mainMode() {
+        viewState = .main
+        clearSelectedPlace()
+    }
+    
     func setStartFromCurrentLocation() {
         guard let location = currentLocation else {
             useCurrentLocation()
@@ -197,6 +200,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
             passedRouteIndex = -1
             activeTurnManeuver = nil
             selecedPlace = nil
+            viewState = .routePreview
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -225,6 +229,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
             locationManager.pausesLocationUpdatesAutomatically = false
             locationManager.startUpdatingLocation()
             locationManager.startUpdatingHeading()
+            viewState = .navigating
         } catch {
             errorMessage = error.localizedDescription
         }
