@@ -34,7 +34,8 @@ struct NaverMapRouteView: UIViewRepresentable {
     }
 
     func updateUIView(_ naverMapView: NMFNaverMapView, context: Context) {
-        context.coordinator.onMapTapped = state.onMapTapped
+        context.coordinator.onPlaceSelected = state.onPlaceSelected
+        context.coordinator.onMapCleared = state.onMapCleared
         context.coordinator.onMapViewportChanged = state.onMapViewportChanged
         context.coordinator.update(state: state, on: naverMapView.mapView)
     }
@@ -51,7 +52,8 @@ struct NaverMapRouteView: UIViewRepresentable {
         let turn = NaverTurnRenderer()
         let location = NaverLocationOverlay()
         let destinationPreview = NaverDestinationPreviewRenderer()
-        var onMapTapped: ((Coordinate) -> Void)?
+        var onPlaceSelected: ((Place) -> Void)?
+        var onMapCleared: (() -> Void)?
         var onMapViewportChanged: ((CLLocationDirection, CGPoint?) -> Void)?
 
         private var renderedRoute: WalkingRoute?
@@ -68,7 +70,20 @@ struct NaverMapRouteView: UIViewRepresentable {
         private var lastReportedViewport: MapViewportSnapshot?
 
         func mapView(_ mapView: NMFMapView, didTapMap latlng: NMGLatLng, point: CGPoint) {
-            onMapTapped?(Coordinate(latitude: latlng.lat, longitude: latlng.lng))
+            onMapCleared?()
+        }
+
+        func mapView(_ mapView: NMFMapView, didTap symbol: NMFSymbol) -> Bool {
+            let coord = Coordinate(latitude: symbol.position.lat, longitude: symbol.position.lng)
+            let place = Place(
+                id: "\(coord.latitude)-\(coord.longitude)",
+                name: symbol.caption,
+                category: "",
+                address: "",
+                coordinate: coord
+            )
+            onPlaceSelected?(place)
+            return true
         }
 
         func mapView(_ mapView: NMFMapView, cameraIsChangingByReason reason: Int) {
@@ -141,7 +156,7 @@ struct NaverMapRouteView: UIViewRepresentable {
 
             camera.centerOnInitialLocationIfNeeded(state.currentLocation, on: mapView)
             let previewCoordinate = state.route == nil
-                ? state.selectedPlace?.coordinate ?? state.tappedCoordinate
+                ? state.selectedPlace?.coordinate
                 : nil
             destinationPreview.render(coordinate: previewCoordinate, on: mapView)
 

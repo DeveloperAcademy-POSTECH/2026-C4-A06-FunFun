@@ -36,8 +36,8 @@ struct MapPresentationState: Equatable {
     let routePointRadius: Double
     let approachingThreshold: Double
     let selectedPlace: Place?
-    let tappedCoordinate: Coordinate?
-    var onMapTapped: ((Coordinate) -> Void)?
+    var onPlaceSelected: ((Place) -> Void)?
+    var onMapCleared: (() -> Void)?
     var onMapViewportChanged: ((CLLocationDirection, CGPoint?) -> Void)? = nil
 
     static func == (lhs: MapPresentationState, rhs: MapPresentationState) -> Bool {
@@ -58,7 +58,6 @@ struct MapPresentationState: Equatable {
         && lhs.routePointRadius == rhs.routePointRadius
         && lhs.approachingThreshold == rhs.approachingThreshold
         && lhs.selectedPlace == rhs.selectedPlace
-        && lhs.tappedCoordinate == rhs.tappedCoordinate
     }
 }
 

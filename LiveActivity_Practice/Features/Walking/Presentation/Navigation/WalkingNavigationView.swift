@@ -39,10 +39,12 @@ struct WalkingNavigationView: View {
                     routePointRadius: viewModel.routePointRadius,
                     approachingThreshold: viewModel.approachingThreshold,
                     selectedPlace: viewModel.selecedPlace,
-                    tappedCoordinate: viewModel.tappedCoordinate,
-                    onMapTapped: { coordinate in
+                    onPlaceSelected: { place in
                         guard !viewModel.isNavigating, !isSearchExpanded else { return }
-                        viewModel.selectCoordinateAsDestination(coordinate)
+                        viewModel.placeSelected(place)
+                    },
+                    onMapCleared: {
+                        viewModel.clearSelectedPlace()
                     },
                     onMapViewportChanged: { heading, position in
                         mapHeading = heading
@@ -222,7 +224,7 @@ struct WalkingNavigationView: View {
     
     private var backButton: some View {
         Button {
-            viewModel.clearTappedCoordinate()
+            viewModel.clearSelectedPlace()
             Task { await viewModel.dismissRoute() }
             issueCameraCommand(.userLocation)
         } label: {
@@ -299,36 +301,6 @@ struct WalkingNavigationView: View {
                 }
             }
         }
-    }
-    
-    private var tappedDestinationPanel: some View {
-        VStack(spacing: 12) {
-            HStack(spacing: 10) {
-                Image(systemName: "mappin.circle.fill")
-                    .foregroundStyle(.red)
-                    .font(.title3)
-                Text(viewModel.destinationName)
-                    .appTypography(.labelM)
-                    .lineLimit(1)
-                Spacer()
-            }
-            
-            Button {
-                Task { await viewModel.searchRoute() }
-            } label: {
-                Label {
-                    Text("경로 찾기")
-                        .appTypography(.labelL)
-                } icon: {
-                    Image(systemName: "figure.walk")
-                }
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-        }
-        .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
-        .shadow(radius: 8)
     }
     
     private var homeSearchPanel: some View {
@@ -450,7 +422,7 @@ struct WalkingNavigationView: View {
     
     private func exitNavigation() {
         isExitAlertPresented = false
-        viewModel.clearTappedCoordinate()
+        viewModel.clearSelectedPlace()
         Task {
             await viewModel.dismissRoute()
             issueCameraCommand(.userLocation)

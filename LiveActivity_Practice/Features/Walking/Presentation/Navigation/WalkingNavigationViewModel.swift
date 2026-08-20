@@ -133,19 +133,6 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         requestLocationAccess()
     }
     
-    @Published private(set) var tappedCoordinate: Coordinate?
-    
-    //
-    func selectCoordinateAsDestination(_ coordinate: Coordinate) {
-        selecedPlace = nil
-        tappedCoordinate = coordinate
-        destinationName = String(format: "(%.4f, %.4f)", coordinate.latitude, coordinate.longitude)
-        destinationLatitude = String(coordinate.latitude)
-        destinationLongitude = String(coordinate.longitude)
-        hasSelectedDestination = true
-        setStartFromCurrentLocation()
-    }
-    
     func refreshLiveActivity() {
         guard let progress else { return }
         Task {
@@ -154,24 +141,9 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         }
     }
     
-    //
-    func clearTappedCoordinate() {
-        selecedPlace = nil
-        tappedCoordinate = nil
-        destinationName = ""
-        destinationLatitude = ""
-        destinationLongitude = ""
-        hasSelectedDestination = false
-        route = nil
-        progress = nil
-        passedRouteIndex = -1
-        activeTurnManeuver = nil
-        errorMessage = nil
-    }
-    
     func clearSelectedPlace() {
-         selecedPlace = nil
-     }
+        selecedPlace = nil
+    }
     
     func setStartFromCurrentLocation() {
         guard let location = currentLocation else {
@@ -310,7 +282,11 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     
     func placeSelected(_ place: Place) {
         selecedPlace = place
-        
+        destinationName = place.name
+        destinationLatitude = String(place.coordinate.latitude)
+        destinationLongitude = String(place.coordinate.longitude)
+        hasSelectedDestination = true
+        setStartFromCurrentLocation()
     }
     
     
@@ -662,14 +638,9 @@ extension WalkingNavigationViewModel: CLLocationManagerDelegate {
         
         // 사용자가 "현재 위치"를 출발지로 사용하려 할 때, 아직 GPS 좌표를 못 받은 경우의 플래그
         if shouldUseLocationAsStart {
-            // 필요 이유
-            // 앱을 처음 열었을 때 GPS 좌표가 아직 도착하지 않은 상태에서 사용자가 지도를 탭해 목적지를 선택할 수 있기 떄문
-            /// 목적지 선택
-            /// → selectCoordinateAsDestination
-            /// → setStartFromCurrentLocation
-            /// → 이 시점에 currentLocation이 nil
-            /// → 출발지를 바로 채울 수 없음
-            /// → 플래그를 켜두고 GPS가 오면 그때 채움
+            // 장소 선택 → placeSelected → setStartFromCurrentLocation
+            // 이 시점에 currentLocation이 nil이면 출발지를 바로 채울 수 없어
+            // 플래그를 켜두고 GPS가 오면 그때 채움
             startLatitude = String(location.coordinate.latitude)
             startLongitude = String(location.coordinate.longitude)
             startName = "현재 위치"
