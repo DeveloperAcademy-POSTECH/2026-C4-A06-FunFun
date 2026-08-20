@@ -18,7 +18,6 @@ WalkingNavigationView의 화면 전환이 여러 Bool/Optional 프로퍼티의 �
 ![screen-flow](assets/screen-flow.png)
 주요 화면 플로우
 
-
 ## 결정
 `ViewState` enum을 도입하여 화면 상태를 명시적으로 관리:
 

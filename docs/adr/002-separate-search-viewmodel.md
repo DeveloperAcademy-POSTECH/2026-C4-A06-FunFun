@@ -10,7 +10,7 @@
 `WalkingNavigationViewModel`에 검색, 경로 탐색, 내비게이션, 이탈 감지, Live Activity 등 너무 많은 책임이 몰려 있었다.
 검색은 독립적인 화면(SearchModalView)에서만 사용되므로 분리 가능한 첫 번째 후보였다.
 
-Delegate 패턴 vs 클로저 전달 두 가지를 고민했고, 검색 결과 `Place` 하나만 넘기면 되므로 클로저가 더 단순하다고 판단했다.
+Delegate 패턴 vs 클로저 전달 두 가지를 고민했고, 함수 하나만 구현하면 되어서 단순한 클로저로 결정함.
 
 ## 결정
 - `SearchViewModel`을 별도 `@Observable` 클래스로 분리 (NSObject 상속, CLLocationManagerDelegate 포함)

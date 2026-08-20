@@ -448,7 +448,7 @@ struct WalkingNavigationView: View {
                 Spacer()
                 Button {
                     Task {
-                        await viewModel.startNavigation()
+                        await viewModel.startNavigating()
                     }
                 } label: {
                     ZStack {

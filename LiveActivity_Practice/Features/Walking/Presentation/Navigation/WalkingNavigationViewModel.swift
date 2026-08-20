@@ -10,12 +10,16 @@ import Foundation
 
 @MainActor
 final class WalkingNavigationViewModel: NSObject, ObservableObject {
-    enum ViewState {
+    enum ViewState: Equatable {
         case main // 기본 상태 : 기본 + 장소 선택
         case routePreview // 경로가 찾아진 상태 : 미리 보여줌
         case loading // API 응답 대기중
         case navigating // 경로를 따라가는 중
         case error(Error) // 에러 케이스
+        
+        static func == (lhs: WalkingNavigationViewModel.ViewState, rhs: WalkingNavigationViewModel.ViewState) -> Bool {
+            lhs.self == rhs.self
+        }
     }
     
     enum RouteDeviationState: Equatable {
@@ -54,7 +58,6 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     
     //
     @Published private(set) var isLoading = false
-    @Published private(set) var isNavigating = false
     @Published private(set) var isArrived = false
     @Published var errorMessage: String?
     @Published var showTimeInsteadOfDistance = false
@@ -150,7 +153,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     }
     
     func dismissRoute() async {
-        if isNavigating {
+        if viewState == .navigating {
             await stopNavigation()
         }
         route = nil
@@ -190,12 +193,12 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         }
     }
     
-    func startNavigation() async {
+    func startNavigating() async {
         guard let route, destination != nil else { return }
         do {
             let startProgress = initialProgress(route)
             try await activityManager.start(destinationName: destination!.name, route: route, initialProgress: startProgress, showTime: showTimeInsteadOfDistance)
-            isNavigating = true
+            viewState = .navigating
             passedRouteIndex = -1
             activeTurnManeuver = nil
             navigationBearing = nil
@@ -224,7 +227,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
         locationManager.stopUpdatingHeading()
         locationManager.allowsBackgroundLocationUpdates = false
         await activityManager.end()
-        isNavigating = false
+        // viewState = .main
         isArrived = false
         navigationBearing = nil
         navigationAlignmentID = nil
@@ -232,10 +235,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     }
     
     func rerouteFromCurrentLocation() async {
-        guard isNavigating,
-              !isRerouting,
-              let currentLocation,
-              let destination = destination else { return }
+        guard viewState == .navigating, !isRerouting, let currentLocation, let destination = destination else { return }
         
         shouldPresentReroutePrompt = false
         deviationState = .rerouting
@@ -471,7 +471,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     }
     
     private func updateDeviationState(at current: Coordinate, routeMatch: RouteMatch, horizontalAccuracy: CLLocationAccuracy) {
-        guard isNavigating, deviationState != .rerouting else { return }
+        guard viewState == .navigating, deviationState != .rerouting else { return }
         
         // 목적지 50m 이내에서는 경로 이탈 감지 비활성화
         if let destination = destination {
@@ -540,7 +540,7 @@ final class WalkingNavigationViewModel: NSObject, ObservableObject {
     //
     // 현재 위치에서 경로상 20m 앞 지점까지의 경로 방향을 계산
     private func updateNavigationBearing(at current: Coordinate, route: WalkingRoute) {
-        guard isNavigating,
+        guard viewState == .navigating,
               (currentLocationAccuracy ?? .greatestFiniteMagnitude) <= 30,
               route.path.count >= 2,
               let nearest = route.path.enumerated().min(by: {
@@ -632,7 +632,7 @@ extension WalkingNavigationViewModel: CLLocationManagerDelegate {
             )
             
             /// deviation
-            if isNavigating, deviationState == .onRoute {
+            if viewState == .navigating, deviationState == .onRoute {
                 passedRouteIndex = max(passedRouteIndex, routeMatch.segmentIndex)
             }
         }
@@ -642,7 +642,7 @@ extension WalkingNavigationViewModel: CLLocationManagerDelegate {
         progress = newProgress
         
         // 내비게이션 중인데 베어링이 아직 없으면 경로 기반으로 카메라 방향 계산
-        if isNavigating, navigationBearing == nil {
+        if viewState == .navigating , navigationBearing == nil {
             updateNavigationBearing(at: coordinate, route: route)
         }
         
