@@ -3,6 +3,28 @@
 
 T map 보행 경로를 기반으로, 회전 지점에서 실제로 알아보기 쉬운 주변 장소를 랜드마크로 제시하는 iOS 프로토타입입니다. Apple 지도, T map, 네이버 지도 중 원하는 지도 엔진으로 같은 경로와 랜드마크를 확인할 수 있습니다.
 
+# View 플로우
+
+```mermaid
+flowchart TD
+App
+WalkingNavigationView
+WalkingNavigationViewModel
+PersistentWalkingMapView
+NaverMapRouteView
+
+App --> WalkingNavigationView <--> WalkingNavigationViewModel
+
+WalkingNavigationViewModel --> WalkingRouteRepository
+WalkingRouteRepository --> TMAPClient
+
+WalkingNavigationView -->|MapPresentationState 조립| PersistentWalkingMapView
+PersistentWalkingMapView -->|MapPresentationState 전달| NaverMapRouteView
+NaverMapRouteView -.->|MapPresentationState 콜백| WalkingNavigationView
+
+NaverMapRouteView --> NaverMapSDK
+```
+
 ## 랜드마크는 어떻게 정하나요?
 
 이 프로젝트는 지도 SDK가 자동으로 추천하는 장소를 그대로 표시하지 않습니다. **T map의 보행 경로 데이터로 회전 지점을 찾고**, 각 회전 지점 주변의 **T map POI(장소) 데이터**를 다시 조회한 다음, 앱의 거리·방향·가시성 규칙으로 한 곳을 고릅니다.
