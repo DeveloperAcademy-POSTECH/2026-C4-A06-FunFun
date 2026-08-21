@@ -78,7 +78,7 @@ struct WalkingNavigationView: View {
                     if let place = viewModel.selecedPlace {
                         PlaceInformationView(
                             place: place,
-                            isLoading: viewModel.isLoading,
+                            isLoading: viewModel.viewState == .loading,
                             onConfirm: {
                                 Task { await viewModel.searchRoute() }
                             }

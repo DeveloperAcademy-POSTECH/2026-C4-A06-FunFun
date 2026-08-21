@@ -10,13 +10,16 @@ import Foundation
 
 @Observable
 final class WalkingNavigationViewModel: NSObject {
+
+    // MARK: - State & Properties
+
     enum ViewState: Equatable {
         case main // 기본 상태 : 기본 + 장소 선택
         case routePreview // 경로가 찾아진 상태 : 미리 보여줌
         case loading // API 응답 대기중
         case navigating // 경로를 따라가는 중
         case error(Error) // 에러 케이스
-        
+
         static func == (lhs: WalkingNavigationViewModel.ViewState, rhs: WalkingNavigationViewModel.ViewState) -> Bool {
               switch (lhs, rhs) {
               case (.main, .main),
@@ -46,7 +49,6 @@ final class WalkingNavigationViewModel: NSObject {
     var destination: Place?
     private(set) var selecedPlace: Place?
     
-    //
     private(set) var route: WalkingRoute?
     private(set) var progress: WalkingProgress?
     private(set) var currentLocation: Coordinate?
@@ -57,63 +59,61 @@ final class WalkingNavigationViewModel: NSObject {
     private(set) var navigationBearing: CLLocationDirection?
     private(set) var navigationAlignmentID: Int?
     
-    //
     private(set) var deviationState: RouteDeviationState = .onRoute
     private(set) var deviationPath: [Coordinate] = []
     private(set) var distanceFromRoute: CLLocationDistance = 0
     private(set) var isOffRouteBannerHidden = false
     
-    //
     private(set) var passedRouteIndex = -1
     var shouldPresentReroutePrompt = false
     
-    //
     private(set) var isArrived = false
     var errorMessage: String?
     var showTimeInsteadOfDistance = false
     var showLandmarks = true
-    
-    //
+
     var landmarkMinZoom: Double = 20
     var approachingThreshold: Double = 20
-    
+
     // 개발자용
     var showTurnMarkers = false
     var showRoutePoints = false
     var routePointRadius: Double = 10
     var showGradientOverlay = true
-    
-    //
+
     var landmarkCount: Int {
         guard let route else { return 0 }
         return Set(route.maneuvers.compactMap { $0.landmark?.id }).count
     }
-    
-    private let repository: WalkingRouteRepositoryProtocol
-    private let placeSearchClient: TMAPClientProtocol
-    private let activityManager: WalkingLiveActivityManager
-    private let locationManager = CLLocationManager()
-    private var lastManeuverID: Int?
-    private var shouldTrackLocation = false
-    
-    // 좌표 업데이트 때, true면 route의 시작 좌표로 사용 / false이면 무시
-    private var shouldUseLocationAsStart = false
-    private var consecutiveOffRouteUpdates = 0
-    private var hasAskedForCurrentDeviation = false
-    private var navigationAlignmentSequence = 0
-    
-    
-    //
+
     var isOffRoute: Bool {
         switch deviationState {
         case .offRoute, .rerouting, .offRouteChecked: true
         case .onRoute, .suspected: false
         }
     }
-    
-    //
+
     var isRerouting: Bool { deviationState == .rerouting }
-    
+
+    private let repository: WalkingRouteRepositoryProtocol
+    private let placeSearchClient: TMAPClientProtocol
+    private let activityManager: WalkingLiveActivityManager
+    private let locationManager = CLLocationManager()
+    private var lastManeuverID: Int?
+    private var shouldTrackLocation = false
+    // 좌표 업데이트 때, true면 route의 시작 좌표로 사용 / false이면 무시
+    private var shouldUseLocationAsStart = false
+    private var consecutiveOffRouteUpdates = 0
+    private var hasAskedForCurrentDeviation = false
+    private var navigationAlignmentSequence = 0
+    private static let passedZoneTurnTypes: Set<WalkingTurn> = [.left, .slightLeft, .right, .slightRight]
+    private static let passedZoneDistance: Double = 15
+    private static let passedZoneRadius: Double = 10
+    private var activeTurnManeuver: WalkingManeuver?
+    private let walkingSpeed = 1.25
+
+    // MARK: - Init
+
     init(
         repository: WalkingRouteRepositoryProtocol = WalkingRouteRepository(),
         placeSearchClient: TMAPClientProtocol = TMAPClient(),
@@ -129,17 +129,10 @@ final class WalkingNavigationViewModel: NSObject {
         locationManager.activityType = .fitness
     }
     
-    func useCurrentLocation() {
-        shouldTrackLocation = false
-        shouldUseLocationAsStart = true
-        requestLocationAccess()
-    }
+    // MARK: - 장소 선택
     
-    func refreshLiveActivity() {
-        guard let progress else { return }
-        Task {
-            await activityManager.update(progress, showTime: showTimeInsteadOfDistance)
-        }
+    func placeSelected(_ place: Place) {
+        selecedPlace = place
     }
     
     func clearSelectedPlace() {
@@ -153,7 +146,9 @@ final class WalkingNavigationViewModel: NSObject {
     
     func setStartFromCurrentLocation() {
         guard let location = currentLocation else {
-            useCurrentLocation()
+            shouldTrackLocation = false
+            shouldUseLocationAsStart = true
+            requestLocationAccess()
             return
         }
         start = Place.init(id: "", name: "현재 위치", category: "", address: "",
@@ -162,24 +157,7 @@ final class WalkingNavigationViewModel: NSObject {
                             longitude: location.longitude))
     }
     
-    func dismissRoute() async {
-        if viewState == .navigating {
-            await stopNavigation()
-        }
-        route = nil
-        progress = nil
-        selecedPlace = nil
-        passedRouteIndex = -1
-        activeTurnManeuver = nil
-        destination = nil
-        errorMessage = nil
-        startLocationTracking()
-    }
-    
-    func startLocationTracking() {
-        shouldTrackLocation = true
-        requestLocationAccess()
-    }
+    // MARK: - 경로 탐색
     
     func searchRoute() async {
         setStartFromCurrentLocation()
@@ -202,6 +180,22 @@ final class WalkingNavigationViewModel: NSObject {
             errorMessage = error.localizedDescription
         }
     }
+    
+    func dismissRoute() async {
+        if viewState == .navigating {
+            await stopNavigation()
+        }
+        route = nil
+        progress = nil
+        selecedPlace = nil
+        passedRouteIndex = -1
+        activeTurnManeuver = nil
+        destination = nil
+        errorMessage = nil
+        startLocationTracking()
+    }
+    
+    // MARK: - 내비게이션
     
     func startNavigating() async {
         guard let route, destination != nil else { return }
@@ -237,11 +231,25 @@ final class WalkingNavigationViewModel: NSObject {
         locationManager.stopUpdatingHeading()
         locationManager.allowsBackgroundLocationUpdates = false
         await activityManager.end()
-        // viewState = .main
         isArrived = false
         navigationBearing = nil
         navigationAlignmentID = nil
         resetDeviationState()
+    }
+    
+    func refreshLiveActivity() {
+        guard let progress else { return }
+        Task {
+            await activityManager.update(progress, showTime: showTimeInsteadOfDistance)
+        }
+    }
+    
+    // MARK: - 경로 이탈
+    
+    func keepCurrentRoute() {
+        shouldPresentReroutePrompt = false
+        hasAskedForCurrentDeviation = true
+        isOffRouteBannerHidden = true
     }
     
     func rerouteFromCurrentLocation() async {
@@ -255,7 +263,7 @@ final class WalkingNavigationViewModel: NSObject {
             let newProgress = initialProgress(newRoute)
             progress = newProgress
             passedRouteIndex = -1
-        activeTurnManeuver = nil
+            activeTurnManeuver = nil
             lastManeuverID = nil
             resetDeviationState()
             navigationBearing = nil
@@ -269,67 +277,69 @@ final class WalkingNavigationViewModel: NSObject {
         }
     }
     
-    func keepCurrentRoute() {
-        shouldPresentReroutePrompt = false
-        hasAskedForCurrentDeviation = true
-        isOffRouteBannerHidden = true
-    }
-    
-    func placeSelected(_ place: Place) {
-        selecedPlace = place
-    }
-    
-    private func requestLocationAccess() {
-        switch locationManager.authorizationStatus {
-        case .notDetermined:
-            locationManager.requestWhenInUseAuthorization()
-        case .authorizedAlways, .authorizedWhenInUse:
-            if shouldTrackLocation {
-                locationManager.startUpdatingLocation()
-                locationManager.startUpdatingHeading()
-            } else {
-                locationManager.requestLocation()
+    // GPS 업데이트마다 호출되어 "경로 이탈 여부"를 판정하는 상태 머신
+    private func updateDeviationState(at current: Coordinate, routeMatch: RouteMatch, horizontalAccuracy: CLLocationAccuracy) {
+        guard viewState == .navigating, deviationState != .rerouting else { return }
+        
+        // 목적지 50m 이내에서는 경로 이탈 감지 비활성화
+        if let destination = destination {
+            let distToDestination = current.distance(to: destination.coordinate)
+            if distToDestination <= 50 {
+                if isOffRoute { resetDeviationState() }
+                return
             }
-        case .denied, .restricted:
-            errorMessage = "현재 위치 권한을 허용해 주세요."
-        @unknown default:
-            break
+        }
+        
+        distanceFromRoute = routeMatch.distance
+        let validAccuracy = horizontalAccuracy >= 0 ? horizontalAccuracy : 0
+        let deviationThreshold = max(25, min(validAccuracy * 1.5, 60))
+        let recoveryThreshold: CLLocationDistance = 15
+        
+        if isOffRoute {
+            if routeMatch.distance <= recoveryThreshold {
+                resetDeviationState()
+            } else {
+                deviationState = .offRoute(distance: routeMatch.distance)
+                appendDeviationCoordinate(current)
+            }
+            return
+        }
+        
+        guard routeMatch.distance > deviationThreshold else {
+            consecutiveOffRouteUpdates = 0
+            deviationState = .onRoute
+            return
+        }
+        
+        consecutiveOffRouteUpdates += 1
+        deviationState = .suspected(distance: routeMatch.distance)
+        guard consecutiveOffRouteUpdates >= 3 else { return }
+        
+        deviationState = .offRoute(distance: routeMatch.distance)
+        deviationPath = [routeMatch.snappedCoordinate]
+        appendDeviationCoordinate(current)
+        if !hasAskedForCurrentDeviation {
+            hasAskedForCurrentDeviation = true
+            shouldPresentReroutePrompt = true
         }
     }
     
-    private static func mapPlaceSearchResult(_ poi: LandmarkPoiDTO) -> Place? {
-        let coordinatePairs = [
-            (poi.pnsLat, poi.pnsLon),
-            (poi.noorLat, poi.noorLon)
-        ]
-        guard let coordinate = coordinatePairs.compactMap({ pair -> Coordinate? in
-            let (latitudeText, longitudeText) = pair
-            guard let latitudeText, let longitudeText,
-                  let latitude = Double(latitudeText),
-                  let longitude = Double(longitudeText),
-                  (33...39).contains(latitude),
-                  (124...132).contains(longitude) else { return nil }
-            return Coordinate(latitude: latitude, longitude: longitude)
-        }).first else { return nil }
-        let address = [poi.upperAddrName, poi.middleAddrName, poi.lowerAddrName, poi.detailAddrName]
-            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-            .joined(separator: " ")
-        return Place(
-            id: poi.id ?? "\(poi.name)-\(coordinate.latitude)-\(coordinate.longitude)",
-            name: poi.name,
-            category: poi.lowerBizName ?? poi.middleBizName ?? poi.upperBizName ?? "장소",
-            address: address,
-            coordinate: coordinate
-        )
+    private func resetDeviationState() {
+        deviationState = .onRoute
+        deviationPath = []
+        distanceFromRoute = 0
+        consecutiveOffRouteUpdates = 0
+        hasAskedForCurrentDeviation = false
+        shouldPresentReroutePrompt = false
+        isOffRouteBannerHidden = false
     }
     
-    private static let passedZoneTurnTypes: Set<WalkingTurn> = [.left, .slightLeft, .right, .slightRight]
-    private static let passedZoneDistance: Double = 15
-    private static let passedZoneRadius: Double = 10
-    private var activeTurnManeuver: WalkingManeuver?
+    private func appendDeviationCoordinate(_ coordinate: Coordinate) {
+        guard deviationPath.last?.distance(to: coordinate) ?? .greatestFiniteMagnitude >= 3 else { return }
+        deviationPath.append(coordinate)
+    }
     
-    private let walkingSpeed = 1.25
+    // MARK: - 경로 진행 계산
     
     private func initialProgress(_ route: WalkingRoute) -> WalkingProgress {
         let firstDistance = route.maneuvers.first.map { Int(route.path.first?.distance(to: $0.coordinate) ?? 0) } ?? route.totalDistance
@@ -341,20 +351,6 @@ final class WalkingNavigationViewModel: NSObject {
             isApproachingTurn: firstDistance < Int(approachingThreshold),
             distanceFromRoute: 0,
             estimatedArrival: .now.addingTimeInterval(Double(route.totalDistance) / walkingSpeed)
-        )
-    }
-    
-    private static func passedZoneCenter(for maneuver: WalkingManeuver, routePath: [Coordinate]) -> Coordinate? {
-        let idx = maneuver.routeIndex
-        guard idx + 1 < routePath.count else { return nil }
-        let from = maneuver.coordinate
-        let to = routePath[idx + 1]
-        let dist = from.distance(to: to)
-        guard dist > 0 else { return nil }
-        let ratio = min(passedZoneDistance / dist, 1.0)
-        return Coordinate(
-            latitude: from.latitude + (to.latitude - from.latitude) * ratio,
-            longitude: from.longitude + (to.longitude - from.longitude) * ratio
         )
     }
     
@@ -385,10 +381,8 @@ final class WalkingNavigationViewModel: NSObject {
             if let center = Self.passedZoneCenter(for: activeTurn, routePath: route.path) {
                 let distToZone = current.distance(to: center)
                 if distToZone <= Self.passedZoneRadius {
-                    // passed zone 진입 → active turn 해제, 통과 처리
                     activeTurnManeuver = nil
                 } else {
-                    // passed zone 미진입 → 이 maneuver를 계속 표시
                     let remaining = zip(route.path[nearest.offset...], route.path.dropFirst(nearest.offset + 1))
                         .reduce(0.0) { $0 + $1.0.distance(to: $1.1) }
                     return WalkingProgress(
@@ -429,13 +423,28 @@ final class WalkingNavigationViewModel: NSObject {
         )
     }
     
+    private static func passedZoneCenter(for maneuver: WalkingManeuver, routePath: [Coordinate]) -> Coordinate? {
+        let idx = maneuver.routeIndex
+        guard idx + 1 < routePath.count else { return nil }
+        let from = maneuver.coordinate
+        let to = routePath[idx + 1]
+        let dist = from.distance(to: to)
+        guard dist > 0 else { return nil }
+        let ratio = min(passedZoneDistance / dist, 1.0)
+        return Coordinate(
+            latitude: from.latitude + (to.latitude - from.latitude) * ratio,
+            longitude: from.longitude + (to.longitude - from.longitude) * ratio
+        )
+    }
+    
+    // MARK: - 경로 매칭
+    
     private struct RouteMatch {
         let segmentIndex: Int
         let distance: CLLocationDistance
         let snappedCoordinate: Coordinate
     }
     
-    //
     private func matchToRoute(current: Coordinate, routePath: [Coordinate]) -> RouteMatch? {
         guard routePath.count >= 2 else { return nil }
         return zip(routePath.indices, routePath.indices.dropFirst())
@@ -475,74 +484,8 @@ final class WalkingNavigationViewModel: NSObject {
         )
     }
     
-    private func updateDeviationState(at current: Coordinate, routeMatch: RouteMatch, horizontalAccuracy: CLLocationAccuracy) {
-        guard viewState == .navigating, deviationState != .rerouting else { return }
-        
-        // 목적지 50m 이내에서는 경로 이탈 감지 비활성화
-        if let destination = destination {
-            let distToDestination = current.distance(to: destination.coordinate)
-            if distToDestination <= 50 {
-                if isOffRoute { resetDeviationState() }
-                return
-            }
-        }
-        
-        distanceFromRoute = routeMatch.distance
-        let validAccuracy = horizontalAccuracy >= 0 ? horizontalAccuracy : 0
-        let deviationThreshold = max(25, min(validAccuracy * 1.5, 60))
-        let recoveryThreshold: CLLocationDistance = 15
-        
-        if isOffRoute {
-            
-            if routeMatch.distance <= recoveryThreshold {
-                
-                resetDeviationState()
-            } else {
-                
-                deviationState = .offRoute(distance: routeMatch.distance)
-                appendDeviationCoordinate(current)
-            }
-            return
-        }
-        
-        guard routeMatch.distance > deviationThreshold else {
-            consecutiveOffRouteUpdates = 0
-            deviationState = .onRoute
-            return
-        }
-        
-        consecutiveOffRouteUpdates += 1
-        
-        deviationState = .suspected(distance: routeMatch.distance)
-        guard consecutiveOffRouteUpdates >= 3 else { return }
-        
-        
-        deviationState = .offRoute(distance: routeMatch.distance)
-        deviationPath = [routeMatch.snappedCoordinate]
-        appendDeviationCoordinate(current)
-        if !hasAskedForCurrentDeviation {
-            hasAskedForCurrentDeviation = true
-            shouldPresentReroutePrompt = true
-        }
-    }
+    // MARK: - 카메라 방향
     
-    private func appendDeviationCoordinate(_ coordinate: Coordinate) {
-        guard deviationPath.last?.distance(to: coordinate) ?? .greatestFiniteMagnitude >= 3 else { return }
-        deviationPath.append(coordinate)
-    }
-    
-    // 이탈이 아님을 감지
-    private func resetDeviationState() {
-        deviationState = .onRoute
-        deviationPath = []
-        distanceFromRoute = 0
-        consecutiveOffRouteUpdates = 0
-        hasAskedForCurrentDeviation = false
-        shouldPresentReroutePrompt = false
-        isOffRouteBannerHidden = false
-    }
-    
-    //
     // 현재 위치에서 경로상 20m 앞 지점까지의 경로 방향을 계산
     private func updateNavigationBearing(at current: Coordinate, route: WalkingRoute) {
         guard viewState == .navigating,
@@ -602,13 +545,39 @@ final class WalkingNavigationViewModel: NSObject {
         guard abs(shortestDelta) >= 3 else { return previous }
         return (previous + shortestDelta * 0.35 + 360).truncatingRemainder(dividingBy: 360)
     }
+    
+    // MARK: - 위치 권한
+    
+    func startLocationTracking() {
+        shouldTrackLocation = true
+        requestLocationAccess()
+    }
+    
+    private func requestLocationAccess() {
+        switch locationManager.authorizationStatus {
+        case .notDetermined:
+            locationManager.requestWhenInUseAuthorization()
+        case .authorizedAlways, .authorizedWhenInUse:
+            if shouldTrackLocation {
+                locationManager.startUpdatingLocation()
+                locationManager.startUpdatingHeading()
+            } else {
+                locationManager.requestLocation()
+            }
+        case .denied, .restricted:
+            errorMessage = "현재 위치 권한을 허용해 주세요."
+        @unknown default:
+            break
+        }
+    }
 }
+
+// MARK: - CLLocationManagerDelegate
 
 extension WalkingNavigationViewModel: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
         
-        // 새로 갱신된 좌표
         let coordinate = Coordinate(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude)
         currentLocation = coordinate
         currentLocationAccuracy = location.horizontalAccuracy
@@ -625,9 +594,7 @@ extension WalkingNavigationViewModel: CLLocationManagerDelegate {
             shouldUseLocationAsStart = false
         }
         
-        /// 경로를 따라 가는 상황임을 판단
         guard let route else { return }
-        
         
         if let routeMatch = matchToRoute(current: coordinate, routePath: route.path) {
             updateDeviationState(
@@ -636,17 +603,14 @@ extension WalkingNavigationViewModel: CLLocationManagerDelegate {
                 horizontalAccuracy: location.horizontalAccuracy
             )
             
-            /// deviation
             if viewState == .navigating, deviationState == .onRoute {
                 passedRouteIndex = max(passedRouteIndex, routeMatch.segmentIndex)
             }
         }
         
-        // 현재 위치 기준으로 경로 진행 상황(다음 턴, 남은 거리 등) 계산
         let newProgress = calculateProgress(at: coordinate, route: route)
         progress = newProgress
         
-        // 내비게이션 중인데 베어링이 아직 없으면 경로 기반으로 카메라 방향 계산
         if viewState == .navigating , navigationBearing == nil {
             updateNavigationBearing(at: coordinate, route: route)
         }
@@ -680,7 +644,6 @@ extension WalkingNavigationViewModel: CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateHeading newHeading: CLHeading) {
         currentHeading = newHeading.trueHeading >= 0 ? newHeading.trueHeading : newHeading.magneticHeading
     }
-    
 }
 
 private extension Array {
