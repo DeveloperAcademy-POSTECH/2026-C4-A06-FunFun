@@ -24,7 +24,6 @@ WalkingNavigationView의 화면 전환이 여러 Bool/Optional 프로퍼티의 �
 ```swift
 enum ViewState {
     case main          // 기본 화면
-    case searching     // 검색 중 (이후 SearchViewModel 분리로 제거됨)
     case routePreview  // 경로 미리보기
     case loading       // API 응답 대기
     case navigating    // 내비게이션 중
@@ -36,6 +35,6 @@ View에서 `switch viewModel.viewState`로 분기하여 각 상태별 UI를 명�
 
 ## 결과
 - if-else 체인 → switch 문으로 전환, 각 case별 UI 구성이 명확해짐
-- `searching` case는 이후 SearchViewModel 분리(ADR-002)로 fullScreenCover 방식으로 변경되면서 제거
+- `searching` case는 `main` case의 orthogonal한 상태이기 때문에 삭제했음. `.searching` 은 추후에 다른 ViewState에서도 사용가능할 수 있기 때문에 하나로 분리하는 것 보다 개별 View, ViewModel로 분리하는 것이 좋다고 판단.
 - `RouteDeviationState`에 `offRouteChecked` case 추가 (경로 이탈 확인 상태)
 - 미사용 `CustomTopToolbar` 삭제, 뷰 이름 정리도 함께 진행
