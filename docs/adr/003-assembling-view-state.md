@@ -1,15 +1,14 @@
-# ADR-000: [Title]
+# ADR-002: [Title]
 
 ## Status
-제안됨 | 승인됨 | 완료 | 폐기됨
+제안됨
 
 ## Date
-YYYY-MM-DD
+2026-08-21
 
 ## Context
-어떤 문제가 있었는가? 왜 변경이 필요했는가?
 
-## Decisions
+## Decision
 무엇을 어떻게 바꾸기로 했는가? 대안이 있었다면 왜 이 방향을 택했는가?
 
 ## Result
