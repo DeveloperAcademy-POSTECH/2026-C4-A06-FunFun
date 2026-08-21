@@ -8,7 +8,7 @@ import CoreLocation
 import SwiftUI
 
 struct WalkingNavigationView: View {
-    @StateObject private var viewModel = WalkingNavigationViewModel()
+    @State private var viewModel = WalkingNavigationViewModel()
     @State private var cameraCommand: MapCameraCommand?
     @State private var cameraCommandSequence = 0
     @State private var isSearchExpanded = false
@@ -30,7 +30,7 @@ struct WalkingNavigationView: View {
                     currentLocationAccuracy: viewModel.currentLocationAccuracy,
                     navigationBearing: viewModel.navigationBearing,
                     navigationAlignmentID: viewModel.navigationAlignmentID,
-                    isNavigating: viewModel.isNavigating,
+                    isNavigating: viewModel.viewState == .navigating ,
                     cameraCommand: cameraCommand,
                     showLandmarks: viewModel.showLandmarks,
                     landmarkScaleThreshold: viewModel.landmarkMinZoom,
@@ -40,7 +40,7 @@ struct WalkingNavigationView: View {
                     approachingThreshold: viewModel.approachingThreshold,
                     selectedPlace: viewModel.selecedPlace,
                     onPlaceSelected: { place in
-                        guard !viewModel.isNavigating, !isSearchExpanded else { return }
+                        guard !(viewModel.viewState == .navigating), !isSearchExpanded else { return }
                         viewModel.placeSelected(place)
                     },
                     onMapCleared: {
@@ -56,7 +56,7 @@ struct WalkingNavigationView: View {
             
             // isNavigating : 경로 알려주는 중에 떠야 하는 뷰
             //
-            if viewModel.isNavigating && viewModel.showGradientOverlay {
+            if viewModel.viewState == .navigating && viewModel.showGradientOverlay {
                 HeadingSafeAreaGradientOverlay(
                     heading: viewModel.currentHeading,
                     navigationBearing: viewModel.navigationBearing,
@@ -184,7 +184,7 @@ struct WalkingNavigationView: View {
                 issueCameraCommand(.coordinate(place.coordinate))
             }
         }
-        .onChange(of: viewModel.isNavigating) { _, isNavigating in
+        .onChange(of: viewModel.viewState == .navigating) { _, isNavigating in
             if !isNavigating {
                 isExitAlertPresented = false
                 isNavigationSheetExpanded = false

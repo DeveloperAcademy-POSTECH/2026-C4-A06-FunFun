@@ -654,8 +654,7 @@ extension WalkingNavigationViewModel: CLLocationManagerDelegate {
         lastManeuverID = lastManeuverID != newProgress.nextManeuver?.id ?  newProgress.nextManeuver?.id : lastManeuverID
         
         Task {
-            await activityManager.update(newProgress,
-                                         showTime: showTimeInsteadOfDistance)
+            await activityManager.update(newProgress, showTime: showTimeInsteadOfDistance)
         }
         
         // 도착 감지 → 5초 후 자동 종료
