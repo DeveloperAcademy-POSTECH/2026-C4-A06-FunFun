@@ -9,9 +9,11 @@ import Foundation
 
 @MainActor
 final class WalkingLiveActivityManager {
+    private static let passedZoneTurnTypes: Set<WalkingTurn> = [.left, .slightLeft, .right, .slightRight]
     private var wasApproachingTurn = false
     private var hasTriggeredArrival = false
     private var approachingStartDate: Date?
+    private var approachingTurnType: WalkingTurn?
     private var approachingStateDistance: Double = 8
 
     func start(destinationName: String, route: WalkingRoute, initialProgress: WalkingProgress, showTime: Bool = false) async throws {
@@ -31,21 +33,25 @@ final class WalkingLiveActivityManager {
     func update(_ progress: WalkingProgress, showTime: Bool) async {
         var effectiveProgress = progress
 
-        // approaching 최소 8초 유지
+        // approaching 최소 8초 유지 (회전 maneuver는 passed zone 기반이므로 제외)
         if progress.isApproachingTurn && approachingStartDate == nil {
             approachingStartDate = .now
+            approachingTurnType = progress.nextManeuver?.turn
         } else if !progress.isApproachingTurn, let start = approachingStartDate {
-            if Date.now.timeIntervalSince(start) < approachingStateDistance {
+            let usesPassedZone = approachingTurnType.map { Self.passedZoneTurnTypes.contains($0) } ?? false
+            if !usesPassedZone && Date.now.timeIntervalSince(start) < approachingStateDistance {
                 effectiveProgress = WalkingProgress(
                     remainingDistance: progress.remainingDistance,
                     distanceToNextManeuver: progress.distanceToNextManeuver,
                     nextManeuver: progress.nextManeuver,
                     isOffRoute: progress.isOffRoute,
                     isApproachingTurn: true,
+                    distanceFromRoute: progress.distanceFromRoute,
                     estimatedArrival: progress.estimatedArrival
                 )
             } else {
                 approachingStartDate = nil
+                approachingTurnType = nil
             }
         }
 
@@ -60,7 +66,15 @@ final class WalkingLiveActivityManager {
         for activity in Activity<WalkingActivityAttributes>.activities {
             if isArriving && !hasTriggeredArrival {
                 hasTriggeredArrival = true
-                await activity.end(content, dismissalPolicy: .after(.now.addingTimeInterval(8)))
+                await activity.update(content, alertConfiguration: AlertConfiguration(
+                    title: "목적지 근처에 도착했어요",
+                    body: "길 안내를 종료할게요",
+                    sound: .default
+                ))
+                Task { @MainActor in
+                    try await Task.sleep(nanoseconds: 5_000_000_000)
+                    await activity.end(content, dismissalPolicy: .after(.now.addingTimeInterval(5)))
+                }
             } else if justEnteredApproach {
                 await activity.update(content, alertConfiguration: AlertConfiguration(
                     title: "\(state.instruction)",

@@ -11,6 +11,7 @@ struct MapCameraCommand: Equatable {
     enum Target: Equatable {
         case userLocation
         case route
+        case coordinate(Coordinate)
     }
 
     let id: Int
@@ -30,7 +31,14 @@ struct MapPresentationState: Equatable {
     let cameraCommand: MapCameraCommand?
     let showLandmarks: Bool
     let landmarkScaleThreshold: Double
-    var onMapTapped: ((Coordinate) -> Void)?
+    let showTurnMarkers: Bool
+    let showRoutePoints: Bool
+    let routePointRadius: Double
+    let approachingThreshold: Double
+    let selectedPlace: Place?
+    var onPlaceSelected: ((Place) -> Void)?
+    var onMapCleared: (() -> Void)?
+    var onMapViewportChanged: ((CLLocationDirection, CGPoint?) -> Void)? = nil
 
     static func == (lhs: MapPresentationState, rhs: MapPresentationState) -> Bool {
         lhs.route == rhs.route
@@ -45,6 +53,11 @@ struct MapPresentationState: Equatable {
         && lhs.cameraCommand == rhs.cameraCommand
         && lhs.showLandmarks == rhs.showLandmarks
         && lhs.landmarkScaleThreshold == rhs.landmarkScaleThreshold
+        && lhs.showTurnMarkers == rhs.showTurnMarkers
+        && lhs.showRoutePoints == rhs.showRoutePoints
+        && lhs.routePointRadius == rhs.routePointRadius
+        && lhs.approachingThreshold == rhs.approachingThreshold
+        && lhs.selectedPlace == rhs.selectedPlace
     }
 }
 

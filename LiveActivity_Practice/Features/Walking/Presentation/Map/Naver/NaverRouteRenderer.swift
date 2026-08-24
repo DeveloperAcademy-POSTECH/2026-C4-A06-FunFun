@@ -9,6 +9,7 @@ final class NaverRouteRenderer {
     private var deviationRoutePath: NMFPath?
     private var renderedDeviationPath: [Coordinate] = []
     private var startEndMarkers: [NMFMarker] = []
+    private var routePointMarkers: [NMFCircleOverlay] = []
 
     func render(route: WalkingRoute?, passedRouteIndex: Int, on mapView: NMFMapView) {
         clearAll()
@@ -24,12 +25,29 @@ final class NaverRouteRenderer {
         path?.patternInterval = 18
         path?.mapView = mapView
         routePath = path
-
+        
         if let start = route.path.first {
-            addMarker(title: "출발지", coordinate: start, color: .systemGreen, on: mapView)
+            addMarker(type: .start, coordinate: start, on: mapView)
         }
         if let destination = route.path.last {
-            addMarker(title: "목적지", coordinate: destination, color: .systemRed, on: mapView)
+            addMarker(type: .destination, coordinate: destination, on: mapView)
+        }
+    }
+
+    func renderRoutePoints(route: WalkingRoute?, radius: Double, on mapView: NMFMapView) {
+        routePointMarkers.forEach { $0.mapView = nil }
+        routePointMarkers.removeAll()
+        guard let route else { return }
+        for coordinate in route.path {
+            let dot = NMFCircleOverlay()
+            dot.center = NMGLatLng(lat: coordinate.latitude, lng: coordinate.longitude)
+            dot.radius = radius
+            dot.fillColor = .systemRed.withAlphaComponent(0.5)
+            dot.outlineColor = .clear
+            dot.outlineWidth = 0
+            dot.zIndex = 100
+            dot.mapView = mapView
+            routePointMarkers.append(dot)
         }
     }
 
@@ -54,18 +72,35 @@ final class NaverRouteRenderer {
         routePath?.mapView = nil
         deviationRoutePath?.mapView = nil
         startEndMarkers.forEach { $0.mapView = nil }
+        routePointMarkers.forEach { $0.mapView = nil }
         routePath = nil
         deviationRoutePath = nil
         renderedDeviationPath = []
         startEndMarkers.removeAll()
+        routePointMarkers.removeAll()
     }
 
-    private func addMarker(title: String, coordinate: Coordinate, color: UIColor, on mapView: NMFMapView) {
+    private func addMarker(type: MarkerType, coordinate: Coordinate, on mapView: NMFMapView) {
         let marker = NMFMarker(position: NMGLatLng(lat: coordinate.latitude, lng: coordinate.longitude))
-        marker.captionText = title
-        marker.iconTintColor = color
+        marker.iconImage = NMFOverlayImage(image: type.image)
+        marker.width = 37
+        marker.height = 48
         marker.mapView = mapView
         startEndMarkers.append(marker)
+    }
+    
+    enum MarkerType {
+        case start
+        case destination
+        
+        var image: UIImage {
+            switch self {
+            case .start:
+                UIImage(imageLiteralResourceName: "ic-start")
+            case .destination:
+                UIImage(imageLiteralResourceName: "ic-destination")
+            }
+        }
     }
 
     /// 경로위에 표시하는 화살표

@@ -55,7 +55,7 @@ nonisolated struct Landmark: Identifiable, Codable, Hashable, Sendable {
     let coordinate: Coordinate
 }
 
-nonisolated struct PlaceSearchResult: Identifiable, Hashable, Sendable {
+nonisolated struct Place: Identifiable, Hashable, Sendable {
     let id: String
     let name: String
     let category: String
@@ -90,5 +90,6 @@ nonisolated struct WalkingProgress: Hashable, Sendable {
     let nextManeuver: WalkingManeuver?
     let isOffRoute: Bool
     let isApproachingTurn: Bool
+    let distanceFromRoute: Int
     let estimatedArrival: Date
 }

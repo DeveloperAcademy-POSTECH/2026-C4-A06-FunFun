@@ -4,6 +4,7 @@
 //  Created by 현진백 on 2026/07/14.
 //
 
+import CoreLocation
 import NMapsMap
 import SwiftUI
 
@@ -19,41 +20,134 @@ struct NaverMapRouteView: UIViewRepresentable {
         naverMapView.showScaleBar = false
         naverMapView.showZoomControls = false
         naverMapView.showLocationButton = false
-        mapView.positionMode = .normal
+        mapView.locationOverlay.icon = NMFOverlayImage(name: "indicator")
+        mapView.positionMode = .disabled
         mapView.touchDelegate = context.coordinator
+        mapView.addCameraDelegate(delegate:context.coordinator)
         mapView.logoAlign = .leftTop
 
-        context.coordinator.location.setupLocationButton(on: naverMapView, hasRoute: state.route != nil)
+        context.coordinator.onMapViewportChanged = state.onMapViewportChanged
+        context.coordinator.updateCurrentLocation(state.currentLocation, on: mapView)
+        context.coordinator.updateRouteAlignmentState(state)
         context.coordinator.camera.prepareInitialCamera(location: state.currentLocation, on: mapView)
         return naverMapView
     }
 
     func updateUIView(_ naverMapView: NMFNaverMapView, context: Context) {
-        context.coordinator.onMapTapped = state.onMapTapped
+        context.coordinator.onPlaceSelected = state.onPlaceSelected
+        context.coordinator.onMapCleared = state.onMapCleared
+        context.coordinator.onMapViewportChanged = state.onMapViewportChanged
         context.coordinator.update(state: state, on: naverMapView.mapView)
     }
 
     static func dismantleUIView(_ naverMapView: NMFNaverMapView, coordinator: Coordinator) {
+        naverMapView.mapView.removeCameraDelegate(delegate:coordinator)
         coordinator.tearDown()
     }
 
-    final class Coordinator: NSObject, NMFMapViewTouchDelegate {
+    final class Coordinator: NSObject, NMFMapViewTouchDelegate, NMFMapViewCameraDelegate {
         let camera = NaverCameraController()
         let route = NaverRouteRenderer()
         let landmark = NaverLandmarkRenderer()
+        let turn = NaverTurnRenderer()
         let location = NaverLocationOverlay()
-        var onMapTapped: ((Coordinate) -> Void)?
+        let destinationPreview = NaverDestinationPreviewRenderer()
+        var onPlaceSelected: ((Place) -> Void)?
+        var onMapCleared: (() -> Void)?
+        var onMapViewportChanged: ((CLLocationDirection, CGPoint?) -> Void)?
 
         private var renderedRoute: WalkingRoute?
         private var renderedPassedRouteIndex = -1
         private var renderedShowLandmarks = true
         private var renderedLandmarkScale: Double = 50
+        private var renderedShowTurnMarkers = false
+        private var renderedShowRoutePoints = false
+        private var renderedRoutePointRadius: Double = 10
+        private var renderedApproachingThreshold: Double = 10
+        private var currentLocation: Coordinate?
+        private var currentRoute: WalkingRoute?
+        private var currentNavigationBearing: CLLocationDirection?
+        private var lastReportedViewport: MapViewportSnapshot?
 
         func mapView(_ mapView: NMFMapView, didTapMap latlng: NMGLatLng, point: CGPoint) {
-            onMapTapped?(Coordinate(latitude: latlng.lat, longitude: latlng.lng))
+            onMapCleared?()
+        }
+
+        func mapView(_ mapView: NMFMapView, didTap symbol: NMFSymbol) -> Bool {
+            let coord = Coordinate(latitude: symbol.position.lat, longitude: symbol.position.lng)
+            let place = Place(
+                id: "\(coord.latitude)-\(coord.longitude)",
+                name: symbol.caption,
+                category: "",
+                address: "",
+                coordinate: coord
+            )
+            onPlaceSelected?(place)
+            return true
+        }
+
+        func mapView(_ mapView: NMFMapView, cameraIsChangingByReason reason: Int) {
+            reportMapViewport(from: mapView)
+        }
+
+        func mapView(
+            _ mapView: NMFMapView,
+            cameraDidChangeByReason reason: Int,
+            animated: Bool
+        ) {
+            reportMapViewport(from: mapView)
+            refreshLandmarkPlacement(on: mapView)
+        }
+
+        private func reportMapViewport(from mapView: NMFMapView) {
+            let heading = mapView.cameraPosition.heading
+            let position = currentLocation.flatMap { location -> CGPoint? in
+                let point = mapView.projection.point(
+                    from: NMGLatLng(
+                        lat: location.latitude,
+                        lng: location.longitude
+                    )
+                )
+                return point.x.isFinite && point.y.isFinite ? point : nil
+            }
+            let viewport = MapViewportSnapshot(
+                heading: heading,
+                indicatorPosition: position
+            )
+            guard viewport != lastReportedViewport else { return }
+            lastReportedViewport = viewport
+            onMapViewportChanged?(heading, position)
+        }
+
+        private func refreshLandmarkPlacement(on mapView: NMFMapView) {
+            guard renderedShowLandmarks, let renderedRoute else { return }
+
+            landmark.render(
+                landmarks: renderedRoute.mapLandmarkSelections(),
+                routePath: renderedRoute.path,
+                passedRouteIndex: renderedPassedRouteIndex,
+                scaleThreshold: renderedLandmarkScale,
+                on: mapView
+            )
+        }
+
+        func updateCurrentLocation(_ location: Coordinate?, on mapView: NMFMapView) {
+            guard location != currentLocation else { return }
+            currentLocation = location
+            DispatchQueue.main.async { [weak self, weak mapView] in
+                guard let self, let mapView else { return }
+                self.reportMapViewport(from: mapView)
+            }
+        }
+
+        func updateRouteAlignmentState(_ state: MapPresentationState) {
+            currentRoute = state.route
+            currentNavigationBearing = state.navigationBearing
         }
 
         func update(state: MapPresentationState, on mapView: NMFMapView) {
+            updateRouteAlignmentState(state)
+            updateCurrentLocation(state.currentLocation, on: mapView)
             location.updateOverlay(
                 location: state.currentLocation,
                 heading: state.currentHeading,
@@ -61,23 +155,47 @@ struct NaverMapRouteView: UIViewRepresentable {
             )
 
             camera.centerOnInitialLocationIfNeeded(state.currentLocation, on: mapView)
+            let previewCoordinate = state.route == nil
+                ? state.selectedPlace?.coordinate
+                : nil
+            destinationPreview.render(coordinate: previewCoordinate, on: mapView)
 
-            if renderedRoute != state.route || renderedPassedRouteIndex != state.passedRouteIndex || renderedShowLandmarks != state.showLandmarks || renderedLandmarkScale != state.landmarkScaleThreshold {
+            if renderedRoute != state.route || renderedPassedRouteIndex != state.passedRouteIndex || renderedShowLandmarks != state.showLandmarks || renderedLandmarkScale != state.landmarkScaleThreshold || renderedShowTurnMarkers != state.showTurnMarkers || renderedShowRoutePoints != state.showRoutePoints || renderedRoutePointRadius != state.routePointRadius || renderedApproachingThreshold != state.approachingThreshold {
                 route.render(route: state.route, passedRouteIndex: state.passedRouteIndex, on: mapView)
                 if state.showLandmarks {
                     let landmarks = state.route?.mapLandmarkSelections() ?? []
-                    landmark.render(landmarks: landmarks, passedRouteIndex: state.passedRouteIndex, scaleThreshold: state.landmarkScaleThreshold, on: mapView)
+                    landmark.render(
+                        landmarks: landmarks,
+                        routePath: state.route?.path ?? [],
+                        passedRouteIndex: state.passedRouteIndex,
+                        scaleThreshold: state.landmarkScaleThreshold,
+                        on: mapView
+                    )
                 } else {
                     landmark.clearAll()
+                }
+                if state.showTurnMarkers {
+                    let maneuvers = state.route?.maneuvers ?? []
+                    turn.render(maneuvers: maneuvers, passedRouteIndex: state.passedRouteIndex, approachingRadius: state.approachingThreshold, routePath: state.route?.path ?? [], on: mapView)
+                } else {
+                    turn.clearAll()
+                }
+                if state.showRoutePoints {
+                    route.renderRoutePoints(route: state.route, radius: state.routePointRadius, on: mapView)
+                } else {
+                    route.renderRoutePoints(route: nil, radius: 0, on: mapView)
                 }
                 renderedRoute = state.route
                 renderedPassedRouteIndex = state.passedRouteIndex
                 renderedShowLandmarks = state.showLandmarks
                 renderedLandmarkScale = state.landmarkScaleThreshold
+                renderedShowTurnMarkers = state.showTurnMarkers
+                renderedShowRoutePoints = state.showRoutePoints
+                renderedRoutePointRadius = state.routePointRadius
+                renderedApproachingThreshold = state.approachingThreshold
             }
 
             route.renderDeviationPath(state.deviationPath, on: mapView)
-            location.updateButtonLayout(hasRoute: state.route != nil)
 
             if camera.handleNavigationAlignment(state: state, on: mapView) { return }
             camera.handleCameraCommand(state: state, on: mapView)
@@ -86,7 +204,14 @@ struct NaverMapRouteView: UIViewRepresentable {
         func tearDown() {
             route.clearAll()
             landmark.clearAll()
+            turn.clearAll()
             location.tearDown()
+            destinationPreview.clear()
         }
     }
+}
+
+private struct MapViewportSnapshot: Equatable {
+    let heading: CLLocationDirection
+    let indicatorPosition: CGPoint?
 }
