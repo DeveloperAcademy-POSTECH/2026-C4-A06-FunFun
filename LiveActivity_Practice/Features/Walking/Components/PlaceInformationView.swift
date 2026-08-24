@@ -6,8 +6,8 @@
 import SwiftUI
 
 /// 경로 검색 전에 선택한 목적지 정보를 확인하는 하단 카드입니다.
-struct BottomPlaceView: View {
-    let place: PlaceSearchResult
+struct PlaceInformationView: View {
+    let place: Place
     let isLoading: Bool
     let onConfirm: () -> Void
 
@@ -16,7 +16,7 @@ struct BottomPlaceView: View {
     ///   - isLoading: 경로 검색 진행 여부입니다.
     ///   - onConfirm: 도착지 설정 버튼을 눌렀을 때 실행할 동작입니다.
     init(
-        place: PlaceSearchResult,
+        place: Place,
         isLoading: Bool,
         onConfirm: @escaping () -> Void
     ) {
@@ -115,8 +115,8 @@ private struct BottomPlaceGlassSurface: ViewModifier {
         )
         .ignoresSafeArea()
 
-        BottomPlaceView(
-            place: PlaceSearchResult(
+        PlaceInformationView(
+            place: Place(
                 id: "preview-seven-eleven",
                 name: "세븐일레븐",
                 category: "편의점",

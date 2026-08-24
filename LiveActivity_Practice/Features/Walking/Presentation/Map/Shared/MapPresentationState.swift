@@ -35,10 +35,9 @@ struct MapPresentationState: Equatable {
     let showRoutePoints: Bool
     let routePointRadius: Double
     let approachingThreshold: Double
-    let previewDestination: PlaceSearchResult?
-    let tappedCoordinate: Coordinate?
-    let locationButtonBottomInset: CGFloat
-    var onMapTapped: ((Coordinate) -> Void)?
+    let selectedPlace: Place?
+    var onPlaceSelected: ((Place) -> Void)?
+    var onMapCleared: (() -> Void)?
     var onMapViewportChanged: ((CLLocationDirection, CGPoint?) -> Void)? = nil
 
     static func == (lhs: MapPresentationState, rhs: MapPresentationState) -> Bool {
@@ -58,9 +57,7 @@ struct MapPresentationState: Equatable {
         && lhs.showRoutePoints == rhs.showRoutePoints
         && lhs.routePointRadius == rhs.routePointRadius
         && lhs.approachingThreshold == rhs.approachingThreshold
-        && lhs.previewDestination == rhs.previewDestination
-        && lhs.tappedCoordinate == rhs.tappedCoordinate
-        && lhs.locationButtonBottomInset == rhs.locationButtonBottomInset
+        && lhs.selectedPlace == rhs.selectedPlace
     }
 }
 

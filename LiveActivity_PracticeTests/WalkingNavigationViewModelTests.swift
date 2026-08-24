@@ -5,75 +5,30 @@ import Testing
 @testable import LiveActivity_Practice
 
 @MainActor
-@Suite("WalkingNavigationViewModel 검색 및 출발지 설정")
+@Suite("WalkingNavigationViewModel 출발지 설정")
 struct WalkingNavigationViewModelTests {
 
-    // MARK: - setStartFromCurrentLocation
-
-    @Test("현재 위치가 있으면 출발지가 즉시 설정된다")
-    func setStartFromCurrentLocation_withExistingLocation() {
+    @Test("현재 위치가 없으면 출발지가 즉시 설정되지 않는다")
+    func setStartFromCurrentLocation_withoutLocation() {
         let mockClient = MockTMAPClient()
         let mockRepo = MockWalkingRouteRepository()
         let vm = WalkingNavigationViewModel(repository: mockRepo, placeSearchClient: mockClient)
 
-        // currentLocation은 private(set)이라 직접 설정 불가 — startLocationTracking 후 위치 업데이트 필요
-        // 대신 setStartFromCurrentLocation이 currentLocation == nil일 때 fallback 동작을 검증
         vm.setStartFromCurrentLocation()
 
-        // currentLocation이 nil이므로 hasSelectedStart는 아직 false (useCurrentLocation fallback)
         #expect(vm.hasSelectedStart == false)
     }
+}
 
-    // MARK: - selectPlace
-
-    @Test("목적지 선택 시 destinationName과 hasSelectedDestination이 설정된다")
-    func selectPlace_destination() {
-        let mockClient = MockTMAPClient()
-        let mockRepo = MockWalkingRouteRepository()
-        let vm = WalkingNavigationViewModel(repository: mockRepo, placeSearchClient: mockClient)
-
-        let place = PlaceSearchResult(
-            id: "1",
-            name: "포항공대",
-            category: "대학교",
-            address: "포항시 지곡동",
-            coordinate: Coordinate(latitude: 36.014, longitude: 129.326)
-        )
-
-        vm.selectPlace(place, for: .destination)
-
-        #expect(vm.destinationName == "포항공대")
-        #expect(vm.hasSelectedDestination == true)
-        #expect(vm.placeSearchResults.isEmpty)
-    }
-
-    @Test("출발지 선택 시 startName과 hasSelectedStart가 설정된다")
-    func selectPlace_start() {
-        let mockClient = MockTMAPClient()
-        let mockRepo = MockWalkingRouteRepository()
-        let vm = WalkingNavigationViewModel(repository: mockRepo, placeSearchClient: mockClient)
-
-        let place = PlaceSearchResult(
-            id: "2",
-            name: "포항역",
-            category: "기차역",
-            address: "포항시 흥해읍",
-            coordinate: Coordinate(latitude: 36.080, longitude: 129.380)
-        )
-
-        vm.selectPlace(place, for: .start)
-
-        #expect(vm.startName == "포항역")
-        #expect(vm.hasSelectedStart == true)
-    }
+@Suite("SearchViewModel 검색 및 페이징")
+struct SearchViewModelTests {
 
     // MARK: - searchPlaces
 
     @Test("키워드가 2자 미만이면 검색하지 않고 결과를 비운다")
     func searchPlaces_shortKeyword() async {
         let mockClient = MockTMAPClient()
-        let mockRepo = MockWalkingRouteRepository()
-        let vm = WalkingNavigationViewModel(repository: mockRepo, placeSearchClient: mockClient)
+        let vm = SearchViewModel(placeSearchClient: mockClient)
 
         await vm.searchPlaces(keyword: "포")
 
@@ -85,8 +40,7 @@ struct WalkingNavigationViewModelTests {
     @Test("빈 키워드이면 검색하지 않는다")
     func searchPlaces_emptyKeyword() async {
         let mockClient = MockTMAPClient()
-        let mockRepo = MockWalkingRouteRepository()
-        let vm = WalkingNavigationViewModel(repository: mockRepo, placeSearchClient: mockClient)
+        let vm = SearchViewModel(placeSearchClient: mockClient)
 
         await vm.searchPlaces(keyword: "")
 
@@ -97,8 +51,7 @@ struct WalkingNavigationViewModelTests {
     @Test("공백만 있는 키워드이면 검색하지 않는다")
     func searchPlaces_whitespaceKeyword() async {
         let mockClient = MockTMAPClient()
-        let mockRepo = MockWalkingRouteRepository()
-        let vm = WalkingNavigationViewModel(repository: mockRepo, placeSearchClient: mockClient)
+        let vm = SearchViewModel(placeSearchClient: mockClient)
 
         await vm.searchPlaces(keyword: "   ")
 
@@ -106,11 +59,10 @@ struct WalkingNavigationViewModelTests {
         #expect(mockClient.searchPlacesCallCount == 0)
     }
 
-    @Test("정상 검색 시 결과가 반환되고 페이지가 1로 설정된다")
+    @Test("정상 검색 시 결과가 반환된다")
     func searchPlaces_validKeyword() async {
         let mockClient = MockTMAPClient()
-        let mockRepo = MockWalkingRouteRepository()
-        let vm = WalkingNavigationViewModel(repository: mockRepo, placeSearchClient: mockClient)
+        let vm = SearchViewModel(placeSearchClient: mockClient)
 
         let pois = [
             MockTMAPClient.makePoi(id: "1", name: "포항공대"),
@@ -131,8 +83,7 @@ struct WalkingNavigationViewModelTests {
     @Test("검색 결과가 totalCount와 같으면 더 불러올 수 없다")
     func searchPlaces_noMoreResults() async {
         let mockClient = MockTMAPClient()
-        let mockRepo = MockWalkingRouteRepository()
-        let vm = WalkingNavigationViewModel(repository: mockRepo, placeSearchClient: mockClient)
+        let vm = SearchViewModel(placeSearchClient: mockClient)
 
         let pois = [MockTMAPClient.makePoi(id: "1", name: "포항공대")]
         mockClient.searchPlacesHandler = { _, _, _ in
@@ -145,11 +96,10 @@ struct WalkingNavigationViewModelTests {
         #expect(vm.canLoadMoreSearchResults == false)
     }
 
-    @Test("검색 실패 시 에러 메시지가 설정된다")
+    @Test("검색 실패 시 결과가 비워진다")
     func searchPlaces_failure() async {
         let mockClient = MockTMAPClient()
-        let mockRepo = MockWalkingRouteRepository()
-        let vm = WalkingNavigationViewModel(repository: mockRepo, placeSearchClient: mockClient)
+        let vm = SearchViewModel(placeSearchClient: mockClient)
 
         mockClient.searchPlacesHandler = { _, _, _ in
             throw TMAPError.missingAPIKey
@@ -158,22 +108,17 @@ struct WalkingNavigationViewModelTests {
         await vm.searchPlaces(keyword: "포항")
 
         #expect(vm.placeSearchResults.isEmpty)
-        #expect(vm.errorMessage != nil)
         #expect(vm.canLoadMoreSearchResults == false)
     }
 
-    // MARK: - loadMoreSearchResults (페이징)
+    // MARK: - loadMoreSearchResults
 
     @Test("추가 페이지 로드 시 결과가 기존 결과에 추가된다")
     func loadMoreSearchResults_appendsResults() async {
         let mockClient = MockTMAPClient()
-        let mockRepo = MockWalkingRouteRepository()
-        let vm = WalkingNavigationViewModel(repository: mockRepo, placeSearchClient: mockClient)
+        let vm = SearchViewModel(placeSearchClient: mockClient)
 
-        // 첫 페이지
-        var callCount = 0
         mockClient.searchPlacesHandler = { _, page, _ in
-            callCount += 1
             if page == 1 {
                 return MockTMAPClient.makeResponse(
                     pois: [MockTMAPClient.makePoi(id: "1", name: "결과1")],
@@ -196,7 +141,6 @@ struct WalkingNavigationViewModelTests {
         #expect(vm.placeSearchResults.count == 1)
         #expect(vm.canLoadMoreSearchResults == true)
 
-        // 두 번째 페이지
         await vm.loadMoreSearchResults()
         #expect(vm.placeSearchResults.count == 3)
         #expect(vm.placeSearchResults[1].name == "결과2")
@@ -207,8 +151,7 @@ struct WalkingNavigationViewModelTests {
     @Test("canLoadMore가 false이면 추가 로드하지 않는다")
     func loadMoreSearchResults_guardCanLoadMore() async {
         let mockClient = MockTMAPClient()
-        let mockRepo = MockWalkingRouteRepository()
-        let vm = WalkingNavigationViewModel(repository: mockRepo, placeSearchClient: mockClient)
+        let vm = SearchViewModel(placeSearchClient: mockClient)
 
         mockClient.searchPlacesHandler = { _, _, _ in
             MockTMAPClient.makeResponse(
@@ -228,8 +171,7 @@ struct WalkingNavigationViewModelTests {
     @Test("검색 전에는 loadMore가 호출되지 않는다")
     func loadMoreSearchResults_beforeSearch() async {
         let mockClient = MockTMAPClient()
-        let mockRepo = MockWalkingRouteRepository()
-        let vm = WalkingNavigationViewModel(repository: mockRepo, placeSearchClient: mockClient)
+        let vm = SearchViewModel(placeSearchClient: mockClient)
 
         await vm.loadMoreSearchResults()
 
@@ -241,8 +183,7 @@ struct WalkingNavigationViewModelTests {
     @Test("검색 결과 초기화 시 페이징 상태도 리셋된다")
     func clearPlaceSearchResults_resetsAll() async {
         let mockClient = MockTMAPClient()
-        let mockRepo = MockWalkingRouteRepository()
-        let vm = WalkingNavigationViewModel(repository: mockRepo, placeSearchClient: mockClient)
+        let vm = SearchViewModel(placeSearchClient: mockClient)
 
         mockClient.searchPlacesHandler = { _, _, _ in
             MockTMAPClient.makeResponse(
@@ -261,36 +202,26 @@ struct WalkingNavigationViewModelTests {
         #expect(vm.canLoadMoreSearchResults == false)
     }
 
-    // MARK: - updateSearchQuery
+    // MARK: - selectPlace
 
-    @Test("검색 쿼리 변경 시 기존 경로와 진행 상태가 초기화된다")
-    func updateSearchQuery_resetsRoute() {
+    @Test("장소 선택 시 검색 결과가 초기화된다")
+    func selectPlace_clearsResults() async {
         let mockClient = MockTMAPClient()
-        let mockRepo = MockWalkingRouteRepository()
-        let vm = WalkingNavigationViewModel(repository: mockRepo, placeSearchClient: mockClient)
+        let vm = SearchViewModel(placeSearchClient: mockClient)
 
-        vm.updateSearchQuery("새로운 목적지", for: .destination)
+        mockClient.searchPlacesHandler = { _, _, _ in
+            MockTMAPClient.makeResponse(
+                pois: [MockTMAPClient.makePoi(id: "1", name: "포항공대")],
+                totalCount: 1
+            )
+        }
 
-        #expect(vm.destinationName == "새로운 목적지")
-        #expect(vm.hasSelectedDestination == false)
-        #expect(vm.route == nil)
-    }
+        await vm.searchPlaces(keyword: "포항공대")
+        #expect(vm.placeSearchResults.count == 1)
 
-    @Test("같은 쿼리로 변경 시 아무 변화가 없다")
-    func updateSearchQuery_sameValueNoOp() {
-        let mockClient = MockTMAPClient()
-        let mockRepo = MockWalkingRouteRepository()
-        let vm = WalkingNavigationViewModel(repository: mockRepo, placeSearchClient: mockClient)
+        let place = vm.placeSearchResults[0]
+        vm.selectPlace(place)
 
-        let place = PlaceSearchResult(
-            id: "1", name: "포항공대", category: "", address: "",
-            coordinate: Coordinate(latitude: 36.0, longitude: 129.0)
-        )
-        vm.selectPlace(place, for: .destination)
-        #expect(vm.hasSelectedDestination == true)
-
-        // 같은 이름으로 업데이트 — hasSelectedDestination이 유지되어야 함
-        vm.updateSearchQuery("포항공대", for: .destination)
-        #expect(vm.hasSelectedDestination == true)
+        #expect(vm.placeSearchResults.isEmpty)
     }
 }

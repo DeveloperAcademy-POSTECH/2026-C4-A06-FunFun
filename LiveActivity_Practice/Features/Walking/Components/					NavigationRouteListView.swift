@@ -13,7 +13,7 @@ import SwiftUI
 ///   - isExpanded: 펼침 상태를 외부에서 제어하기 위한 바인딩입니다.
 ///   - expandedHeight: 펼친 콘텐츠의 높이입니다.
 ///
-struct CustomBottomSheet: View {
+struct NavigationRouteListView: View {
     // MARK: - Inputs
 
     let route: WalkingRoute
@@ -392,7 +392,7 @@ private struct BottomSheetGlassSurface: ViewModifier {
         )
         .ignoresSafeArea()
 
-        CustomBottomSheet(
+        NavigationRouteListView(
             route: WalkingRoute(
                 totalDistance: 800,
                 totalTime: 600,

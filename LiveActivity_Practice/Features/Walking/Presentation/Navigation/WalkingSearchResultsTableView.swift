@@ -7,10 +7,10 @@ import SwiftUI
 import UIKit
 
 struct WalkingSearchResultsTableView: UIViewRepresentable {
-    let places: [PlaceSearchResult]
+    let places: [Place]
     let isLoading: Bool
-    let onSelect: (PlaceSearchResult) -> Void
     let onLoadMore: () -> Void
+    let placeSelected: (Place) -> Void
 
     func makeCoordinator() -> Coordinator {
         Coordinator(parent: self)
@@ -107,7 +107,7 @@ struct WalkingSearchResultsTableView: UIViewRepresentable {
                 return
             }
 
-            parent.onSelect(place)
+            parent.placeSelected(place)
         }
 
         func tableView(
@@ -131,7 +131,7 @@ nonisolated private enum Section: Hashable, Sendable {
 }
 
 nonisolated private enum Item: Hashable, Sendable {
-    case place(PlaceSearchResult)
+    case place(Place)
     case loading
 }
 

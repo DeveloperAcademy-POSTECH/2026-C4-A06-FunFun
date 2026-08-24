@@ -8,11 +8,10 @@ import CoreLocation
 import SwiftUI
 
 struct WalkingNavigationView: View {
-    @StateObject private var viewModel = WalkingNavigationViewModel()
+    @State private var viewModel = WalkingNavigationViewModel()
     @State private var cameraCommand: MapCameraCommand?
     @State private var cameraCommandSequence = 0
     @State private var isSearchExpanded = false
-    @State private var searchQuery = ""
     @State private var showSettings = false
     @State private var isExitAlertPresented = false
     @State private var isNavigationSheetExpanded = false
@@ -23,15 +22,15 @@ struct WalkingNavigationView: View {
         ZStack(alignment: .bottomTrailing) {
             PersistentWalkingMapView(
                 state: MapPresentationState(
-                    route: viewModel.route,
-                    deviationPath: viewModel.deviationPath,
-                    passedRouteIndex: viewModel.passedRouteIndex,
+                    route: viewModel.routeSearchService.route,
+                    deviationPath: viewModel.routeTracker.deviationPath,
+                    passedRouteIndex: viewModel.routeTracker.passedRouteIndex,
                     currentLocation: viewModel.currentLocation,
                     currentHeading: viewModel.currentHeading,
                     currentLocationAccuracy: viewModel.currentLocationAccuracy,
-                    navigationBearing: viewModel.navigationBearing,
+                    navigationBearing: viewModel.bearingTracker.bearing,
                     navigationAlignmentID: viewModel.navigationAlignmentID,
-                    isNavigating: viewModel.isNavigating,
+                    isNavigating: viewModel.viewState == .navigating ,
                     cameraCommand: cameraCommand,
                     showLandmarks: viewModel.showLandmarks,
                     landmarkScaleThreshold: viewModel.landmarkMinZoom,
@@ -39,12 +38,13 @@ struct WalkingNavigationView: View {
                     showRoutePoints: viewModel.showRoutePoints,
                     routePointRadius: viewModel.routePointRadius,
                     approachingThreshold: viewModel.approachingThreshold,
-                    previewDestination: viewModel.previewDestination,
-                    tappedCoordinate: viewModel.tappedCoordinate,
-                    locationButtonBottomInset: locationButtonBottomInset,
-                    onMapTapped: { coordinate in
-                        guard !viewModel.isNavigating, !isSearchExpanded else { return }
-                        viewModel.selectCoordinateAsDestination(coordinate)
+                    selectedPlace: viewModel.selectedPlace,
+                    onPlaceSelected: { place in
+                        guard !(viewModel.viewState == .navigating), !isSearchExpanded else { return }
+                        viewModel.placeSelected(place)
+                    },
+                    onMapCleared: {
+                        viewModel.clearSelectedPlace()
                     },
                     onMapViewportChanged: { heading, position in
                         mapHeading = heading
@@ -54,10 +54,12 @@ struct WalkingNavigationView: View {
             )
             .ignoresSafeArea()
             
-            if viewModel.isNavigating && viewModel.showGradientOverlay {
+            // isNavigating : 경로 알려주는 중에 떠야 하는 뷰
+            //
+            if viewModel.viewState == .navigating && viewModel.showGradientOverlay {
                 HeadingSafeAreaGradientOverlay(
                     heading: viewModel.currentHeading,
-                    navigationBearing: viewModel.navigationBearing,
+                    navigationBearing: viewModel.bearingTracker.bearing,
                     mapHeading: mapHeading,
                     indicatorPosition: indicatorPosition
                 )
@@ -65,100 +67,98 @@ struct WalkingNavigationView: View {
             }
             
             VStack(spacing: 12) {
-                if viewModel.isNavigating {
-                    CustomTopToolbar(
-                        destinationName: viewModel.destinationName,
-                        onBack: {
-                            isExitAlertPresented = true
-                        },
-                        onSettings: {
-                            showSettings = true
-                        }
-                    )
-                } else {
-                    HStack {
-                        if viewModel.route != nil || viewModel.tappedCoordinate != nil || viewModel.previewDestination != nil {
-                            backButton
-                        }
-                        Spacer()
-                        settingsButton
-                    }
-
-                    if viewModel.route != nil && !viewModel.isNavigating {
-                        WalkingSearchStartDestinationView(
-                            destinationName: viewModel.destinationName
-                        ) {
-                            isSearchExpanded = true
-                        }
-                        .frame(height: 117)
-                    }
-                }
-
-                if viewModel.isNavigating {
-                    if viewModel.isOffRoute && !viewModel.isOffRouteBannerHidden {
-                        offRouteBanner
-                    }
-                }
-                
-                Spacer()
-                
-                if viewModel.isNavigating, let route = viewModel.route {
-                    CustomBottomSheet(
-                        route: route,
-                        progress: viewModel.progress,
-                        destinationName: viewModel.destinationName,
-                        isExpanded: $isNavigationSheetExpanded
-                    )
-                } else if let place = viewModel.previewDestination {
-                    BottomPlaceView(
-                        place: place,
-                        isLoading: viewModel.isLoading,
-                        onConfirm: {
-                            Task { await viewModel.searchRoute() }
-                        }
-                    )
-                } else if let route = viewModel.route {
-                    routeSummary(route)
-                } else if viewModel.isLoading {
-                    ProgressView("최단 경로와 랜드마크 검색 중…")
-                        .appTypography(.body1)
-                        .padding()
-                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
-                } else if viewModel.tappedCoordinate != nil {
-                    tappedDestinationPanel
-                } else if let error = viewModel.errorMessage {
-                    Text(error)
-                        .appTypography(.captionS)
-                        .foregroundStyle(.red)
-                        .padding()
-                        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
-                }
-                
-                if !viewModel.isNavigating,
-                   viewModel.route == nil,
-                   viewModel.previewDestination == nil,
-                   viewModel.tappedCoordinate == nil,
-                   !viewModel.isLoading {
+                switch viewModel.viewState {
+                case .main:
                     homeSearchPanel
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        myLocationButton
+                    }
+                    if let place = viewModel.selectedPlace {
+                        PlaceInformationView(
+                            place: place,
+                            isLoading: viewModel.viewState == .loading,
+                            onConfirm: {
+                                Task { await viewModel.searchRoute() }
+                            }
+                        )
+                    }
+                case .routePreview:
+                    HStack {
+                        backButton
+                        Spacer()
+                    }
+                    RouteSummaryHeaderView()
+
+                    Spacer()
+
+                    HStack {
+                        Spacer()
+                        myLocationButton
+                    }
+                    if let route = viewModel.routeSearchService.route {
+                        routeSummary(route)
+                    }
+                case .navigating:
+                    switch viewModel.routeTracker.deviationState {
+                    case .offRoute:
+                        offRouteBanner
+                    default:
+                        HStack {
+                            backButton
+                            Spacer()
+                            settingsButton
+                        }
+                    }
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        myLocationButton
+                    }
+                    switch viewModel.routeTracker.deviationState {
+                    case .rerouting:
+                        ProgressView("최단 경로와 랜드마크 검색 중…")
+                            .appTypography(.body1)
+                            .padding()
+                            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+                    default:
+                        if let route = viewModel.routeSearchService.route {
+                            NavigationRouteListView(
+                                route: route,
+                                progress: viewModel.routeTracker.progress,
+                                destinationName: viewModel.destination?.name ?? "목적지",
+                                isExpanded: $isNavigationSheetExpanded
+                            )
+                        }
+                    }
+                case .error:
+                    if let error = viewModel.errorMessage {
+                        Text(error)
+                            .appTypography(.captionS)
+                            .foregroundStyle(.red)
+                            .padding()
+                            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
+                    }
+                default:
+                    EmptyView()
                 }
             }
-            .padding()
-            
+            .padding(12)
         }
         .overlay(alignment: .bottom) {
-            if viewModel.isArrived {
-                ArrivalLandingView(destinationName: viewModel.destinationName)
+            if viewModel.navigationSession.isArrived {
+                ArrivalLandingView(destinationName: viewModel.destination?.name ?? "목적지")
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                     .zIndex(10)
             }
         }
-        .animation(.easeInOut(duration: 0.3), value: viewModel.isArrived)
+        .animation(.easeInOut(duration: 0.3), value: viewModel.navigationSession.isArrived)
         .overlay(alignment: .center) {
             if isExitAlertPresented {
                 ZStack {
                     Color.black.opacity(0.12)
                         .ignoresSafeArea()
-                    
                     NavigationExitAlert(
                         onContinue: {
                             isExitAlertPresented = false
@@ -175,30 +175,33 @@ struct WalkingNavigationView: View {
             viewModel.startLocationTracking()
             issueCameraCommand(.userLocation)
         }
-        .onChange(of: viewModel.route) { _, route in
+        .onChange(of: viewModel.routeSearchService.route) { _, route in
             isNavigationSheetExpanded = false
             if route != nil { issueCameraCommand(.route) }
         }
-        .onChange(of: viewModel.previewDestination) { _, destination in
-            if let destination {
-                issueCameraCommand(.coordinate(destination.coordinate))
+        .onChange(of: viewModel.selectedPlace) { _, place in
+            if let place {
+                issueCameraCommand(.coordinate(place.coordinate))
             }
         }
-        .onChange(of: viewModel.isNavigating) { _, isNavigating in
+        .onChange(of: viewModel.viewState == .navigating) { _, isNavigating in
             if !isNavigating {
                 isExitAlertPresented = false
                 isNavigationSheetExpanded = false
             }
         }
-        .sheet(isPresented: $isSearchExpanded) {
-            WalkingSearchModalView(
-                viewModel: viewModel,
+        .fullScreenCover(isPresented: $isSearchExpanded) {
+            SearchModalView(
+                viewModel: SearchViewModel(),
+                searchQuery: "",
                 isPresented: $isSearchExpanded,
-                searchQuery: $searchQuery
+                placeSelected: { place in
+                    viewModel.placeSelected(place)
+                }
             )
-            .presentationDetents([.fraction(0.9)])
-            .presentationDragIndicator(.visible)
-            .presentationCornerRadius(30)
+        }
+        .transaction { transaction in
+            transaction.disablesAnimations = true
         }
         .sheet(isPresented: $showSettings) {
             settingsView
@@ -206,21 +209,23 @@ struct WalkingNavigationView: View {
         }
     }
 
-    private var locationButtonBottomInset: CGFloat {
-        guard viewModel.isNavigating else {
-            return viewModel.route != nil ? 250 : 104
+    private var myLocationButton: some View {
+        Button {
+            issueCameraCommand(.userLocation)
+            viewModel.clearSelectedPlace()
+        } label: {
+            Image(systemName: "dot.scope")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(Color("Colors/text-text-1"))
+                .frame(width: 44, height: 44)
         }
-
-        let sheetHeight: CGFloat = isNavigationSheetExpanded ? 520 : 120
-        let sheetBottomMargin: CGFloat = 16
-        let buttonToSheetGap: CGFloat = 16
-
-        return sheetHeight + sheetBottomMargin + buttonToSheetGap
+        .modifier(WalkingToolbarButtonStyle())
+        .accessibilityLabel("내 위치 찾기")
     }
     
     private var backButton: some View {
         Button {
-            viewModel.clearTappedCoordinate()
+            viewModel.mainMode()
             Task { await viewModel.dismissRoute() }
             issueCameraCommand(.userLocation)
         } label: {
@@ -299,42 +304,8 @@ struct WalkingNavigationView: View {
         }
     }
     
-    private var tappedDestinationPanel: some View {
-        VStack(spacing: 12) {
-            HStack(spacing: 10) {
-                Image(systemName: "mappin.circle.fill")
-                    .foregroundStyle(.red)
-                    .font(.title3)
-                Text(viewModel.destinationName)
-                    .appTypography(.labelM)
-                    .lineLimit(1)
-                Spacer()
-            }
-            
-            Button {
-                Task { await viewModel.searchRoute() }
-            } label: {
-                Label {
-                    Text("경로 찾기")
-                        .appTypography(.labelL)
-                } icon: {
-                    Image(systemName: "figure.walk")
-                }
-                    .frame(maxWidth: .infinity)
-            }
-            .buttonStyle(.borderedProminent)
-        }
-        .padding()
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 18))
-        .shadow(radius: 8)
-    }
-    
     private var homeSearchPanel: some View {
         VStack(spacing: 6) {
-            Capsule()
-                .fill(Color(.systemGray3))
-                .frame(width: 51, height: 5)
-            
             Button {
                 isSearchExpanded = true
             } label: {
@@ -369,7 +340,7 @@ struct WalkingNavigationView: View {
                 Text("목적지")
                     .appTypography(.captionS)
                     .foregroundStyle(.secondary)
-                Text(viewModel.destinationName.isEmpty ? "목적지" : viewModel.destinationName)
+                Text(viewModel.destination == nil ? "목적지" : viewModel.destination!.name)
                     .appTypography(.labelM)
                     .lineLimit(1)
             }
@@ -396,7 +367,7 @@ struct WalkingNavigationView: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 2) {
-                    if viewModel.isRerouting {
+                    if viewModel.routeTracker.isRerouting {
                         Text("경로 재탐색 중…")
                             .appTypography(.title2)
                             .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.1))
@@ -412,12 +383,12 @@ struct WalkingNavigationView: View {
                 
                 Spacer()
                 
-                if viewModel.isRerouting {
+                if viewModel.routeTracker.isRerouting {
                     ProgressView()
                 }
             }
             
-            if !viewModel.isRerouting {
+            if !viewModel.routeTracker.isRerouting {
                 VStack(spacing: 6) {
                     Button {
                         Task { await viewModel.rerouteFromCurrentLocation() }
@@ -452,7 +423,7 @@ struct WalkingNavigationView: View {
     
     private func exitNavigation() {
         isExitAlertPresented = false
-        viewModel.clearTappedCoordinate()
+        viewModel.clearSelectedPlace()
         Task {
             await viewModel.dismissRoute()
             issueCameraCommand(.userLocation)
@@ -477,7 +448,7 @@ struct WalkingNavigationView: View {
                 Spacer()
                 Button {
                     Task {
-                        await viewModel.startNavigation()
+                        await viewModel.startNavigating()
                     }
                 } label: {
                     ZStack {
@@ -511,7 +482,7 @@ struct WalkingNavigationView: View {
 
     @ViewBuilder
     private func navigationDetails(for route: WalkingRoute) -> some View {
-        if let progress = viewModel.progress, let next = progress.nextManeuver {
+        if let progress = viewModel.routeTracker.progress, let next = progress.nextManeuver {
             Label {
                 Text(next.instruction)
                     .appTypography(.body1)
