@@ -22,13 +22,13 @@ struct WalkingNavigationView: View {
         ZStack(alignment: .bottomTrailing) {
             PersistentWalkingMapView(
                 state: MapPresentationState(
-                    route: viewModel.route,
-                    deviationPath: viewModel.deviationPath,
-                    passedRouteIndex: viewModel.passedRouteIndex,
+                    route: viewModel.routeSearchService.route,
+                    deviationPath: viewModel.routeTracker.deviationPath,
+                    passedRouteIndex: viewModel.routeTracker.passedRouteIndex,
                     currentLocation: viewModel.currentLocation,
                     currentHeading: viewModel.currentHeading,
                     currentLocationAccuracy: viewModel.currentLocationAccuracy,
-                    navigationBearing: viewModel.navigationBearing,
+                    navigationBearing: viewModel.bearingTracker.bearing,
                     navigationAlignmentID: viewModel.navigationAlignmentID,
                     isNavigating: viewModel.viewState == .navigating ,
                     cameraCommand: cameraCommand,
@@ -38,7 +38,7 @@ struct WalkingNavigationView: View {
                     showRoutePoints: viewModel.showRoutePoints,
                     routePointRadius: viewModel.routePointRadius,
                     approachingThreshold: viewModel.approachingThreshold,
-                    selectedPlace: viewModel.selecedPlace,
+                    selectedPlace: viewModel.selectedPlace,
                     onPlaceSelected: { place in
                         guard !(viewModel.viewState == .navigating), !isSearchExpanded else { return }
                         viewModel.placeSelected(place)
@@ -59,7 +59,7 @@ struct WalkingNavigationView: View {
             if viewModel.viewState == .navigating && viewModel.showGradientOverlay {
                 HeadingSafeAreaGradientOverlay(
                     heading: viewModel.currentHeading,
-                    navigationBearing: viewModel.navigationBearing,
+                    navigationBearing: viewModel.bearingTracker.bearing,
                     mapHeading: mapHeading,
                     indicatorPosition: indicatorPosition
                 )
@@ -75,7 +75,7 @@ struct WalkingNavigationView: View {
                         Spacer()
                         myLocationButton
                     }
-                    if let place = viewModel.selecedPlace {
+                    if let place = viewModel.selectedPlace {
                         PlaceInformationView(
                             place: place,
                             isLoading: viewModel.viewState == .loading,
@@ -97,11 +97,11 @@ struct WalkingNavigationView: View {
                         Spacer()
                         myLocationButton
                     }
-                    if let route = viewModel.route {
+                    if let route = viewModel.routeSearchService.route {
                         routeSummary(route)
                     }
                 case .navigating:
-                    switch viewModel.deviationState {
+                    switch viewModel.routeTracker.deviationState {
                     case .offRoute:
                         offRouteBanner
                     default:
@@ -116,17 +116,17 @@ struct WalkingNavigationView: View {
                         Spacer()
                         myLocationButton
                     }
-                    switch viewModel.deviationState {
+                    switch viewModel.routeTracker.deviationState {
                     case .rerouting:
                         ProgressView("최단 경로와 랜드마크 검색 중…")
                             .appTypography(.body1)
                             .padding()
                             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16))
                     default:
-                        if let route = viewModel.route {
+                        if let route = viewModel.routeSearchService.route {
                             NavigationRouteListView(
                                 route: route,
-                                progress: viewModel.progress,
+                                progress: viewModel.routeTracker.progress,
                                 destinationName: viewModel.destination?.name ?? "목적지",
                                 isExpanded: $isNavigationSheetExpanded
                             )
@@ -147,13 +147,13 @@ struct WalkingNavigationView: View {
             .padding(12)
         }
         .overlay(alignment: .bottom) {
-            if viewModel.isArrived {
+            if viewModel.navigationSession.isArrived {
                 ArrivalLandingView(destinationName: viewModel.destination?.name ?? "목적지")
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                     .zIndex(10)
             }
         }
-        .animation(.easeInOut(duration: 0.3), value: viewModel.isArrived)
+        .animation(.easeInOut(duration: 0.3), value: viewModel.navigationSession.isArrived)
         .overlay(alignment: .center) {
             if isExitAlertPresented {
                 ZStack {
@@ -175,11 +175,11 @@ struct WalkingNavigationView: View {
             viewModel.startLocationTracking()
             issueCameraCommand(.userLocation)
         }
-        .onChange(of: viewModel.route) { _, route in
+        .onChange(of: viewModel.routeSearchService.route) { _, route in
             isNavigationSheetExpanded = false
             if route != nil { issueCameraCommand(.route) }
         }
-        .onChange(of: viewModel.selecedPlace) { _, place in
+        .onChange(of: viewModel.selectedPlace) { _, place in
             if let place {
                 issueCameraCommand(.coordinate(place.coordinate))
             }
@@ -367,7 +367,7 @@ struct WalkingNavigationView: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 2) {
-                    if viewModel.isRerouting {
+                    if viewModel.routeTracker.isRerouting {
                         Text("경로 재탐색 중…")
                             .appTypography(.title2)
                             .foregroundStyle(Color(red: 0.1, green: 0.1, blue: 0.1))
@@ -383,12 +383,12 @@ struct WalkingNavigationView: View {
                 
                 Spacer()
                 
-                if viewModel.isRerouting {
+                if viewModel.routeTracker.isRerouting {
                     ProgressView()
                 }
             }
             
-            if !viewModel.isRerouting {
+            if !viewModel.routeTracker.isRerouting {
                 VStack(spacing: 6) {
                     Button {
                         Task { await viewModel.rerouteFromCurrentLocation() }
@@ -482,7 +482,7 @@ struct WalkingNavigationView: View {
 
     @ViewBuilder
     private func navigationDetails(for route: WalkingRoute) -> some View {
-        if let progress = viewModel.progress, let next = progress.nextManeuver {
+        if let progress = viewModel.routeTracker.progress, let next = progress.nextManeuver {
             Label {
                 Text(next.instruction)
                     .appTypography(.body1)
