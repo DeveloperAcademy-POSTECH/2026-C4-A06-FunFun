@@ -171,6 +171,26 @@ struct WalkingNavigationView: View {
             }
         }
         .animation(.easeInOut(duration: 0.2), value: isExitAlertPresented)
+#if DEBUG
+        .overlay(alignment: .trailing) {
+            if !viewModel.mockLocation.isEnabled {
+                mockLocationToggleButton
+                    .padding(.trailing, 12)
+            }
+        }
+        .overlay(alignment: .topLeading) {
+            if viewModel.mockLocation.isEnabled {
+                MockLocationRemoteView(
+                    controller: viewModel.mockLocation,
+                    onRecenter: { issueCameraCommand(.userLocation) },
+                    onClose: { viewModel.disableMockLocation() }
+                )
+                .padding(.leading, 12)
+                .padding(.top, 150)
+                .zIndex(20)
+            }
+        }
+#endif
         .task {
             viewModel.startLocationTracking()
             issueCameraCommand(.userLocation)
@@ -223,6 +243,22 @@ struct WalkingNavigationView: View {
         .accessibilityLabel("내 위치 찾기")
     }
     
+#if DEBUG
+    private var mockLocationToggleButton: some View {
+        Button {
+            viewModel.enableMockLocation()
+            issueCameraCommand(.userLocation)
+        } label: {
+            Image(systemName: "gamecontroller.fill")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(.orange)
+                .frame(width: 44, height: 44)
+        }
+        .modifier(WalkingToolbarButtonStyle())
+        .accessibilityLabel("위치 리모콘 켜기")
+    }
+#endif
+
     private var backButton: some View {
         Button {
             viewModel.mainMode()
