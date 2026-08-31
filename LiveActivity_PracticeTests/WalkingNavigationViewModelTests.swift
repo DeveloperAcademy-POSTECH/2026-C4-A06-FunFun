@@ -8,15 +8,14 @@ import Testing
 @Suite("WalkingNavigationViewModel 출발지 설정")
 struct WalkingNavigationViewModelTests {
 
-    @Test("현재 위치가 없으면 출발지가 즉시 설정되지 않는다")
+    @Test("현재 위치가 없으면 출발지가 설정되지 않는다")
     func setStartFromCurrentLocation_withoutLocation() {
-        let mockClient = MockTMAPClient()
         let mockRepo = MockWalkingRouteRepository()
-        let vm = WalkingNavigationViewModel(repository: mockRepo, placeSearchClient: mockClient)
+        let vm = WalkingNavigationViewModel(repository: mockRepo)
 
         vm.setStartFromCurrentLocation()
 
-        #expect(vm.hasSelectedStart == false)
+        #expect(vm.start == nil)
     }
 }
 
@@ -204,8 +203,8 @@ struct SearchViewModelTests {
 
     // MARK: - selectPlace
 
-    @Test("장소 선택 시 검색 결과가 초기화된다")
-    func selectPlace_clearsResults() async {
+    @Test("clearPlaceSearchResults 호출 시 검색 결과가 초기화된다")
+    func clearPlaceSearchResults_clearsResults() async {
         let mockClient = MockTMAPClient()
         let vm = SearchViewModel(placeSearchClient: mockClient)
 
@@ -219,8 +218,7 @@ struct SearchViewModelTests {
         await vm.searchPlaces(keyword: "포항공대")
         #expect(vm.placeSearchResults.count == 1)
 
-        let place = vm.placeSearchResults[0]
-        vm.selectPlace(place)
+        vm.clearPlaceSearchResults()
 
         #expect(vm.placeSearchResults.isEmpty)
     }
