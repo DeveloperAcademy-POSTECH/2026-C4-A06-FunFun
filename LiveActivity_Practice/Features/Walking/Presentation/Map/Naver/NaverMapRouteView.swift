@@ -34,6 +34,20 @@ struct NaverMapRouteView: UIViewRepresentable {
     }
 
     func updateUIView(_ naverMapView: NMFNaverMapView, context: Context) {
+        /**
+         ```swift
+         for mapState in await mapStateEvent {
+             switch mapState {
+             case .navigating(RouteState, CurrentState):
+                // handle route updates
+             case .searching: ...
+             case .idle(CurrentState):
+                // handle current user states
+             case ...
+             }
+         }
+         ```
+         */
         context.coordinator.onPlaceSelected = state.onPlaceSelected
         context.coordinator.onMapCleared = state.onMapCleared
         context.coordinator.onMapViewportChanged = state.onMapViewportChanged
