@@ -544,7 +544,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Config/AppInfo.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Gilchi Atki";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "도보 경로 진행 상황과 다음 분기점을 안내하기 위해 위치를 사용합니다.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "도보 내비게이션 중 현재 위치를 지도에 표시하고, 다음 회전 지점까지의 거리를 계산하며, 경로 이탈 시 재탐색을 위해 위치 정보를 사용합니다.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -586,7 +586,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Config/AppInfo.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Gilchi Atki";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "도보 경로 진행 상황과 다음 분기점을 안내하기 위해 위치를 사용합니다.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "도보 내비게이션 중 현재 위치를 지도에 표시하고, 다음 회전 지점까지의 거리를 계산하며, 경로 이탈 시 재탐색을 위해 위치 정보를 사용합니다.";
 				INFOPLIST_KEY_NSSupportsLiveActivities = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
