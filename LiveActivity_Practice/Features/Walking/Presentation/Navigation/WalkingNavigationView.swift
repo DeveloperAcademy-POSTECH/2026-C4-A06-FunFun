@@ -12,7 +12,9 @@ struct WalkingNavigationView: View {
     @State private var cameraCommand: MapCameraCommand?
     @State private var cameraCommandSequence = 0
     @State private var isSearchExpanded = false
+#if DEBUG
     @State private var showSettings = false
+#endif
     @State private var isExitAlertPresented = false
     @State private var isNavigationSheetExpanded = false
     @State private var mapHeading: CLLocationDirection = 0
@@ -108,7 +110,9 @@ struct WalkingNavigationView: View {
                         HStack {
                             backButton
                             Spacer()
+#if DEBUG
                             settingsButton
+#endif
                         }
                     }
                     Spacer()
@@ -223,10 +227,12 @@ struct WalkingNavigationView: View {
         .transaction { transaction in
             transaction.disablesAnimations = true
         }
+#if DEBUG
         .sheet(isPresented: $showSettings) {
             settingsView
                 .presentationDetents([.medium])
         }
+#endif
     }
 
     private var myLocationButton: some View {
@@ -274,6 +280,7 @@ struct WalkingNavigationView: View {
         .accessibilityLabel("뒤로가기")
     }
     
+#if DEBUG
     private var settingsButton: some View {
         Button {
             showSettings = true
@@ -286,7 +293,7 @@ struct WalkingNavigationView: View {
         .modifier(WalkingToolbarButtonStyle())
         .accessibilityLabel("설정")
     }
-    
+
     private var settingsView: some View {
         NavigationStack {
             Form {
@@ -339,6 +346,7 @@ struct WalkingNavigationView: View {
             }
         }
     }
+#endif
     
     private var homeSearchPanel: some View {
         VStack(spacing: 6) {
